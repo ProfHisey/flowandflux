@@ -18,3 +18,8 @@ dist-ssr
 
 # local screenshot scratch
 shot*.mjs
+
+# Course-specific planning documents (reference homework/exam content and
+# the reserved in-class demo list — never publish):
+BME378-course-map.md
+CLAUDE.md

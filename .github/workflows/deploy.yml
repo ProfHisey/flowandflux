@@ -24,10 +24,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Physics before pixels: a failing check blocks the deploy.
+      # Physics before pixels: the regression checks gate every deploy.
       - run: npm run verify
       - run: npm run build
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

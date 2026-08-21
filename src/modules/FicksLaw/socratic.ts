@@ -22,11 +22,11 @@ export const FICK_QUESTIONS: SocraticQuestion[] = [
     q: 'Switch to the sphere. The local flux at the outer surface is far smaller than at the inner surface. Is species piling up somewhere in between?',
     probe: 'Compare the two flux readouts, then look at the total transfer rate J.',
     resolution:
-      'No — J is identical at both faces. The area of a spherical shell goes as r², so j must fall as 1/r² to keep J = j·4πr² constant. Nothing accumulates. This is the standard trap: j and J are different physical quantities, and only J is conserved along the path. The course writes them as separate symbols for exactly this reason.',
+      'No — J is identical at both faces. The area of a spherical shell goes as r², so j must fall as 1/r² to keep J = j·4πr² constant. Nothing accumulates. This is the standard trap: j and J are different physical quantities, and only J is conserved along the path. Transport texts write them as separate symbols for exactly this reason.',
   },
   {
     q: 'Double the thickness L. What happens to the flux, and what happens to the total amount of drug sitting inside the layer?',
-    probe: 'Load the epidermis preset, note both readouts, then drag L.',
+    probe: 'Load the drug-through-skin example, note both readouts, then drag L.',
     resolution:
       'Flux halves: the gradient ΔC/L is halved and D has not changed. The holdup doubles, and the reason is worth saying out loud — the profile stays linear between the same two boundary values, so the average concentration through the layer is still ΔC/2 no matter how thick it is. Only the volume changed. One slider, two quantities moving in opposite directions.',
   },
@@ -44,6 +44,6 @@ export const FICK_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'The animation speed does not change when you change D. Is that a bug?',
     resolution:
-      'It is deliberate, and worth being annoyed by. D spans ten decades across this course; an animation faithful to D would either freeze or blur at almost every setting. The particle speed here is fixed for legibility, while the *shape* of the field and every number in the readouts are physical. Any simulation you meet will make a compromise like this somewhere — the useful habit is asking which quantities are honest and which are cosmetic.',
+      'It is deliberate, and worth being annoyed by. D spans ten decades across real problems; an animation faithful to D would either freeze or blur at almost every setting. The particle speed here is fixed for legibility, while the *shape* of the field and every number in the readouts are physical. Any simulation you meet will make a compromise like this somewhere — the useful habit is asking which quantities are honest and which are cosmetic.',
   },
 ];

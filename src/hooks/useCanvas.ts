@@ -38,6 +38,8 @@ export function useCanvas(
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawRef = useRef(draw);
   drawRef.current = draw;
+  const runningRef = useRef(running);
+  runningRef.current = running;
 
   const sizeRef = useRef({ width: 0, height: 0 });
 
@@ -46,6 +48,22 @@ export function useCanvas(
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const paintOnce = () => {
+      // Resizing the backing store CLEARS the canvas. A running loop
+      // repaints next frame anyway, but a paused/static canvas would stay
+      // blank forever — which read as "the module didn't load" whenever a
+      // late layout shift (fonts, scrollbars) resized it after mount.
+      if (runningRef.current) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const { width, height } = sizeRef.current;
+      if (width === 0 || height === 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      drawRef.current(ctx, { dt: 0, t: 0, width, height });
+    };
+
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
@@ -53,6 +71,7 @@ export function useCanvas(
       canvas.width = Math.round(rect.width * dpr);
       canvas.height = Math.round(rect.height * dpr);
       sizeRef.current = { width: rect.width, height: rect.height };
+      requestAnimationFrame(paintOnce);
     };
 
     resize();

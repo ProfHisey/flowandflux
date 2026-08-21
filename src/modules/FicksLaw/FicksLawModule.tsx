@@ -6,7 +6,6 @@ import { Panel, Stat } from '../../components/ui/Panel';
 import { Slider } from '../../components/ui/Slider';
 import { Segmented } from '../../components/ui/Segmented';
 import { EquationCard } from '../../components/ui/EquationCard';
-import { SocraticPanel } from '../../components/ui/SocraticPanel';
 
 import {
   areaAt,
@@ -25,15 +24,16 @@ import {
 } from '../../lib/fick';
 import { lengthCm, sci } from '../../lib/format';
 import { FickCanvas, type CrossingStats } from './FickCanvas';
+import { Fick3DCanvas } from './Fick3DCanvas';
 import { FickChart } from './FickChart';
 import { DEFAULT_PARAMS, D_LANDMARKS, PRESETS } from './presets';
-import { FICK_QUESTIONS } from './socratic';
 
 export function FicksLawModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<FickParams>(DEFAULT_PARAMS);
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
   const [showParticles, setShowParticles] = useState(true);
+  const [view, setView] = useState<'2d' | '3d'>('2d');
   const [stats, setStats] = useState<CrossingStats | null>(null);
 
   const set = <K extends keyof FickParams>(key: K, value: FickParams[K]) => {
@@ -69,12 +69,22 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* ---------------------------------------------------- canvas */}
-        <div className="space-y-5">
+        <div className="order-1 space-y-5 lg:col-start-1 lg:row-start-1">
           <Panel
             title="Steady-state concentration field"
             subtitle="Particles take unbiased random steps. The net drift you see is emergent."
             right={
-              <div className="flex shrink-0 gap-1.5">
+              <div className="flex shrink-0 items-center gap-1.5">
+                <div className="w-28">
+                  <Segmented<'2d' | '3d'>
+                    value={view}
+                    options={[
+                      { value: '2d', label: '2D' },
+                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
+                    ]}
+                    onChange={setView}
+                  />
+                </div>
                 <IconButton
                   label={running ? 'Pause' : 'Play'}
                   onClick={() => setRunning((r) => !r)}
@@ -91,17 +101,39 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <FickCanvas
-              params={params}
-              showParticles={showParticles}
-              running={running}
-              dark={dark}
-              onStats={setStats}
-            />
+            {view === '2d' ? (
+              <FickCanvas
+                params={params}
+                showParticles={showParticles}
+                running={running}
+                dark={dark}
+                onStats={setStats}
+              />
+            ) : (
+              <>
+                <Fick3DCanvas
+                  params={params}
+                  showParticles={showParticles}
+                  running={running}
+                  dark={dark}
+                />
+                <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  The same unbiased random walk, in three dimensions — drag to rotate,
+                  double-click to reset. The rotation is only a camera move; the walk
+                  itself never changes. The crossing counter and all measurements live
+                  on the 2D tab.
+                </p>
+              </>
+            )}
 
-            {isSlab && showParticles && stats && <TrafficReadout stats={stats} />}
+            {view === '2d' && isSlab && showParticles && stats && (
+              <TrafficReadout stats={stats} />
+            )}
           </Panel>
 
+        </div>
+
+        <div className="order-3 space-y-5 lg:col-start-1 lg:row-start-2">
           {/* ------------------------------------------------- readouts */}
           <Panel title="Readouts" subtitle="Every value carries its units. Check them.">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -157,7 +189,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
             {preset?.check && (
               <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs leading-relaxed text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
                 <span className="font-semibold">Hand-check: </span>
-                {preset.source} works out to {preset.check}.
+                this setup works out to {preset.check} — try it on paper.
               </p>
             )}
           </Panel>
@@ -168,7 +200,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
         </div>
 
         {/* --------------------------------------------------- controls */}
-        <div className="space-y-5">
+        <div className="order-2 space-y-5 lg:col-start-2 lg:row-start-1 lg:row-span-2">
           <Panel title="Setup">
             <div className="space-y-5">
               <Segmented<Geometry>
@@ -277,8 +309,8 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
           </Panel>
 
           <Panel
-            title="Problems from the course"
-            subtitle="Load a setup that already has a worked answer."
+            title="Example problems"
+            subtitle="Load a setup, then check the numbers by hand."
           >
             <div className="space-y-2">
               {PRESETS.map((pr) => {
@@ -384,7 +416,9 @@ R_D \equiv \frac{\Delta C}{J} =
         </div>
       </div>
 
-      <SocraticPanel questions={FICK_QUESTIONS} />
+      {/* The Socratic question set (socratic.ts) is authored but not rendered:
+          guided-discussion delivery is on hold pending a decision between the
+          walkthrough tool being built at NU and other candidates. */}
     </div>
   );
 }
@@ -447,7 +481,7 @@ function ModuleHeader() {
           Module 1 · Diffusion
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          BME 378 · Lectures 3, 4, 5, 7, 8
+          Steady-state mass transfer
         </span>
       </div>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
@@ -490,7 +524,7 @@ function DScale({ D }: { D: number }) {
         </span>
       </div>
       <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
-        Ticks mark the values quoted in Lecture 3, from solids to gases — ten decades.
+        Ticks mark typical real-world values, from solids to gases — ten decades.
       </p>
     </div>
   );

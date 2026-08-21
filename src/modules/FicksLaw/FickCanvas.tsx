@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import { concentration, molPerCm3TomM, type FickParams } from '../../lib/fick';
 
@@ -11,7 +11,7 @@ import { concentration, molPerCm3TomM, type FickParams } from '../../lib/fick';
  * there is no term in the update that knows which way is "downhill". The net
  * transport you can watch at the midplane emerges purely because there are
  * more particles on the high-concentration side to wander across. That is the
- * statistical content of Fick's law (Lecture 3), and it is the one thing a
+ * statistical content of Fick's law, and it is the one thing a
  * static slide cannot show.
  */
 
@@ -44,10 +44,10 @@ const BINS = 28;
  *  D spans ten decades in this course, and we want the animation legible at
  *  every one of them. The *shape* of the profile is physical; the *speed* of
  *  the animation is not, and the UI says so. */
-const D_VIS = 2500;
+export const D_VIS = 300;
 const PARTICLE_BUDGET = 1400;
 
-function gauss(): number {
+export function gauss(): number {
   // Box-Muller, one of the two normals discarded.
   let u = 0;
   while (u === 0) u = Math.random();
@@ -57,20 +57,21 @@ function gauss(): number {
 
 /** Perceptually reasonable low-to-high concentration ramp, legible on both
  *  a light and a dark page. */
-function rampColor(u: number, dark: boolean): string {
+export function rampColor(u: number, dark: boolean, alpha = 1): string {
   const t = Math.min(1, Math.max(0, u));
+  let r: number, g: number, b: number;
   if (dark) {
     // near-black slate -> saturated cyan
-    const r = Math.round(15 + t * 22);
-    const g = Math.round(23 + t * 175);
-    const b = Math.round(42 + t * 175);
-    return `rgb(${r},${g},${b})`;
+    r = Math.round(15 + t * 22);
+    g = Math.round(23 + t * 175);
+    b = Math.round(42 + t * 175);
+  } else {
+    // near-white -> deep indigo
+    r = Math.round(248 - t * 199);
+    g = Math.round(250 - t * 172);
+    b = Math.round(252 - t * 76);
   }
-  // near-white -> deep indigo
-  const r = Math.round(248 - t * 199);
-  const g = Math.round(250 - t * 172);
-  const b = Math.round(252 - t * 76);
-  return `rgb(${r},${g},${b})`;
+  return alpha < 1 ? `rgba(${r},${g},${b},${alpha})` : `rgb(${r},${g},${b})`;
 }
 
 export function FickCanvas({
@@ -93,9 +94,11 @@ export function FickCanvas({
   const emitRef = useRef(0);
   const paramsRef = useRef(params);
   paramsRef.current = params;
+  const zoomRef = useRef(1);
+  const [zoomTick, setZoomTick] = useState(0);
 
   // Anything that changes the picture but not the motion.
-  const redrawKey = `${params.geometry}|${params.D}|${params.C1}|${params.C2}|${params.L}|${params.A}|${params.r1}|${params.r2}|${dark}|${showParticles}`;
+  const redrawKey = `${params.geometry}|${params.D}|${params.C1}|${params.C2}|${params.L}|${params.A}|${params.r1}|${params.r2}|${dark}|${showParticles}|${zoomTick}`;
 
   // Reseed whenever anything that defines the steady-state profile changes.
   // Geometry matters because the coordinate meaning of a particle's (a, b) is
@@ -108,11 +111,12 @@ export function FickCanvas({
     leftRef.current = 0;
     elapsedRef.current = 0;
     emitRef.current = 0;
-  }, [params.geometry, params.C1, params.C2, params.L, params.r1, params.r2]);
+  }, [params.geometry, params.C1, params.C2, params.L, params.A, params.r1, params.r2]);
 
   const canvasRef = useCanvas((ctx, frame) => {
     const p = paramsRef.current;
     const { width: W, height: H } = frame;
+    applyZoom(ctx, zoomRef.current, W, H);
     const pad = 8;
 
     const cLo = Math.min(p.C1, p.C2);
@@ -154,6 +158,8 @@ export function FickCanvas({
     }
   }, { running: running && showParticles, redrawKey });
 
+  useWheelZoom(canvasRef, zoomRef, setZoomTick);
+
   return (
     <canvas
       ref={canvasRef}
@@ -161,6 +167,51 @@ export function FickCanvas({
       aria-label={`Concentration field in a ${params.geometry}, with diffusing particles`}
     />
   );
+}
+
+/** Scroll-to-zoom for the 2D canvases (double-click resets). Purely a
+ *  camera move — the simulation always runs in unzoomed pixels. Shared by
+ *  the Fick, Fourier, and Newton 2D views. */
+export function useWheelZoom(
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  zoomRef: React.RefObject<number>,
+  bump: React.Dispatch<React.SetStateAction<number>>,
+) {
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault();
+      zoomRef.current = Math.min(
+        3,
+        Math.max(0.5, zoomRef.current! * Math.exp(-e.deltaY * 0.0012)),
+      );
+      bump((t) => t + 1);
+    };
+    const reset = () => {
+      zoomRef.current = 1;
+      bump((t) => t + 1);
+    };
+    el.addEventListener('wheel', wheel, { passive: false });
+    el.addEventListener('dblclick', reset);
+    return () => {
+      el.removeEventListener('wheel', wheel);
+      el.removeEventListener('dblclick', reset);
+    };
+  }, [canvasRef, zoomRef, bump]);
+}
+
+/** Centre-anchored zoom transform for a draw frame. */
+export function applyZoom(
+  ctx: CanvasRenderingContext2D,
+  zm: number,
+  W: number,
+  H: number,
+) {
+  if (zm === 1) return;
+  ctx.translate(W / 2, H / 2);
+  ctx.scale(zm, zm);
+  ctx.translate(-W / 2, -H / 2);
 }
 
 // ---------------------------------------------------------------- slab
@@ -180,10 +231,21 @@ function drawSlab(
   rightRef: React.RefObject<number>,
   leftRef: React.RefObject<number>,
 ): SlabGeom | null {
-  const x0 = pad + 56;
-  const x1 = W - pad - 56;
+  // The drawn slab responds to the sliders (log-mapped so decades read as
+  // steady growth): thicker L widens the wall, larger face area A makes it
+  // taller. Schematic, not to scale — but a slider that changes nothing on
+  // screen teaches nothing.
+  const x0f = pad + 56;
+  const x1f = W - pad - 56;
   const y0 = pad + 26;
-  const y1 = H - pad - 30;
+  const y1f = H - pad - 30;
+  const tL = Math.min(1, Math.max(0, (Math.log10(p.L) + 4) / 4)); // 1e-4..1 cm
+  const tA = Math.min(1, Math.max(0, (Math.log10(p.A) + 2) / 4)); // 0.01..100 cm^2
+  const cxS = (x0f + x1f) / 2;
+  const halfW = ((x1f - x0f) / 2) * (0.35 + 0.65 * tL);
+  const x0 = cxS - halfW;
+  const x1 = cxS + halfW;
+  const y1 = y0 + (y1f - y0) * (0.55 + 0.45 * tA);
   const slabW = x1 - x0;
   const slabH = y1 - y0;
   if (slabW <= 0 || slabH <= 0) return null;
@@ -197,13 +259,13 @@ function drawSlab(
 
   // Reservoir cheeks either side, at the two boundary concentrations.
   ctx.fillStyle = rampColor(norm(0), dark);
-  ctx.fillRect(pad, y0, 56 - pad, slabH);
+  ctx.fillRect(pad, y0, x0 - pad, slabH);
   ctx.fillStyle = rampColor(norm(p.L), dark);
-  ctx.fillRect(x1, y0, 56 - pad, slabH);
+  ctx.fillRect(x1, y0, W - pad - x1, slabH);
   // Hatch the baths so they read as reservoirs rather than as more wall,
   // without lying about their concentration by washing the colour out.
-  hatch(ctx, pad, y0, 56 - pad, slabH, dark);
-  hatch(ctx, x1, y0, 56 - pad, slabH, dark);
+  hatch(ctx, pad, y0, x0 - pad, slabH, dark);
+  hatch(ctx, x1, y0, W - pad - x1, slabH, dark);
 
   let counts: number[] | null = null;
   if (showParticles) {
@@ -464,12 +526,17 @@ function drawCurved(
   ctx.closePath();
   ctx.fill();
 
-  const label = dark ? '#cbd5e1' : '#475569';
-  ctx.fillStyle = label;
-  ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`C₁ = ${fmtmM(p.C1)} mM  at r₁`, cx, cy - rOut - 10);
-  ctx.fillText(`C₂ = ${fmtmM(p.C2)} mM  at r₂`, cx, cy + rOut + 18);
+  // Labels embedded where the boundaries actually are: C₁ inside the inner
+  // cavity it belongs to, C₂ tied to the outer rim by a tick — so there is
+  // never a question of which boundary is which.
+  chip2d(ctx, cx, cy, `C₁ = ${fmtmM(p.C1)} mM · r₁ inner`, dark);
+  ctx.strokeStyle = dark ? '#64748b' : '#94a3b8';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + rOut);
+  ctx.lineTo(cx, cy + rOut + 7);
+  ctx.stroke();
+  chip2d(ctx, cx, cy + rOut + 15, `C₂ = ${fmtmM(p.C2)} mM · r₂ outer`, dark);
 }
 
 function stepCurvedParticles(
@@ -558,6 +625,26 @@ function drawParticles(
     ctx.arc(px, py, 1.4, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+/** A small labelled chip with a translucent backing, legible over any
+ *  shading. Shared by the 2D canvases for embedded boundary labels. */
+export function chip2d(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  text: string,
+  dark: boolean,
+) {
+  ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
+  const w = ctx.measureText(text).width;
+  ctx.fillStyle = dark ? 'rgba(15,23,42,0.78)' : 'rgba(255,255,255,0.85)';
+  ctx.fillRect(x - w / 2 - 5, y - 10, w + 10, 19);
+  ctx.fillStyle = dark ? '#e2e8f0' : '#334155';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+  ctx.textBaseline = 'alphabetic';
 }
 
 /** Diagonal hatching, used to mark the well-mixed reservoirs. */

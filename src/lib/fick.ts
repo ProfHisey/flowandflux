@@ -1,6 +1,6 @@
 /**
  * Steady-state Fick's first law of diffusion in one dimension,
- * for the three geometries taught in BME 378 Lecture 4.
+ * for the three canonical geometries: slab, cylinder, sphere.
  *
  *   Cartesian    j_x = -D dC/dx          J = -D A_x  dC/dx
  *   Cylindrical  j_r = -D dC/dr          J = -D (2 pi r L) dC/dr
@@ -52,7 +52,7 @@ export function domain(p: FickParams): [number, number] {
 
 /**
  * Diffusive resistance R_D = ΔC / J, by direct analogy with Ohm's law
- * (Lecture 8). Units: s/cm^3.
+ * Units: s/cm^3.
  */
 export function resistance(p: FickParams): number {
   const { geometry, D, L, A, r1, r2 } = p;
@@ -141,7 +141,7 @@ export function profile(p: FickParams, n = 120): ProfilePoint[] {
 /**
  * Total amount of species held inside the wall at steady state, mol.
  * For the slab this is the "how much drug is in the epidermis" question
- * from HW1 Q2b, which reduces to the average concentration times the volume.
+ * which reduces to the average concentration times the volume.
  */
 export function holdup(p: FickParams, n = 400): number {
   const [a, b] = domain(p);
@@ -168,7 +168,7 @@ export function volume(p: FickParams): number {
 }
 
 /**
- * Stokes-Einstein diffusivity (Lecture 3), cm^2/s, for a sphere of radius
+ * Stokes-Einstein diffusivity, cm^2/s, for a sphere of radius
  * a (cm) in a fluid of viscosity mu (poise = g/cm/s) at temperature T (K).
  *
  *   D = k_B T / (6 pi mu a)

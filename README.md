@@ -4,9 +4,9 @@ Interactive simulations for transport phenomena — diffusion, conduction, fluid
 and convective transport — built to replace static slides with something a student
 can push on.
 
-Built first for **BME 378, Biomedical Mass and Heat Transfer** at Northwestern, and
-written to be useful to anyone learning transport: principles first, with the
-course's own derivations and problems layered on as worked examples.
+Built first for a biomedical mass and heat transfer course at Northwestern, and
+written to be useful to anyone learning transport: general principles only, with
+invented, course-neutral examples throughout.
 
 **[flowandflux.org](https://flowandflux.org)**
 
@@ -14,19 +14,26 @@ course's own derivations and problems layered on as worked examples.
 
 ## What's here
 
-**Module 1 · Fick's Law of Diffusion** — steady-state one-dimensional diffusion
-through a wall, in Cartesian, cylindrical, and spherical geometry.
+Fifteen interactive modules, grouped by physics:
 
-The centrepiece is a cloud of random walkers drawn on top of the concentration
-field. Every walker takes steps that are equally likely to go left or right;
-nothing in the simulation knows which way is downhill. A counter at the midplane
-tallies crossings in each direction — roughly five hundred per second each way —
-and the net transport turns out to be the four-percent imbalance between them.
-That imbalance is then compared against `j = −D ∂C/∂x` evaluated on the density
-gradient those same walkers are carrying. Two independent measurements of one
-quantity, agreeing to within noise.
+- **Start** — a PhET-style mixing box (mass and heat), zero equations by design.
+- **The flux laws** — Fick's law (random walkers vs. `j = −D ∂C/∂x`, measured two
+  independent ways), Fourier's law (an energy-exchange lattice), Newton's law of
+  viscosity (sliding layers, grip links, dye kinematics), and composite-wall
+  resistance networks with a live ΔT budget.
+- **Unsteady** — bolus dispersion (a spreading Gaussian the walkers keep landing
+  on), sudden contact (erf fronts, effusivity, why metal feels cold), and
+  interactive Heisler charts (Bi and Fo decide).
+- **Momentum** — Stokes drag and settling (true-magnitude force arrows, the a²
+  law, the centrifuge), and Poiseuille flow with parallel plates and the falling
+  film, derived on-page by cancelling Navier–Stokes terms.
+- **Convection** — the Péclet number (walkers that wander *and* drift), Newton's
+  law of cooling (the film-and-wake mechanism of h, plus a fin), Nu & Sh
+  correlations computed live, and a perfused channel feeding a layer of cells.
 
-Which is Fick's law, arrived at from underneath rather than asserted.
+Every module: real units on every number, symbolic before numeric, measured
+quantities checked against analytic predictions on screen, and a rotatable 3D
+view alongside the 2D canvas.
 
 ---
 
@@ -42,26 +49,31 @@ npm run verify   # physics regression checks
 npm run build
 ```
 
-`npm run verify` checks the simulation against hand-worked answers from the course
-— the transdermal drug problem from HW1, species conservation across all three
-geometries, the resistance formulas from Lecture 8, Stokes–Einstein from Lecture 3.
-It runs in CI and blocks deployment on failure. Physics before pixels.
+`npm run verify` checks every physics function against hand-worked answers —
+flux and holdup through a membrane, species and energy conservation across slab /
+cylinder / sphere, Stokes–Einstein round-trips, Gaussian spreading moments,
+lumped-cooling time constants, one-term transient solutions, settling velocities,
+and more. It runs in CI and blocks deployment on failure. Physics before pixels.
 
 ---
 
 ## Stack
 
-React 19 + TypeScript, Vite, Tailwind, HTML5 Canvas for the particle physics,
-Recharts for the live profiles, KaTeX for equations. No backend; the whole thing is
-static.
+React 19 + TypeScript, Vite, Tailwind, HTML5 Canvas for the particle physics and
+the 3D views (orthographic painter's algorithm, no 3D library), Recharts for the
+live profiles, KaTeX for equations. No backend; the whole thing is static.
 
-## Contributing
+## Design principles
 
-`CLAUDE.md` documents the design constraints — why the animation speed is
-deliberately unphysical, why the walkers have no drift term, why `j` and `J` are
-never conflated. Worth reading before changing the simulation.
+- **Units are never optional.** Every readout carries them.
+- **Physics before pixels.** The math lives in `src/lib/*.ts` as pure functions,
+  verified in `scripts/verify.ts` before any UI is built on top.
+- **Honest animations.** Cosmetic speeds are labelled as cosmetic; measured
+  quantities are actually measured from the simulation, never assumed.
+- **Emergence over assertion.** Walkers never consult the gradient; net transport
+  emerges from counting. Ratios that matter (like Pe) are kept physical even when
+  speeds are not.
 
 ## Licence
 
-MIT for the code. Course materials referenced in the presets belong to their
-authors and are not distributed here.
+MIT for the code.

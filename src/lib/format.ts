@@ -63,6 +63,28 @@ export function tick(value: number): string {
   return `${m}e${exp}`;
 }
 
+/** A time in seconds, rendered in whichever unit keeps the number readable.
+ *  Diffusion times span microseconds (synapse) to days (a still room), and
+ *  the whole lesson is in that range — so the unit must move. */
+export function timeS(s: number): string {
+  const abs = Math.abs(s);
+  if (abs < 1e-3) return `${sci(s * 1e6)} µs`;
+  if (abs < 1) return `${sci(s * 1e3)} ms`;
+  if (abs < 90) return `${sci(s)} s`;
+  if (abs < 5400) return `${sci(s / 60)} min`;
+  if (abs < 172800) return `${sci(s / 3600)} h`;
+  return `${sci(s / 86400)} days`;
+}
+
+/** A length in m (SI, used for heat and momentum), rendered readably. */
+export function lengthM(m: number): string {
+  const abs = Math.abs(m);
+  if (abs < 1e-3) return `${sci(m * 1e6)} µm`;
+  if (abs < 1e-2) return `${sci(m * 1e3)} mm`;
+  if (abs < 1) return `${sci(m * 1e2)} cm`;
+  return `${sci(m)} m`;
+}
+
 /** A length in cm, rendered in whichever unit keeps the number readable. */
 export function lengthCm(cm: number): string {
   const abs = Math.abs(cm);
