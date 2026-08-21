@@ -1,0 +1,20 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+*.log
+
+# Course materials live in the parent folder and must never be committed:
+# copyrighted textbooks, instructor solution manuals, exam keys.
+*.pdf
+*.pptx
+*.docx
+/Homeworks/
+/textbooks/
+/student notes from past years/
+
+# local screenshot scratch
+shot*.mjs
