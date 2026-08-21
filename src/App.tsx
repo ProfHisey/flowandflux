@@ -128,13 +128,20 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Waves size={20} className="shrink-0 text-sky-600 dark:text-sky-400" />
-          <div className="min-w-0">
-            <span className="block text-sm font-bold tracking-tight">FlowAndFlux</span>
-            <span className="hidden text-[11px] leading-tight text-slate-500 dark:text-slate-400 sm:block">
-              Transport phenomena, made visible
+          <button
+            type="button"
+            onClick={() => select('divider')}
+            aria-label="FlowAndFlux home"
+            className="flex min-w-0 shrink-0 items-center gap-3 rounded-lg px-1 py-0.5 text-left transition-opacity hover:opacity-75"
+          >
+            <Waves size={20} className="shrink-0 text-sky-600 dark:text-sky-400" />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold tracking-tight">FlowAndFlux</span>
+              <span className="hidden text-[11px] leading-tight text-slate-500 dark:text-slate-400 sm:block">
+                Transport phenomena, made visible
+              </span>
             </span>
-          </div>
+          </button>
 
           <ModulePicker current={moduleId} onSelect={select} />
 
