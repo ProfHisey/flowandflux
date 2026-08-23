@@ -171,18 +171,25 @@ export function StokesCanvas({
     arrow(sx + 34, sy, sy - B * K, dark ? '#38bdf8' : '#0284c7');
     arrow(sx + 58, sy, sy - dir * Dg * K, dark ? '#34d399' : '#047857');
 
-    ctx.font = '600 10px ui-sans-serif, system-ui, sans-serif';
+    // Symbols at the arrows; the formulas live in the corner legend so the
+    // free-body picture stays clean (Aug 2026 review).
+    ctx.font = '600 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = dark ? '#f87171' : '#dc2626';
-    ctx.fillText('weight', sx - 34, sy + Wg * K + 16);
+    ctx.fillText('W', sx - 34, sy + Wg * K + 16);
     ctx.fillStyle = dark ? '#38bdf8' : '#0284c7';
-    ctx.fillText('buoyancy', sx + 34, sy - B * K - 8);
+    ctx.fillText('B', sx + 34, sy - B * K - 8);
     ctx.fillStyle = dark ? '#34d399' : '#047857';
-    ctx.fillText(
-      'drag 6πμav',
-      sx + 58 + 6,
-      dir > 0 ? sy - Dg * K - 8 : sy + Dg * K + 16,
-    );
+    ctx.fillText('F_D', sx + 58 + 4, dir > 0 ? sy - Dg * K - 8 : sy + Dg * K + 16);
+
+    ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = dark ? '#f87171' : '#dc2626';
+    ctx.fillText('W = ρₚVg', x0 + 8, y0 + boxH - 34);
+    ctx.fillStyle = dark ? '#38bdf8' : '#0284c7';
+    ctx.fillText('B = ρ_f Vg', x0 + 8, y0 + boxH - 20);
+    ctx.fillStyle = dark ? '#34d399' : '#047857';
+    ctx.fillText('F_D = 6πμav', x0 + 8, y0 + boxH - 6);
 
     // Box and labels.
     ctx.strokeStyle = dark ? '#475569' : '#94a3b8';

@@ -18,7 +18,12 @@ import { molPerCm3TomM } from '../../lib/fick';
 import { lengthCm, sci, timeS } from '../../lib/format';
 import { D_LANDMARKS } from '../FicksLaw/presets';
 import { Segmented } from '../../components/ui/Segmented';
-import { UnsteadyCanvas, type PulseStats, type ReleaseMode } from './UnsteadyCanvas';
+import {
+  UnsteadyCanvas,
+  type BolusCargo,
+  type PulseStats,
+  type ReleaseMode,
+} from './UnsteadyCanvas';
 import { Bolus3DCanvas } from './Bolus3DCanvas';
 import { UnsteadyChart } from './UnsteadyChart';
 import { DEFAULT_PARAMS, PRESETS } from './presets';
@@ -29,6 +34,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [releaseTick, setReleaseTick] = useState(0);
   const [release, setRelease] = useState<ReleaseMode>('plane');
+  const [cargo, setCargo] = useState<BolusCargo>('mass');
   const [stats, setStats] = useState<PulseStats | null>(null);
   const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
@@ -96,6 +102,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
               {dim === '2d' ? (
                 <UnsteadyCanvas
                   mode={release}
+                  cargo={cargo}
                   releaseTick={releaseTick}
                   running={running}
                   dark={dark}
@@ -139,22 +146,33 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                     : '√(6Dt) — rms radius: 2Dt per axis, three axes'
                 }
               />
-              <Stat
-                label={<InlineMath math="C(0,t)" />}
-                value={sci(derived.peakmM)}
-                unit="mM"
-                hint={
-                  release === 'plane'
-                    ? 'the peak — falls as 1/√t'
-                    : 'the peak — falls as t^(−3/2), one √t per axis'
-                }
-              />
-              <Stat
-                label={<InlineMath math="M" />}
-                value={sci(params.M)}
-                unit="mol"
-                hint="the released amount — conserved forever"
-              />
+              {cargo === 'mass' ? (
+                <Stat
+                  label={<InlineMath math="C(0,t)" />}
+                  value={sci(derived.peakmM)}
+                  unit="mM"
+                  hint={
+                    release === 'plane'
+                      ? 'the peak — falls as 1/√t'
+                      : 'the peak — falls as t^(−3/2), one √t per axis'
+                  }
+                />
+              ) : (
+                <Stat
+                  label={<InlineMath math="\theta(0,t)" />}
+                  value={release === 'plane' ? '∝ 1/√t' : '∝ t^{-3/2}'}
+                  unit=""
+                  hint="the hot spot dilutes as it spreads — same law, thermal cargo"
+                />
+              )}
+              {cargo === 'mass' && (
+                <Stat
+                  label={<InlineMath math="M" />}
+                  value={sci(params.M)}
+                  unit="mol"
+                  hint="the released amount — conserved forever"
+                />
+              )}
               <Stat
                 label={<InlineMath math="t" />}
                 value={timeS(params.t)}
@@ -193,7 +211,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           </Panel>
 
           <Panel title="Profiles">
-            <UnsteadyChart params={params} mode={release} dark={dark} />
+            <UnsteadyChart params={params} mode={release} cargo={cargo} dark={dark} />
           </Panel>
         </div>
 
@@ -201,12 +219,26 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
         <div className="order-2 space-y-5 lg:col-start-2 lg:row-start-1 lg:row-span-2">
           <Panel title="Setup">
             <div className="space-y-5">
+              <Segmented<BolusCargo>
+                label="Cargo"
+                value={cargo}
+                options={[
+                  { value: 'mass', label: 'Mass', title: 'A burst of molecules spreading with D' },
+                  { value: 'heat', label: 'Heat', title: 'A pulse of thermal energy spreading with α = k/ρc — same Gaussian, different cargo' },
+                ]}
+                onChange={(c) => {
+                  setCargo(c);
+                  setPresetId('');
+                  if (c === 'heat' && params.D < 1e-4) set('D', 0.12);
+                  if (c === 'mass' && params.D > 1e-1) set('D', 1e-6);
+                }}
+              />
               <Segmented<ReleaseMode>
                 label="Release geometry"
                 value={release}
                 options={[
-                  { value: 'plane', label: 'Plane', title: 'A thin sheet of material released across a plane — spreads along one axis' },
-                  { value: 'point', label: 'Point', title: 'Everything released at one point — a depot injection, an ink drop; spreads as a sphere' },
+                  { value: 'plane', label: 'Plane', title: 'A thin sheet released across a plane — spreads along one axis' },
+                  { value: 'point', label: 'Point', title: 'Everything released at one point — a depot injection, a hot spot; spreads as a sphere' },
                 ]}
                 onChange={(m) => {
                   setRelease(m);
@@ -214,28 +246,35 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 }}
               />
               <Slider
-                label="Diffusion coefficient, D"
+                label={cargo === 'heat' ? 'Thermal diffusivity, α' : 'Diffusion coefficient, D'}
                 unit="cm²/s"
                 value={params.D}
-                min={1e-10}
-                max={1e-1}
+                min={cargo === 'heat' ? 1e-4 : 1e-10}
+                max={cargo === 'heat' ? 10 : 1e-1}
                 log
                 format={sci}
                 onChange={(v) => set('D', v)}
+                hint={
+                  cargo === 'heat'
+                    ? 'α = k/ρc. Shown in cm²/s so both cargos share one clock; divide by 10⁴ for m²/s.'
+                    : undefined
+                }
               />
-              <DScale D={params.D} />
+              <DScale D={params.D} cargo={cargo} />
 
-              <Slider
-                label="Amount released, M"
-                unit="mol"
-                value={params.M}
-                min={1e-16}
-                max={1e-3}
-                log
-                format={sci}
-                onChange={(v) => set('M', v)}
-              />
-              {release === 'plane' && (
+              {cargo === 'mass' && (
+                <Slider
+                  label="Amount released, M"
+                  unit="mol"
+                  value={params.M}
+                  min={1e-16}
+                  max={1e-3}
+                  log
+                  format={sci}
+                  onChange={(v) => set('M', v)}
+                />
+              )}
+              {release === 'plane' && cargo === 'mass' && (
                 <Slider
                   label="Release area, A"
                   unit="cm²"
@@ -283,6 +322,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                     onClick={() => {
                       setParams(pr.params);
                       setRelease(pr.release ?? 'plane');
+                      setCargo(pr.cargo ?? 'mass');
                       setPresetId(pr.id);
                     }}
                     className={
@@ -311,6 +351,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 onClick={() => {
                   setParams(DEFAULT_PARAMS);
                   setRelease('plane');
+                  setCargo('mass');
                   setPresetId(PRESETS[0].id);
                 }}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
@@ -453,15 +494,26 @@ function ModuleHeader() {
   );
 }
 
-function DScale({ D }: { D: number }) {
-  const lo = Math.log10(1e-10);
-  const hi = Math.log10(1e-1);
+/** Thermal-diffusivity landmarks, cm²/s (α = k/ρc). */
+const A_LANDMARKS: { label: string; D: number }[] = [
+  { label: 'Water / tissue', D: 1.4e-3 },
+  { label: 'Brick', D: 5e-3 },
+  { label: 'Steel', D: 0.12 },
+  { label: 'Air', D: 0.22 },
+  { label: 'Copper', D: 1.16 },
+];
+
+function DScale({ D, cargo }: { D: number; cargo: BolusCargo }) {
+  const heat = cargo === 'heat';
+  const lo = Math.log10(heat ? 1e-4 : 1e-10);
+  const hi = Math.log10(heat ? 10 : 1e-1);
+  const marks = heat ? A_LANDMARKS : D_LANDMARKS;
   const pos = (v: number) => ((Math.log10(v) - lo) / (hi - lo)) * 100;
 
   return (
     <div className="-mt-2 space-y-1">
       <div className="relative h-6">
-        {D_LANDMARKS.map((m) => (
+        {marks.map((m) => (
           <span
             key={m.label}
             className="absolute top-0 h-2 w-px bg-slate-300 dark:bg-slate-600"
@@ -474,14 +526,16 @@ function DScale({ D }: { D: number }) {
           style={{ left: `${Math.min(100, Math.max(0, pos(D)))}%` }}
         />
         <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
-          solids
+          {heat ? 'water' : 'solids'}
         </span>
         <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
-          gases
+          {heat ? 'metals' : 'gases'}
         </span>
       </div>
       <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
-        Ticks mark typical real-world values, from solids to gases — ten decades.
+        {heat
+          ? 'Ticks mark real α values — water to copper spans three decades, which is why metal "feels" fast.'
+          : 'Ticks mark typical real-world values, from solids to gases — ten decades.'}
       </p>
     </div>
   );

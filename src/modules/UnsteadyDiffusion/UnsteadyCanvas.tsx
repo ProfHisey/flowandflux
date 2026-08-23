@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import { applyZoom, D_VIS, gauss, rampColor, useWheelZoom } from '../FicksLaw/FickCanvas';
+import { rampWarm } from '../FourierLaw/FourierCanvas';
 
 /**
  * The capsule burst. At t = 0 every walker sits at the release site; press
@@ -22,6 +23,7 @@ import { applyZoom, D_VIS, gauss, rampColor, useWheelZoom } from '../FicksLaw/Fi
  */
 
 export type ReleaseMode = 'plane' | 'point';
+export type BolusCargo = 'mass' | 'heat';
 
 export interface PulseStats {
   /** Plane: sample std dev of walker x. Point: rms distance from centre. Px. */
@@ -44,12 +46,16 @@ const BINS = 40;
 
 export function UnsteadyCanvas({
   mode,
+  cargo = 'mass',
   releaseTick,
   running,
   dark,
   onStats,
 }: {
   mode: ReleaseMode;
+  /** Mass (walkers are molecules) or heat (walkers are energy packets —
+   *  same random walk, different cargo and colour family). */
+  cargo?: BolusCargo;
   /** Increment to re-burst the capsule. */
   releaseTick: number;
   running: boolean;
@@ -62,13 +68,13 @@ export function UnsteadyCanvas({
   const zoomRef = useRef(1);
   const [zoomTick, setZoomTick] = useState(0);
 
-  const redrawKey = `${mode}|${dark}|${releaseTick}|${zoomTick}`;
+  const redrawKey = `${mode}|${cargo}|${dark}|${releaseTick}|${zoomTick}`;
 
   useEffect(() => {
     particlesRef.current = [];
     tRef.current = 0;
     emitRef.current = 0;
-  }, [releaseTick, mode]);
+  }, [releaseTick, mode, cargo]);
 
   const canvasRef = useCanvas((ctx, frame) => {
     const { width: W, height: H } = frame;
@@ -128,13 +134,18 @@ export function UnsteadyCanvas({
       // peak falls — that dilution is the 1/sqrt(t) law happening on screen.
       const refPeak = (COUNT * binW) / Math.sqrt(4 * Math.PI * D_VIS * 1);
       for (let b = 0; b < BINS; b++) {
-        ctx.fillStyle = rampColor(Math.min(1, counts[b] / refPeak) * 0.9, dark);
+        const u = Math.min(1, counts[b] / refPeak) * 0.9;
+        ctx.fillStyle =
+          cargo === 'heat' ? rampWarm(u, dark, 0.6) : rampColor(u, dark);
         ctx.fillRect(x0 + b * binW, y0, binW + 0.5, slabH);
       }
     }
 
-    // The walkers.
-    ctx.fillStyle = dark ? 'rgba(226,232,240,0.75)' : 'rgba(15,23,42,0.55)';
+    // The walkers: molecules in slate, energy packets in ember orange.
+    ctx.fillStyle =
+      cargo === 'heat'
+        ? dark ? 'rgba(251,146,60,0.85)' : 'rgba(194,65,12,0.7)'
+        : dark ? 'rgba(226,232,240,0.75)' : 'rgba(15,23,42,0.55)';
     for (const q of list) {
       ctx.beginPath();
       ctx.arc(q.x, q.y, 1.4, 0, Math.PI * 2);
@@ -209,7 +220,13 @@ export function UnsteadyCanvas({
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      mode === 'plane' ? 'capsule bursts here at t = 0' : 'depot releases here at t = 0',
+      cargo === 'heat'
+        ? mode === 'plane'
+          ? 'a sheet of heat is deposited here at t = 0'
+          : 'a hot spot is deposited here at t = 0'
+        : mode === 'plane'
+          ? 'capsule bursts here at t = 0'
+          : 'depot releases here at t = 0',
       xc,
       y0 - 10,
     );

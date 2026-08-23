@@ -274,6 +274,36 @@ export function Fick3DCanvas({
         }
       }
 
+      // The inner cylinder is the reservoir held at C₁ — drawn as an OPAQUE
+      // solid rod, not an empty bore, so it reads as the infinite source.
+      const coreCol = rampColor(normAt(p.r1), dark);
+      const NCC = 22;
+      for (let j = 0; j < NCC; j++) {
+        const t0 = (j / NCC) * Math.PI * 2;
+        const t1 = ((j + 1) / NCC) * Math.PI * 2;
+        quad(
+          [
+            [-AL / 2, rIn * Math.sin(t0), rIn * Math.cos(t0)],
+            [AL / 2, rIn * Math.sin(t0), rIn * Math.cos(t0)],
+            [AL / 2, rIn * Math.sin(t1), rIn * Math.cos(t1)],
+            [-AL / 2, rIn * Math.sin(t1), rIn * Math.cos(t1)],
+          ],
+          coreCol,
+        );
+        // End discs so the rod is closed when viewed down the axis.
+        for (const end of [-AL / 2, AL / 2]) {
+          quad(
+            [
+              [end, 0, 0],
+              [end, rIn * Math.sin(t0), rIn * Math.cos(t0)],
+              [end, rIn * Math.sin(t1), rIn * Math.cos(t1)],
+              [end, 0, 0],
+            ],
+            coreCol,
+          );
+        }
+      }
+
       if (showParticles) {
         stepCyl3D((rho) => normAt(toPhys(rho)), rIn, rOut, AL, dt, cylRef);
         for (const q of cylRef.current) {
@@ -281,25 +311,26 @@ export function Fick3DCanvas({
         }
       }
     } else {
-      // Sphere with a quarter wedge cut away (model-space, so rotating the
-      // view swings you around the cut). The two exposed flat faces are
-      // shaded shell by shell.
+      // Sphere with an EIGHTH (one octant: x, y, z > 0) cut away — half the
+      // old quarter wedge, per the Aug 2026 review. Model-space, so rotating
+      // the view swings you around the cut. The three exposed flat faces
+      // (x = 0, z = 0, and the y = 0 floor) are shaded shell by shell.
       const rOut = fit;
       const rIn = rOut * (p.r1 / p.r2);
       const toPhys = (rho: number) => (rho / rOut) * p.r2;
 
       const NR = 10;
-      const NA = 16;
+      const NA = 10;
       const dr = (rOut - rIn) / NR;
-      const da = Math.PI / NA;
+      const da = Math.PI / 2 / NA;
       for (let i = 0; i < NR; i++) {
         const rA = rIn + i * dr;
         const rB = rA + dr;
         const col = rampColor(normAt(toPhys(rA + dr / 2)), dark);
         for (let j = 0; j < NA; j++) {
-          const a0 = -Math.PI / 2 + j * da;
+          const a0 = j * da;
           const a1 = a0 + da;
-          // Face in the x = 0 plane (exposed toward +z).
+          // Face in the x = 0 plane (y, z > 0 quadrant).
           quad(
             [
               [0, rA * Math.sin(a0), rA * Math.cos(a0)],
@@ -309,7 +340,7 @@ export function Fick3DCanvas({
             ],
             col,
           );
-          // Face in the z = 0 plane (exposed toward +x).
+          // Face in the z = 0 plane (x, y > 0 quadrant).
           quad(
             [
               [rA * Math.cos(a0), rA * Math.sin(a0), 0],
@@ -319,6 +350,35 @@ export function Fick3DCanvas({
             ],
             col,
           );
+          // Floor face in the y = 0 plane (x, z > 0 quadrant).
+          quad(
+            [
+              [rA * Math.cos(a0), 0, rA * Math.sin(a0)],
+              [rB * Math.cos(a0), 0, rB * Math.sin(a0)],
+              [rB * Math.cos(a1), 0, rB * Math.sin(a1)],
+              [rA * Math.cos(a1), 0, rA * Math.sin(a1)],
+            ],
+            col,
+          );
+        }
+      }
+
+      // The inner reservoir is a SOLID core held at C₁ — draw it opaque so
+      // it reads as the infinite source it is, not an empty cavity.
+      const coreCol = rampColor(normAt(p.r1), dark);
+      const NS = 14;
+      for (let j = 0; j < NS; j++) {
+        for (let k = 0; k < NS * 2; k++) {
+          const th0 = (j / NS) * Math.PI;
+          const th1 = ((j + 1) / NS) * Math.PI;
+          const ph0 = (k / (NS * 2)) * Math.PI * 2;
+          const ph1 = ((k + 1) / (NS * 2)) * Math.PI * 2;
+          const P = (th: number, ph: number): Vec3 => [
+            rIn * Math.sin(th) * Math.cos(ph),
+            rIn * Math.cos(th),
+            rIn * Math.sin(th) * Math.sin(ph),
+          ];
+          quad([P(th0, ph0), P(th1, ph0), P(th1, ph1), P(th0, ph1)], coreCol);
         }
       }
 
@@ -362,24 +422,34 @@ export function Fick3DCanvas({
       ctx.fillText(text, sx, sy);
       ctx.textBaseline = 'alphabetic';
     };
+    // Short symbol chips on the geometry; the numbers live in the corner
+    // legend so the labels never bury the object (Aug 2026 review).
     if (p.geometry === 'slab') {
       const tL = Math.min(1, Math.max(0, (Math.log10(p.L) + 4) / 4));
       const half = ((0.9 + 0.7 * tL) * (fit / 0.96)) / 2;
-      chip([-half, 0, 0], `C₁ = ${fmtmM(p.C1)} mM · x = 0`);
-      chip([half, 0, 0], `C₂ = ${fmtmM(p.C2)} mM · x = L`);
+      chip([-half, 0, 0], 'x = 0');
+      chip([half, 0, 0], 'x = L');
     } else {
       const tAx = Math.min(1, Math.max(0, (Math.log10(p.L) + 2) / 4));
       const ALf = 0.8 + 0.9 * tAx;
       const rOut =
         p.geometry === 'sphere' ? fit : fit / Math.sqrt(1 + (ALf / 2) ** 2);
-      chip([0, 0, 0], `C₁ = ${fmtmM(p.C1)} mM · r₁ inner`);
-      chip([0, rOut, 0], `C₂ = ${fmtmM(p.C2)} mM · r₂ outer`);
+      chip([0, 0, 0], 'r₁');
+      chip([0, rOut, 0], 'r₂');
     }
 
-    ctx.textAlign = 'right';
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 10);
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      p.geometry === 'slab'
+        ? `C₁ = ${fmtmM(p.C1)} mM at x = 0 · C₂ = ${fmtmM(p.C2)} mM at x = L`
+        : `C₁ = ${fmtmM(p.C1)} mM at r₁ (inner, held by the reservoir) · C₂ = ${fmtmM(p.C2)} mM at r₂ (outer)`,
+      10,
+      H - 10,
+    );
+    ctx.textAlign = 'right';
+    ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 28);
   }, { running: loopRunning, redrawKey });
 
   // Pointer-driven orbit. Rotation lives in refs; while the animation loop is
@@ -534,7 +604,7 @@ function stepSph3D(
   const list = ref.current!;
   const sigma = Math.sqrt(2 * D_VIS * dt);
   const shell = (rOut - rIn) / SPH_BINS;
-  const inWedge = (q: P3) => q.x > 0 && q.z > 0;
+  const inWedge = (q: P3) => q.x > 0 && q.z > 0 && q.y > 0;
 
   for (let i = list.length - 1; i >= 0; i--) {
     const q = list[i];
@@ -542,18 +612,19 @@ function stepSph3D(
       q.x += sigma * gauss();
       q.y += sigma * gauss();
       q.z += sigma * gauss();
-      // The cutaway wedge is solid wall as far as walkers are concerned:
-      // reflect the shallower coordinate back across its cut plane.
+      // The cutaway octant is solid wall as far as walkers are concerned:
+      // reflect the shallowest coordinate back across its cut plane.
       if (inWedge(q)) {
-        if (q.x < q.z) q.x = -q.x;
-        else q.z = -q.z;
+        if (q.x <= q.z && q.x <= q.y) q.x = -q.x;
+        else if (q.z <= q.y) q.z = -q.z;
+        else q.y = -q.y;
       }
     }
     const r = Math.hypot(q.x, q.y, q.z);
     if (r < rIn || r > rOut) list.splice(i, 1);
   }
 
-  // Targets weighted by shell volume (minus the quarter wedge, which scales
+  // Targets weighted by shell volume (minus the cut octant, which scales
   // every shell equally and therefore drops out of the weighting).
   const totalVol = rOut ** 3 - rIn ** 3;
   const want = (bin: number) => {

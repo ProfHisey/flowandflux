@@ -195,10 +195,12 @@ function drawSlab(
   const slabH = y1 - y0;
   if (slabW <= 0 || slabH <= 0) return;
 
-  // Shaded temperature field.
+  // Shaded temperature field — MUTED when the molecules are on, so the
+  // molecules themselves carry the colour story (Aug 2026 review: the
+  // background tint alone did not read, especially next to the 3D view).
   for (let px = 0; px < slabW; px++) {
     const s = (px / slabW) * p.L;
-    ctx.fillStyle = rampWarm(norm(s), dark);
+    ctx.fillStyle = rampWarm(norm(s), dark, showMolecules ? 0.22 : 1);
     ctx.fillRect(x0 + px, y0, 1.5, slabH);
   }
 
@@ -388,7 +390,9 @@ function drawLatticeMolecules(
   const tHi = Math.max(p.T1, p.T2) + 273.15;
   const span = tHi - tLo || 1;
 
-  ctx.fillStyle = dark ? 'rgba(226,232,240,0.8)' : 'rgba(15,23,42,0.6)';
+  // Advance the jiggle first, then draw bonds between CURRENT positions so
+  // the lattice reads as a bonded solid — springs stretching and snapping
+  // back as neighbours hand energy across them.
   for (let n = 0; n < list.length; n++) {
     const q = list[n];
     const u = Math.min(1, Math.max(0, (E[n] - tLo) / span));
@@ -397,9 +401,41 @@ function drawLatticeMolecules(
       q.ox = 0.55 * q.ox + 0.45 * amp * gauss() * 0.8;
       q.oy = 0.55 * q.oy + 0.45 * amp * gauss() * 0.8;
     }
+  }
+  ctx.strokeStyle = dark ? 'rgba(148,163,184,0.35)' : 'rgba(100,116,139,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let r = 0; r < NYL; r++) {
+    for (let i = 0; i < NXL; i++) {
+      const n = r * NXL + i;
+      const q = list[n];
+      if (i < NXL - 1) {
+        const nb = list[n + 1];
+        ctx.moveTo(q.ax + q.ox, q.ay + q.oy);
+        ctx.lineTo(nb.ax + nb.ox, nb.ay + nb.oy);
+      }
+      if (r < NYL - 1) {
+        const nb = list[n + NXL];
+        ctx.moveTo(q.ax + q.ox, q.ay + q.oy);
+        ctx.lineTo(nb.ax + nb.ox, nb.ay + nb.oy);
+      }
+    }
+  }
+  ctx.stroke();
+
+  // Each molecule wears its own energy as colour — the field is on the
+  // matter, not the background.
+  const edge = dark ? 'rgba(226,232,240,0.55)' : 'rgba(15,23,42,0.45)';
+  for (let n = 0; n < list.length; n++) {
+    const q = list[n];
+    const u = Math.min(1, Math.max(0, (E[n] - tLo) / span));
+    ctx.fillStyle = rampWarm(u, dark);
     ctx.beginPath();
-    ctx.arc(q.ax + q.ox, q.ay + q.oy, 1.6, 0, Math.PI * 2);
+    ctx.arc(q.ax + q.ox, q.ay + q.oy, 2.6, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
   }
 }
 
@@ -430,7 +466,7 @@ function drawCurved(
   for (let r = rOut; r >= rIn; r -= 1) {
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = rampWarm(norm(toPhys(r)), dark);
+    ctx.strokeStyle = rampWarm(norm(toPhys(r)), dark, showMolecules ? 0.22 : 1);
     ctx.lineWidth = 1.6;
     ctx.stroke();
   }
@@ -459,20 +495,27 @@ function drawCurved(
       }
       moleculesRef.current = list;
     }
-    ctx.fillStyle = dark ? 'rgba(226,232,240,0.8)' : 'rgba(15,23,42,0.6)';
+    // Molecules coloured by their own local temperature, outlined so they
+    // pop off the muted rings.
+    const edge = dark ? 'rgba(226,232,240,0.55)' : 'rgba(15,23,42,0.45)';
     for (const q of list) {
-      const amp = 0.7 + 4.6 * Math.min(1, Math.max(0, norm(toPhys(q.ax))));
+      const u = Math.min(1, Math.max(0, norm(toPhys(q.ax))));
+      const amp = 0.7 + 4.6 * u;
       if (running && dt > 0) {
         q.ox = 0.55 * q.ox + 0.45 * amp * gauss() * 0.8;
         q.oy = 0.55 * q.oy + 0.45 * amp * gauss() * 0.8;
       }
+      ctx.fillStyle = rampWarm(u, dark);
       ctx.beginPath();
       ctx.arc(
         cx + q.ax * Math.cos(q.ay) + q.ox,
         cy + q.ax * Math.sin(q.ay) + q.oy,
-        1.6, 0, Math.PI * 2,
+        2.4, 0, Math.PI * 2,
       );
       ctx.fill();
+      ctx.strokeStyle = edge;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
     }
   }
 

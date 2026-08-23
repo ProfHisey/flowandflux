@@ -178,13 +178,12 @@ export function Divider3DCanvas({
         }
         molsRef.current = mols;
       }
-      // Translucent temperature bands behind the molecules.
-      for (let i = 0; i < NXE; i++) {
-        const xa = -half + (i / NXE) * BW;
-        const xb = xa + BW / NXE;
-        const col = rampWarm(norm(E[i]), dark, 0.16);
-        pt.quad([[xa, -BH / 2, 0], [xb, -BH / 2, 0], [xb, BH / 2, 0], [xa, BH / 2, 0]], col);
-      }
+      // Molecules wear their own energy as colour, joined by faint bonds so
+      // the solid reads as a lattice (Aug 2026 review: background tinting
+      // alone did not carry the field in 3D).
+      const NY = 6;
+      const NZ = 6;
+      const bondCol = dark ? 'rgba(148,163,184,0.18)' : 'rgba(100,116,139,0.18)';
       for (const q of mols) {
         const amp = 0.7 + 4.2 * norm(E[q.col]);
         if (dt > 0) {
@@ -192,7 +191,29 @@ export function Divider3DCanvas({
           q.oy = 0.55 * q.oy + 0.45 * amp * gauss() * 0.8;
           q.oz = 0.55 * q.oz + 0.45 * amp * gauss() * 0.8;
         }
-        pt.dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit, dark ? '226,232,240' : '15,23,42', 1.1);
+      }
+      const at = (n: number): Vec3 => {
+        const q = mols[n];
+        return [q.x + q.ox, q.y + q.oy, q.z + q.oz];
+      };
+      for (let i = 0; i < NXE; i++) {
+        for (let j = 0; j < NY; j++) {
+          for (let k = 0; k < NZ; k++) {
+            const n = (i * NY + j) * NZ + k;
+            if (k < NZ - 1) pt.seg(at(n), at(n + 1), bondCol);
+            if (j < NY - 1) pt.seg(at(n), at(n + NZ), bondCol);
+            // The divider severs the middle bonds while it is in.
+            if (i < NXE - 1 && !(live.dividerIn && i === NXE / 2 - 1)) {
+              pt.seg(at(n), at(n + NY * NZ), bondCol);
+            }
+          }
+        }
+      }
+      for (const q of mols) {
+        const css = rampWarm(norm(E[q.col]), dark);
+        const m = css.match(/(\d+),(\d+),(\d+)/);
+        const rgb = m ? `${m[1]},${m[2]},${m[3]}` : '226,232,240';
+        pt.dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit, rgb, 1.4, 1.15);
       }
     }
 

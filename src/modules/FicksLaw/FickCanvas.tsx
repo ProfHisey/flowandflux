@@ -217,7 +217,7 @@ export function useWheelZoom(
       dragging = true;
       lastX = e.clientX;
       lastY = e.clientY;
-      el.setPointerCapture(e.pointerId);
+      try { el.setPointerCapture(e.pointerId); } catch { /* synthetic events */ }
       el.style.cursor = 'grabbing';
     };
     const move = (e: PointerEvent) => {
@@ -232,7 +232,7 @@ export function useWheelZoom(
     const up = (e: PointerEvent) => {
       if (!dragging) return;
       dragging = false;
-      el.releasePointerCapture(e.pointerId);
+      try { el.releasePointerCapture(e.pointerId); } catch { /* synthetic events */ }
       el.style.cursor = '';
     };
     const reset = () => {

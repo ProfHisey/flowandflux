@@ -9,6 +9,8 @@ export interface Preset {
   params: UnsteadyParams;
   /** Release geometry the preset assumes. Default 'plane'. */
   release?: 'plane' | 'point';
+  /** Cargo: molecules with D, or thermal energy with alpha. Default 'mass'. */
+  cargo?: 'mass' | 'heat';
   /** Optional hand-checkable answer, so the simulator can be trusted. */
   check?: string;
 }
@@ -50,6 +52,37 @@ export const PRESETS: Preset[] = [
     release: 'point',
     check: 'σᵣ = √(6Dt) ≈ 2.1 mm, and C(0) = M/(4πDt)^{3/2} ≈ 3.7 × 10⁻⁸ mol/cm³',
     params: { D: 2e-6, M: 1e-9, A: 1, t: 3600, Lint: 0.2 },
+  },
+  {
+    id: 'weld',
+    name: 'Weld spot on a steel plate',
+    source: 'Workshop',
+    blurb:
+      'A tack weld dumps heat into one face of a 1 cm steel plate. Steel has α ≈ 0.12 cm²/s — how long before the back face knows?',
+    cargo: 'heat',
+    check: 't = L²/2α ≈ 4 s for the back of a 1 cm plate. Same clock as diffusion, thermal cargo',
+    params: { D: 0.118, M: 1e-8, A: 1, t: 4.2, Lint: 1 },
+  },
+  {
+    id: 'copperhandle',
+    name: 'Copper pan handle',
+    source: 'Kitchen',
+    blurb:
+      'The flame heats the pan; the 10 cm copper handle carries the news to your hand. Copper is the sprinter of conduction: α ≈ 1.2 cm²/s.',
+    cargo: 'heat',
+    check: 't = L²/2α ≈ 43 s down 10 cm of copper — a steel handle of the same length takes ~7 minutes, which is why it gets a grip and copper gets a warning',
+    params: { D: 1.16, M: 1e-8, A: 1, t: 43, Lint: 10 },
+  },
+  {
+    id: 'stillwater',
+    name: 'A warm patch in still water',
+    source: 'Everyday',
+    blurb:
+      'Heat a spot in unstirred water and wait for pure conduction to carry it one centimetre. Water is a terrible conductor — that is why convection exists.',
+    cargo: 'heat',
+    release: 'point',
+    check: 't = L²/2α ≈ 6 minutes per centimetre (α ≈ 1.4×10⁻³ cm²/s). Buoyancy beats that easily — pots stir themselves',
+    params: { D: 1.43e-3, M: 1e-8, A: 1, t: 350, Lint: 1 },
   },
   {
     id: 'perfume',

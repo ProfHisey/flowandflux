@@ -138,7 +138,9 @@ export function DividerHeatCanvas({
       // Fourier module's pinned baths is the lesson.
     }
 
-    // Cell shading from the lattice's own energies.
+    // Faint cell wash from the lattice's own energies — muted, because the
+    // MOLECULES carry the colour now (Aug 2026 review: background tinting
+    // alone did not read, especially in 3D).
     const { lo, hi } = boundsRef.current;
     const span = hi - lo || 1;
     const cw = boxW / NX;
@@ -146,7 +148,7 @@ export function DividerHeatCanvas({
     for (let r = 0; r < NY; r++) {
       for (let i = 0; i < NX; i++) {
         const u = (E[r * NX + i] - lo) / span;
-        ctx.fillStyle = rampWarm(Math.min(1, Math.max(0, u)), dark);
+        ctx.fillStyle = rampWarm(Math.min(1, Math.max(0, u)), dark, 0.2);
         ctx.fillRect(x0 + i * cw, y0 + r * ch, cw + 0.5, ch + 0.5);
       }
     }
@@ -167,7 +169,8 @@ export function DividerHeatCanvas({
       }
       moleculesRef.current = list;
     }
-    ctx.fillStyle = dark ? 'rgba(226,232,240,0.8)' : 'rgba(15,23,42,0.6)';
+    // Advance the jiggle, then draw the bonds between CURRENT positions —
+    // the solid reads as a bonded lattice whose springs carry the energy.
     for (let n = 0; n < list.length; n++) {
       const q = list[n];
       const u = Math.min(1, Math.max(0, (E[n] - lo) / span));
@@ -176,9 +179,41 @@ export function DividerHeatCanvas({
         q.ox = 0.55 * q.ox + 0.45 * amp * gauss() * 0.8;
         q.oy = 0.55 * q.oy + 0.45 * amp * gauss() * 0.8;
       }
+    }
+    ctx.strokeStyle = dark ? 'rgba(148,163,184,0.35)' : 'rgba(100,116,139,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let r = 0; r < NY; r++) {
+      for (let i = 0; i < NX; i++) {
+        const n = r * NX + i;
+        const q = list[n];
+        // The divider severs the middle bonds while it is in — the missing
+        // springs ARE the insulation, drawn.
+        if (i < NX - 1 && !(dividerRef.current && i === NX / 2 - 1)) {
+          const nb = list[n + 1];
+          ctx.moveTo(q.ax + q.ox, q.ay + q.oy);
+          ctx.lineTo(nb.ax + nb.ox, nb.ay + nb.oy);
+        }
+        if (r < NY - 1) {
+          const nb = list[n + NX];
+          ctx.moveTo(q.ax + q.ox, q.ay + q.oy);
+          ctx.lineTo(nb.ax + nb.ox, nb.ay + nb.oy);
+        }
+      }
+    }
+    ctx.stroke();
+    // Each molecule wears its own energy as colour.
+    const edge = dark ? 'rgba(226,232,240,0.55)' : 'rgba(15,23,42,0.45)';
+    for (let n = 0; n < list.length; n++) {
+      const q = list[n];
+      const u = Math.min(1, Math.max(0, (E[n] - lo) / span));
+      ctx.fillStyle = rampWarm(u, dark);
       ctx.beginPath();
-      ctx.arc(q.ax + q.ox, q.ay + q.oy, 1.7, 0, Math.PI * 2);
+      ctx.arc(q.ax + q.ox, q.ay + q.oy, 2.8, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = edge;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
     }
 
     // The divider.

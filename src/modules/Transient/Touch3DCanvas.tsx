@@ -117,7 +117,9 @@ export function Touch3DCanvas({
     pt.chip([-half / 2, BH / 2 + 14, 0], `${left.name} · started at ${fmt(left.T)} °C`, dark);
     pt.chip([half / 2, BH / 2 + 14, 0], `${right.name} · started at ${fmt(right.T)} °C`, dark);
     pt.chip([0, 0, 0], `contact: ${fmt(Tc)} °C — instantly, and it stays`, dark);
-    pt.hint(dark, `t = ${t.toFixed(1)} s visual · amber planes: the two thermal fronts`);
+    if (fL > -half) pt.chip([fL, -BH / 2 - 14, 0], 'δ ≈ 3.6√(αt)', dark);
+    if (fR < half) pt.chip([fR, -BH / 2 - 14, 0], 'δ ≈ 3.6√(αt)', dark);
+    pt.hint(dark, `t = ${t.toFixed(1)} s visual · amber planes: the 99% penetration depths`);
   }, { running, redrawKey });
 
   useOrbitControls(canvasRef, cam, running);

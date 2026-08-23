@@ -12,7 +12,7 @@ import {
 import { profile, profilePoint, sigma, sigmaPoint, type UnsteadyParams } from '../../lib/unsteady';
 import { molPerCm3TomM } from '../../lib/fick';
 import { niceAxis, sci, tick } from '../../lib/format';
-import type { ReleaseMode } from './UnsteadyCanvas';
+import type { BolusCargo, ReleaseMode } from './UnsteadyCanvas';
 
 /**
  * C(x, t) — or C(r, t) for a point release — with its own past as ghosts,
@@ -24,10 +24,14 @@ import type { ReleaseMode } from './UnsteadyCanvas';
 export function UnsteadyChart({
   params,
   mode,
+  cargo = 'mass',
   dark,
 }: {
   params: UnsteadyParams;
   mode: ReleaseMode;
+  /** Heat cargo shows the same curves as a temperature excess θ in
+   *  arbitrary units (the deposited energy is not a slider). */
+  cargo?: BolusCargo;
   dark: boolean;
 }) {
   const data = useMemo(
@@ -78,8 +82,12 @@ export function UnsteadyChart({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <ChartFrame
-        title="Concentration, with its past"
-        formula={mode === 'plane' ? 'C(x, t)' : 'C(r, t)'}
+        title={cargo === 'heat' ? 'Temperature excess, with its past' : 'Concentration, with its past'}
+        formula={
+          cargo === 'heat'
+            ? mode === 'plane' ? 'θ(x, t)' : 'θ(r, t)'
+            : mode === 'plane' ? 'C(x, t)' : 'C(r, t)'
+        }
       >
         <ResponsiveContainer width="100%" height={190}>
           <LineChart data={data} margin={{ top: 6, right: 10, bottom: 20, left: 4 }}>
@@ -100,12 +108,12 @@ export function UnsteadyChart({
               stroke={axis}
               tick={{ fontSize: 11 }}
               width={50}
-              label={{ value: 'mM', angle: -90, position: 'insideLeft', fontSize: 11, fill: axis }}
+              label={{ value: cargo === 'heat' ? 'θ (arb.)' : 'mM', angle: -90, position: 'insideLeft', fontSize: 11, fill: axis }}
             />
             <Tooltip
               contentStyle={tooltipStyle(dark)}
               formatter={((v: unknown, name: unknown) => [
-                `${sci(Number(v))} mM`,
+                cargo === 'heat' ? `${sci(Number(v))} (arb.)` : `${sci(Number(v))} mM`,
                 name === 'C' ? 'now' : name === 'Chalf' ? 'at t/2' : 'at t/4',
               ]) as never}
               labelFormatter={((v: unknown) => `${mode === 'plane' ? 'x' : 'r'} = ${sci(Number(v))} cm`) as never}

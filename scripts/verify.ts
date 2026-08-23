@@ -360,6 +360,19 @@ check('synapse (20 nm): 0.5 us', close(diffusionTime(2e-6, 4e-6), 5e-7, 1e-9));
 check('tea (1 cm, unstirred): 1e5 s', close(diffusionTime(1, 5e-6), 1e5, 1e-12));
 check('still room (3 m): 4.5e5 s', close(diffusionTime(300, 0.1), 4.5e5, 1e-12));
 
+// The heat-cargo presets run the SAME clock with alpha = k/(rho c) in cm^2/s:
+// steel 45/(7800*490) = 1.18e-5 m^2/s = 0.118 cm^2/s; copper 400/(8960*385)
+// = 1.16e-4 m^2/s = 1.16 cm^2/s; water 0.6/(1000*4186) = 1.43e-3 cm^2/s.
+check('weld: back of a 1 cm steel plate in ~4 s',
+  close(diffusionTime(1, 0.118), 4.24, 1e-2), String(diffusionTime(1, 0.118)));
+check('copper handle: 10 cm in ~43 s',
+  close(diffusionTime(10, 1.16), 43.1, 1e-2), String(diffusionTime(10, 1.16)));
+check('steel handle of the same length: ~7 minutes',
+  diffusionTime(10, 0.118) > 6 * 60 && diffusionTime(10, 0.118) < 8 * 60,
+  String(diffusionTime(10, 0.118)));
+check('still water: ~6 min per centimetre',
+  close(diffusionTime(1, 1.43e-3), 350, 1e-2), String(diffusionTime(1, 1.43e-3)));
+
 // --- 22. Point release: conservation in 3D ----------------------------------
 {
   const D = 1e-6, t = 200, M = 1e-9;

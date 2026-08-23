@@ -135,9 +135,9 @@ export function Stokes3DCanvas({
     wireBox(pt, -BX, -BY, -BX, BX, BY, BX, faint);
     pt.flush();
 
-    pt.chip([xW, -Wg * K - 14, 0], 'weight', dark);
-    pt.chip([xB, B * K + 14, 0], 'buoyancy', dark);
-    pt.chip([xD, dir * Dg * K + dir * 14, 0], 'drag', dark);
+    pt.chip([xW, -Wg * K - 14, 0], 'W', dark);
+    pt.chip([xB, B * K + 14, 0], 'B', dark);
+    pt.chip([xD, dir * Dg * K + dir * 14, 0], 'F_D', dark);
 
     pt.chip(
       [0, BY + 14, 0],
@@ -146,7 +146,7 @@ export function Stokes3DCanvas({
         : dir > 0 ? 'settling at terminal velocity' : 'floating upward (ρp < ρf)',
       dark,
     );
-    pt.hint(dark, 'force arrows at true relative magnitude — the numbers live on the 2D tab');
+    pt.hint(dark, 'W = ρₚVg · B = ρ_f Vg · F_D = 6πμav — arrows at true relative magnitude');
   }, { running, redrawKey });
 
   useOrbitControls(canvasRef, cam, running);

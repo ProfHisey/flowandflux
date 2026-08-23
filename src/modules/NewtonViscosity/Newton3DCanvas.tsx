@@ -99,10 +99,13 @@ export function Newton3DCanvas({
     const px = (v: Vec3): [number, number] => [cx + v[0] * zm, cyc - v[1] * zm];
 
     const items: { z: number; f: () => void }[] = [];
-    const quad = (pts: [Vec3, Vec3, Vec3, Vec3], fill: string) => {
+    // zBias nudges an item toward the viewer in the depth sort — the plates
+    // use it so fluid molecules flush against them can never poke through
+    // on a near-tie (the overhead-view artifact of the Aug 2026 review).
+    const quad = (pts: [Vec3, Vec3, Vec3, Vec3], fill: string, zBias = 0) => {
       const vs = pts.map(view3) as Vec3[];
       items.push({
-        z: (vs[0][2] + vs[1][2] + vs[2][2] + vs[3][2]) / 4,
+        z: (vs[0][2] + vs[1][2] + vs[2][2] + vs[3][2]) / 4 + zBias,
         f: () => {
           ctx.fillStyle = fill;
           ctx.beginPath();
@@ -196,11 +199,15 @@ export function Newton3DCanvas({
     // sorts behind the face's centroid is painted first and then buried
     // under the fill — half the hatching vanished along a camera-dependent
     // diagonal. Fill-then-stroke in a single callback cannot self-occlude.
-    const hatchedQuad = (pts: [Vec3, Vec3, Vec3, Vec3], stripes: [Vec3, Vec3][]) => {
+    const hatchedQuad = (
+      pts: [Vec3, Vec3, Vec3, Vec3],
+      stripes: [Vec3, Vec3][],
+      zBias = 0,
+    ) => {
       const vs = pts.map(view3) as Vec3[];
       const svs = stripes.map(([a, b]) => [view3(a), view3(b)] as [Vec3, Vec3]);
       items.push({
-        z: (vs[0][2] + vs[1][2] + vs[2][2] + vs[3][2]) / 4,
+        z: (vs[0][2] + vs[1][2] + vs[2][2] + vs[3][2]) / 4 + zBias,
         f: () => {
           ctx.fillStyle = plateFill;
           ctx.beginPath();
@@ -249,18 +256,19 @@ export function Newton3DCanvas({
         [0, yA, 0], [BW, yA, 0], [BW, yB, 0], [0, yB, 0],
         [0, yA, BD], [BW, yA, BD], [BW, yB, BD], [0, yB, BD],
       ];
-      hatchedQuad([ctr(V[0]), ctr(V[1]), ctr(V[2]), ctr(V[3])], front);
-      hatchedQuad([ctr(V[4]), ctr(V[5]), ctr(V[6]), ctr(V[7])], back);
-      quad([ctr(V[0]), ctr(V[3]), ctr(V[7]), ctr(V[4])], plateFill);
-      quad([ctr(V[1]), ctr(V[2]), ctr(V[6]), ctr(V[5])], plateFill);
+      const BIAS = 4; // plates win depth near-ties against flush molecules
+      hatchedQuad([ctr(V[0]), ctr(V[1]), ctr(V[2]), ctr(V[3])], front, BIAS);
+      hatchedQuad([ctr(V[4]), ctr(V[5]), ctr(V[6]), ctr(V[7])], back, BIAS);
+      quad([ctr(V[0]), ctr(V[3]), ctr(V[7]), ctr(V[4])], plateFill, BIAS);
+      quad([ctr(V[1]), ctr(V[2]), ctr(V[6]), ctr(V[5])], plateFill, BIAS);
       const topFace: [Vec3, Vec3, Vec3, Vec3] = [ctr(V[3]), ctr(V[2]), ctr(V[6]), ctr(V[7])];
       const botFace: [Vec3, Vec3, Vec3, Vec3] = [ctr(V[0]), ctr(V[1]), ctr(V[5]), ctr(V[4])];
       if (yOut === yB) {
-        hatchedQuad(topFace, flat);
-        quad(botFace, plateFill);
+        hatchedQuad(topFace, flat, BIAS);
+        quad(botFace, plateFill, BIAS);
       } else {
-        hatchedQuad(botFace, flat);
-        quad(topFace, plateFill);
+        hatchedQuad(botFace, flat, BIAS);
+        quad(topFace, plateFill, BIAS);
       }
     };
     // Top plate scrolls; bottom plate sits still.
@@ -418,17 +426,20 @@ export function Newton3DCanvas({
       for (const [a, b] of E12) cubeEdge(S[a], S[b], solidDye, 2.2);
     }
 
-    // Velocity-profile arrows up the front-left edge, in contrast slate.
+    // Velocity-profile arrows up the front-left edge AND the back-left edge,
+    // so the profile reads from either side of the stack.
     const arrowCol = dark ? '#f1f5f9' : '#1e293b';
-    for (let i = 0; i <= 4; i++) {
-      const y = (BH * i) / 4;
-      const len = (uVisAt(y) / U_VIS3) * BW * 0.16;
-      if (len < 2) continue;
-      seg(ctr([4, y, 2]), ctr([4 + len, y, 2]), arrowCol, 1.6);
-      seg(ctr([4 + len, y, 2]), ctr([4 + len - 6, y + 4, 2]), arrowCol, 1.6);
-      seg(ctr([4 + len, y, 2]), ctr([4 + len - 6, y - 4, 2]), arrowCol, 1.6);
+    for (const zf of [2, BD - 2]) {
+      for (let i = 0; i <= 4; i++) {
+        const y = (BH * i) / 4;
+        const len = (uVisAt(y) / U_VIS3) * BW * 0.16;
+        if (len < 2) continue;
+        seg(ctr([4, y, zf]), ctr([4 + len, y, zf]), arrowCol, 1.6);
+        seg(ctr([4 + len, y, zf]), ctr([4 + len - 6, y + 4, zf]), arrowCol, 1.6);
+        seg(ctr([4 + len, y, zf]), ctr([4 + len - 6, y - 4, zf]), arrowCol, 1.6);
+      }
+      seg(ctr([4, 0, zf]), ctr([4, BH, zf]), faint, 1);
     }
-    seg(ctr([4, 0, 2]), ctr([4, BH, 2]), faint, 1);
 
     // Gap wireframe.
     const V: Vec3[] = [

@@ -123,17 +123,23 @@ export function Fourier3DCanvas({
         },
       });
     };
-    const dotColor = dark ? '226,232,240' : '15,23,42';
-    const dot = (v: Vec3, R: number) => {
+    // Molecules wear their own temperature as colour (Aug 2026 review: the
+    // face-shading alone did not carry the field in 3D).
+    const dot = (v: Vec3, R: number, u = -1) => {
       const vv = view(v);
       const depth = Math.min(1, Math.max(0, vv[2] / R / 2 + 0.5));
       items.push({
         z: vv[2],
         f: () => {
-          ctx.fillStyle = `rgba(${dotColor},${(0.3 + 0.55 * depth).toFixed(2)})`;
+          if (u >= 0) {
+            ctx.fillStyle = rampWarm(u, dark, 0.45 + 0.55 * depth);
+          } else {
+            const dotColor = dark ? '226,232,240' : '15,23,42';
+            ctx.fillStyle = `rgba(${dotColor},${(0.3 + 0.55 * depth).toFixed(2)})`;
+          }
           ctx.beginPath();
           const [ax, ay] = px(vv);
-          ctx.arc(ax, ay, (1.0 + 1.2 * depth) * zm, 0, Math.PI * 2);
+          ctx.arc(ax, ay, (1.3 + 1.3 * depth) * zm, 0, Math.PI * 2);
           ctx.fill();
         },
       });
@@ -167,7 +173,7 @@ export function Fourier3DCanvas({
       const normAtX = (x: number) => normAt((x / BW) * p.L);
       const ctr = (v: Vec3): Vec3 => [v[0] - BW / 2, v[1] - BH / 2, v[2] - BD / 2];
 
-      const alpha = 0.5;
+      const alpha = 0.25;
       const NS = 18;
       const sw = BW / NS;
       for (let i = 0; i < NS; i++) {
@@ -215,7 +221,7 @@ export function Fourier3DCanvas({
         }
         for (const q of molsRef.current) {
           jiggle(q);
-          dot(ctr([q.x + q.ox, q.y + q.oy, q.z + q.oz]), fit);
+          dot(ctr([q.x + q.ox, q.y + q.oy, q.z + q.oz]), fit, q.u);
         }
       }
     } else if (p.geometry === 'cylinder') {
@@ -299,7 +305,7 @@ export function Fourier3DCanvas({
         }
         for (const q of molsRef.current) {
           jiggle(q);
-          dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit);
+          dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit, q.u);
         }
       }
     } else {
@@ -363,7 +369,7 @@ export function Fourier3DCanvas({
         }
         for (const q of molsRef.current) {
           jiggle(q);
-          dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit);
+          dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit, q.u);
         }
       }
     }
@@ -400,24 +406,34 @@ export function Fourier3DCanvas({
       ctx.fillText(text, sx, sy);
       ctx.textBaseline = 'alphabetic';
     };
+    // Short symbol chips on the geometry; numbers in the corner legend so
+    // the labels never bury the object (Aug 2026 review).
     if (p.geometry === 'slab') {
       const tL = Math.min(1, Math.max(0, (Math.log10(p.L) + 3) / 3));
       const half = ((0.9 + 0.7 * tL) * (fit / 0.96)) / 2;
-      chip([-half, 0, 0], `T₁ = ${fmtT(p.T1)} °C · x = 0`);
-      chip([half, 0, 0], `T₂ = ${fmtT(p.T2)} °C · x = L`);
+      chip([-half, 0, 0], 'x = 0');
+      chip([half, 0, 0], 'x = L');
     } else {
       const tAx = Math.min(1, Math.max(0, (Math.log10(p.L) + 1) / 2));
       const ALf = 0.8 + 0.9 * tAx;
       const rOut =
         p.geometry === 'sphere' ? fit : fit / Math.sqrt(1 + (ALf / 2) ** 2);
-      chip([0, 0, 0], `T₁ = ${fmtT(p.T1)} °C · r₁ inner`);
-      chip([0, rOut, 0], `T₂ = ${fmtT(p.T2)} °C · r₂ outer`);
+      chip([0, 0, 0], 'r₁');
+      chip([0, rOut, 0], 'r₂');
     }
 
-    ctx.textAlign = 'right';
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
-    ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 10);
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      p.geometry === 'slab'
+        ? `T₁ = ${fmtT(p.T1)} °C at x = 0 · T₂ = ${fmtT(p.T2)} °C at x = L`
+        : `T₁ = ${fmtT(p.T1)} °C at r₁ (inner) · T₂ = ${fmtT(p.T2)} °C at r₂ (outer)`,
+      10,
+      H - 10,
+    );
+    ctx.textAlign = 'right';
+    ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 28);
   }, { running: loopRunning, redrawKey });
 
   useOrbitControls(canvasRef, cam, loopRunning);
