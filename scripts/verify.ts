@@ -54,6 +54,9 @@ import {
   aliveFraction, axialPeclet, deathOnset, extraction, flowQ, minC,
   supplyC, tissueC, tissueDrop, type PerfusionParams,
 } from '../src/lib/perfusion';
+import {
+  N2, collisionRate, flightInDiameters, gasDiffusivity, meanFreePath, meanSpeed,
+} from '../src/lib/kinetics';
 
 let failures = 0;
 const close = (a: number, b: number, tol = 1e-6) =>
@@ -901,6 +904,46 @@ check('axial Pe is enormous — dropping axial diffusion is licensed',
 check('extraction = fraction of the feed the tissue eats',
   close(extraction(chan), (2e-6 * 0.0025 * 2 * 2) / (0.004 * 5e-6), 1e-12),
   String(extraction(chan)));
+
+// ==========================================================================
+// Kinetic theory — why D is what it is (gases vs liquids)
+// ==========================================================================
+
+// N2 at 300 K, 1 atm, hand-worked:
+// v_bar = sqrt(8kT/pi m) = sqrt(8 * 1.380649e-23 * 300 / (pi * 4.6518e-26))
+//       = 476.2 m/s
+// lambda = kT / (sqrt2 pi d^2 P) = 4.1419e-21 / 6.1629e-14 = 67.2 nm
+// lambda/d = 67.2 nm / 0.37 nm = 182 diameters per flight
+// D = (1/3) lambda v_bar = 1.067e-5 m^2/s = 0.107 cm^2/s (within 2x of the
+// measured 0.2 — elementary kinetic theory's known accuracy)
+console.log('\nKinetic theory — N2 at 300 K, 1 atm, worked by hand');
+const T0 = 300;
+const P0 = 101325;
+check('mean speed = 476 m/s', close(meanSpeed(T0, N2.m), 476.2, 1e-3),
+  String(meanSpeed(T0, N2.m)));
+check('mean free path = 67.2 nm', close(meanFreePath(T0, P0, N2.d), 6.72e-8, 1e-3),
+  String(meanFreePath(T0, P0, N2.d)));
+check('a flight covers ~180 diameters',
+  close(flightInDiameters(T0, P0, N2.d), 181.6, 1e-2),
+  String(flightInDiameters(T0, P0, N2.d)));
+check('~7 billion collisions per second',
+  close(collisionRate(T0, P0, N2.d, N2.m), 7.086e9, 1e-2),
+  String(collisionRate(T0, P0, N2.d, N2.m)));
+check('D_gas = (1/3) lambda v_bar = 0.107 cm^2/s',
+  close(gasDiffusivity(T0, P0, N2.d, N2.m), 0.1067, 1e-2),
+  String(gasDiffusivity(T0, P0, N2.d, N2.m)));
+check('mean free path scales as 1/P (compress -> liquid-ward)',
+  close(meanFreePath(T0, 10 * P0, N2.d), meanFreePath(T0, P0, N2.d) / 10, 1e-12));
+{
+  // The four-decade punchline, cross-library: gas D from kinetic theory vs
+  // liquid D from Stokes-Einstein (small solute, a = 0.2 nm, water at 25 C).
+  const Dliq = stokesEinstein(2e-8, 0.0089, 298);
+  const ratio = gasDiffusivity(T0, P0, N2.d, N2.m) / Dliq;
+  check('liquid D ~ 1.2e-5 cm^2/s (Stokes-Einstein)', close(Dliq, 1.226e-5, 1e-2),
+    String(Dliq));
+  check('gas/liquid D ratio ~ 1e4 — the four decades of lecture values',
+    ratio > 3e3 && ratio < 3e4, String(ratio));
+}
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);

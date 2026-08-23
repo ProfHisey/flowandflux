@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Moon, Sun, Waves } from 'lucide-react';
 import { DividerModule } from './modules/Divider/DividerModule';
+import { GasLiquidModule } from './modules/GasLiquid/GasLiquidModule';
 import { UnsteadyModule } from './modules/UnsteadyDiffusion/UnsteadyModule';
 import { FicksLawModule } from './modules/FicksLaw/FicksLawModule';
 import { FourierLawModule } from './modules/FourierLaw/FourierLawModule';
@@ -36,7 +37,10 @@ const GROUPS: ModuleGroup[] = [
   {
     title: 'Start here',
     short: 'Start',
-    items: [{ id: 'divider', name: 'The divider', tag: 'no equations — pull the wall, watch' }],
+    items: [
+      { id: 'divider', name: 'The divider', tag: 'no equations — pull the wall, watch' },
+      { id: 'gasliquid', name: 'Gases & liquids', tag: 'why D is what it is — flights vs rattling' },
+    ],
   },
   {
     title: 'The phenomenological flux laws',
@@ -208,6 +212,7 @@ export default function App() {
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
         {moduleId === 'divider' && <DividerModule dark={dark} />}
+        {moduleId === 'gasliquid' && <GasLiquidModule dark={dark} />}
         {moduleId === 'fick' && <FicksLawModule dark={dark} />}
         {moduleId === 'fourier' && <FourierLawModule dark={dark} />}
         {moduleId === 'wall' && <WallModule dark={dark} />}
