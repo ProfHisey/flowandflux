@@ -227,9 +227,9 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
               <Stat
                 label="Alive"
                 value={`${Math.round(derived.alive * 100)}%`}
-                unit="of the layer"
+                unit="of the floor"
                 tone={allAlive ? 'accent' : 'warm'}
-                hint={allAlive ? 'every cell fed, with margin' : 'the far corner is starving'}
+                hint={allAlive ? 'every cell fed, with margin' : 'fraction of the tissue floor still fed'}
               />
               <Stat
                 label={<InlineMath math="x^*" />}
@@ -245,9 +245,13 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
               />
               <Stat
                 label="Corner C"
-                value={sci(molPerCm3TomM(derived.corner))}
+                value={sci(molPerCm3TomM(Math.max(0, derived.corner)))}
                 unit="mM"
-                hint="the worst-fed cell on the page"
+                hint={
+                  derived.corner < 0
+                    ? 'exhausted — the zero-order model would go negative here'
+                    : 'the worst-fed cell on the page'
+                }
               />
               <Stat
                 label={<InlineMath math="Q" />}
@@ -257,9 +261,13 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
               />
               <Stat
                 label="Extraction"
-                value={`${sci(derived.extraction * 100)}%`}
+                value={`${sci(Math.min(1, derived.extraction) * 100)}%`}
                 unit="of the feed"
-                hint={`axial Pe = ${sci(derived.Pe)} — axial diffusion is irrelevant`}
+                hint={
+                  derived.extraction > 1
+                    ? 'capped at 100% — demand exceeds the feed, so downstream cells starve'
+                    : `axial Pe = ${sci(derived.Pe)} — axial diffusion is irrelevant`
+                }
               />
             </div>
 
@@ -292,7 +300,7 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Along the channel: convection vs total uptake"
             latex={String.raw`Q\,\frac{dC_s}{dx} = -R\,h_2\,W \;\Rightarrow\; C_s(x) = C_0 - \frac{R h_2 W}{Q}\,x`}
-            note="A running balance: the flow arrives with Q·C₀ per second and the carpet of cells drains Rh₂W per centimetre. Linear decay — and the ONE term the pump controls, scaling as 1/Q. The axial Péclet number (tens of thousands here) is the licence for ignoring axial diffusion entirely."
+            note="A running balance: the flow arrives with Q·C₀ per second and the carpet of cells drains Rh₂W per centimetre. Linear decay — and the ONE term the pump controls, scaling as 1/Q. The axial Péclet number (~10⁵ here) is the licence for ignoring axial diffusion entirely. One more quiet assumption: the channel is taken as well mixed across its own depth, so C_s is both the bulk and the interface concentration — fine while the transverse mixing time h₁²/D stays small next to the residence time L/v."
             defaultOpen={false}
           />
         </div>

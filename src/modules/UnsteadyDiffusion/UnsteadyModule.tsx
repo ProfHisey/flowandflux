@@ -357,7 +357,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The diffusion clock"
             latex={String.raw`\sigma = \sqrt{2Dt} \qquad\Longleftrightarrow\qquad t_L = \frac{L^{2}}{2D}`}
-            note="The most useful number in transport. Twice as far takes four times as long: 0.5 µs across a synapse, 50 s across 100 µm of tissue, 28 hours across an unstirred teacup, 5 days across a still room. Below ~100 µm diffusion is free and instant; beyond ~1 mm it is hopeless — which is why cells are small, tissues are threaded with capillaries, and everything else gets stirred or pumped."
+            note="The most useful number in transport. Twice as far takes four times as long: 0.5 µs across a synapse, 50 s across 100 µm of tissue, 28 hours across a centimetre of unstirred tea, 5 days across a still room. Below ~100 µm diffusion is free and instant; beyond ~1 mm it is hopeless — which is why cells are small, tissues are threaded with capillaries, and everything else gets stirred or pumped."
             defaultOpen={true}
           />
 

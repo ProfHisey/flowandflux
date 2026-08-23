@@ -24,7 +24,7 @@
  *        x* = (C0 - C_crit - R h2^2/2D) Q / (R h2 W)
  *
  * Axial diffusion is neglected; the Pe readout justifies it (typically
- * tens of thousands).
+ * ~1e5 at the default setup).
  *
  * CGS units, matching the mass modules: cm, cm^2/s, mol/cm^3 (displayed
  * as mM), cm^3/s.

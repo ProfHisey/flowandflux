@@ -433,7 +433,7 @@ function NSAnatomy() {
   return (
     <Panel
       title="Navier–Stokes, disarmed term by term"
-      subtitle="Nine terms walk in. Check the assumptions of pipe flow and watch which two walk out."
+      subtitle="Nine terms walk in. Check the assumptions of pipe flow and watch which two are left standing."
     >
       <div className="mb-3 flex flex-wrap gap-2">
         {NS_ASSUMPTIONS.map((a) => (

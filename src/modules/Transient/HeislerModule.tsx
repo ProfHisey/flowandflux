@@ -312,7 +312,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
         <div className="space-y-4">
           <EquationCard
             title="The limits, and the bridge"
-            latex={String.raw`\mathrm{Bi} \to 0:\ \ \zeta_1^2 \to \mathrm{Bi} \ \Rightarrow\ \theta_0/\theta_i \to e^{-\mathrm{Bi}\,\mathrm{Fo}} = e^{-t/\tau_{lumped}}`}
+            latex={String.raw`\mathrm{Bi} \to 0:\ \ \zeta_1^2 \to \mathrm{Bi}\ \text{(wall)},\ \ 3\,\mathrm{Bi}\ \text{(sphere)} \ \Rightarrow\ \theta_0/\theta_i \to e^{-t/\tau_{lumped}}`}
             note="Let Bi shrink and the one-term solution collapses into the lumped exponential from the law-of-cooling module — for the wall, ζ₁² → Bi and τ = ρVc/hA falls out exactly (the sphere does the same through ζ₁² → 3Bi, which is precisely its V/A = R/3). Large Bi is the opposite regime: the surface takes the fluid temperature at once and pure internal conduction sets the pace. One family of solutions, with lumped cooling and the semi-infinite solid as its two ends."
             defaultOpen={false}
           />

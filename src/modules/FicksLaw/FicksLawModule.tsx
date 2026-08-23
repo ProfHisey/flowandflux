@@ -374,7 +374,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
             title="Fick's first law"
             latex={String.raw`\vec{j} = -D\,\nabla C \qquad\Longrightarrow\qquad J = -D\,\vec{A}\cdot\nabla C`}
             terms={[
-              { symbol: 'j', meaning: 'flux — mass of species per unit area per time', maps: 'flux chart' },
+              { symbol: 'j', meaning: 'flux — moles of species per unit area per time', maps: 'flux chart' },
               { symbol: 'J', meaning: 'total transfer rate through the whole area', maps: 'J readout' },
               { symbol: 'D', meaning: 'diffusion coefficient, cm²/s', maps: 'D slider' },
               { symbol: 'C', meaning: 'concentration, mass or moles per volume', maps: 'C₁, C₂ sliders' },

@@ -16,7 +16,7 @@ export const PRESETS: Preset[] = [
     source: 'Design flaw',
     blurb:
       'A perfused channel that looks fine at the inlet — and quietly runs dry at the far end of the cell layer. The classic failure of feeding cells with flow.',
-    check: 'Supply drains 2.5×10⁻³ mM per cm and hits zero exactly at the outlet; the tissue floor there is starved. The corner fails before anywhere else',
+    check: 'Supply drains 2.5 mM per cm and hits zero exactly at the outlet; the tissue floor there is starved. The corner fails before anywhere else',
     params: {
       D: 2e-5, v: 1, h1: 0.002, h2: 0.0025, W: 2, L: 2,
       C0: 5e-6, R: 2e-6, Ccrit: 0,
@@ -52,7 +52,7 @@ export const PRESETS: Preset[] = [
     source: 'Good practice',
     blurb:
       'Thinner tissue, faster flow, and a survival threshold set above zero — because real cells struggle long before the concentration reaches nothing.',
-    check: 'With C_crit = 0.5 mM the alive/starved boundary moves upstream of where C = 0 would put it: designing to zero is designing to fail',
+    check: 'x* = 6.4 cm at C_crit = 0.5 mM vs 7.2 cm at zero — the threshold pulls the failure point almost a centimetre upstream. This design keeps BOTH safely beyond the 2 cm channel: that distance is the margin',
     params: {
       D: 2e-5, v: 3, h1: 0.002, h2: 0.002, W: 2, L: 2,
       C0: 5e-6, R: 2e-6, Ccrit: 5e-7,

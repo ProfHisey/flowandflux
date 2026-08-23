@@ -128,6 +128,7 @@ export function TransientModule({ dark }: { dark: boolean }) {
                   setSkinT(v);
                   setTouchPresetId('');
                 }}
+                hint="The presets use 37 °C (core-blood). Resting skin SURFACE runs nearer 32–34 °C — slide it there and watch the touchable/burning verdicts shift. The formula does not care which convention you pick; the 44 °C line does."
               />
               <div className="space-y-1.5">
                 <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -284,7 +285,7 @@ export function TransientModule({ dark }: { dark: boolean }) {
             { symbol: '\\alpha', meaning: 'thermal diffusivity k/ρc, m²/s — the pace-setter', maps: 'material pickers' },
             { symbol: '\\operatorname{erf}', meaning: 'the error function — the shape every sudden change relaxes into' },
           ]}
-          note="Any body is semi-infinite until the thermal front reaches its far side — a brick wall is semi-infinite for hours, a pea for milliseconds. The front sits at x ≈ 3.6√(αt): the diffusion clock again, wearing thermal units. When the body runs out of thickness, the story continues in the Heisler-charts module."
+          note="Any body is semi-infinite until the thermal front reaches its far side — a brick wall is semi-infinite for an hour or two, a pea for a few seconds. The front sits at x ≈ 3.6√(αt): the diffusion clock again, wearing thermal units. When the body runs out of thickness, the story continues in the Heisler-charts module."
         />
         <EquationCard
           title="The contact temperature"

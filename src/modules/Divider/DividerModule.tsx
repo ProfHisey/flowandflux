@@ -313,7 +313,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                     step={0.05}
                     format={(v) => `${v.toFixed(2)}×`}
                     onChange={setKScale}
-                    hint="Copper-ish at 3×, styrofoam-ish at 0.2×. Takes effect live — pull the divider, then slide this and watch the meeting speed change."
+                    hint="More conductive or less — real materials span four decades (see Fourier's law), compressed here for legibility. Takes effect live: pull the divider, then slide this and watch the meeting speed change."
                   />
                 </>
               )}
