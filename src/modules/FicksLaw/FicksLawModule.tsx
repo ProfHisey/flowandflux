@@ -23,6 +23,7 @@ import {
   type Geometry,
 } from '../../lib/fick';
 import { lengthCm, sci } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { FickCanvas, type CrossingStats } from './FickCanvas';
 import { Fick3DCanvas } from './Fick3DCanvas';
 import { FickChart } from './FickChart';
@@ -33,8 +34,14 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
   const [showParticles, setShowParticles] = useState(true);
-  const [view, setView] = useState<'2d' | '3d'>('2d');
   const [stats, setStats] = useState<CrossingStats | null>(null);
+
+  // The seamless 2D/3D handoff — trial port to a diagram-style module: the
+  // 2D view is an instrumented diagram, so the flip to 3D is a visible
+  // costume change at the aligned pose rather than the same picture
+  // rotating. The drag still carries through.
+  const sd = useSeamlessDim(running && showParticles, { yaw: 0.6, pitch: -0.35 });
+  const view = sd.dim;
 
   const set = <K extends keyof FickParams>(key: K, value: FickParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -78,11 +85,8 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={view}
-                    options={[
-                      { value: '2d', label: '2D' },
-                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
-                    ]}
-                    onChange={setView}
+                    options={SEAMLESS_DIM_OPTIONS}
+                    onChange={sd.setDim}
                   />
                 </div>
                 <IconButton
@@ -101,29 +105,33 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {view === '2d' ? (
-              <FickCanvas
-                params={params}
-                showParticles={showParticles}
-                running={running}
-                dark={dark}
-                onStats={setStats}
-              />
-            ) : (
-              <>
+            <div {...sd.wrapperProps}>
+              {view === '2d' ? (
+                <FickCanvas
+                  params={params}
+                  showParticles={showParticles}
+                  running={running}
+                  dark={dark}
+                  onStats={setStats}
+                />
+              ) : (
                 <Fick3DCanvas
                   params={params}
                   showParticles={showParticles}
                   running={running}
                   dark={dark}
+                  cam={sd.cam}
                 />
-                <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  The same unbiased random walk, in three dimensions — drag to rotate,
-                  double-click to reset. The rotation is only a camera move; the walk
-                  itself never changes. The crossing counter and all measurements live
-                  on the 2D tab.
-                </p>
-              </>
+              )}
+            </div>
+            {view === '2d' && <SeamlessHint noun="The picture" />}
+            {view === '3d' && (
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                The same unbiased random walk, in three dimensions — drag to rotate,
+                double-click to lie it flat again. The rotation is only a camera move;
+                the walk itself never changes. The crossing counter and all
+                measurements live on the 2D tab.
+              </p>
             )}
 
             {view === '2d' && isSlab && showParticles && stats && (
