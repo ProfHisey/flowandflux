@@ -17,6 +17,7 @@ import {
   type StokesParams,
 } from '../../lib/stokes';
 import { lengthM, sci, timeS } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { StokesCanvas } from './StokesCanvas';
 import { Stokes3DCanvas } from './Stokes3DCanvas';
 import { StokesChart } from './StokesChart';
@@ -26,7 +27,9 @@ export function StokesModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<StokesParams>(DEFAULT_PARAMS);
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+
+  const sd = useSeamlessDim(running, { yaw: 0.55, pitch: -0.28 });
+  const dim = sd.dim;
 
   const set = <K extends keyof StokesParams>(key: K, value: StokesParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -62,11 +65,8 @@ export function StokesModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={[
-                      { value: '2d', label: '2D', title: 'The free-body diagram with true-scale arrows' },
-                      { value: '3d', label: '3D', title: 'The suspension as a volume — drag to orbit' },
-                    ]}
-                    onChange={setDim}
+                    options={SEAMLESS_DIM_OPTIONS}
+                    onChange={sd.setDim}
                   />
                 </div>
                 <IconButton
@@ -78,11 +78,14 @@ export function StokesModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {dim === '2d' ? (
-              <StokesCanvas params={params} running={running} dark={dark} />
-            ) : (
-              <Stokes3DCanvas params={params} running={running} dark={dark} />
-            )}
+            <div {...sd.wrapperProps}>
+              {dim === '2d' ? (
+                <StokesCanvas params={params} running={running} dark={dark} />
+              ) : (
+                <Stokes3DCanvas params={params} running={running} dark={dark} cam={sd.cam} />
+              )}
+            </div>
+            {dim === '2d' && <SeamlessHint noun="The column" />}
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               The force arrows are drawn to their true relative magnitudes: drag grows
               with speed until the books balance, and the speed where that happens is

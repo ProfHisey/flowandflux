@@ -21,6 +21,7 @@ import {
   type CorrParams,
 } from '../../lib/correlations';
 import { lengthM, sci } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { CorrCanvas } from './CorrCanvas';
 import { Corr3DCanvas } from './Corr3DCanvas';
 import { CorrChart } from './CorrChart';
@@ -33,7 +34,11 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
   const [L, setL] = useState(DEFAULT_PRESET.L);
   const [D, setD] = useState(DEFAULT_PRESET.D);
   const [presetId, setPresetId] = useState<string>(DEFAULT_PRESET.id);
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+
+  // Both Corr canvases run their own animation loops, so the camera never
+  // needs manual camTick bumps: loopRunning = true.
+  const sd = useSeamlessDim(true, { yaw: 0.55, pitch: -0.28 });
+  const dim = sd.dim;
 
   const fluid = FLUIDS.find((f) => f.name === fluidName) ?? FLUIDS[0];
   const params: CorrParams = useMemo(
@@ -74,20 +79,20 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
                   value={dim}
-                  options={[
-                    { value: '2d', label: '2D', title: 'The films in cross-section' },
-                    { value: '3d', label: '3D', title: 'The films as shells around the body — drag to orbit' },
-                  ]}
-                  onChange={setDim}
+                  options={SEAMLESS_DIM_OPTIONS}
+                  onChange={sd.setDim}
                 />
               </div>
             }
           >
-            {dim === '2d' ? (
-              <CorrCanvas params={params} dark={dark} />
-            ) : (
-              <Corr3DCanvas params={params} dark={dark} />
-            )}
+            <div {...sd.wrapperProps}>
+              {dim === '2d' ? (
+                <CorrCanvas params={params} dark={dark} />
+              ) : (
+                <Corr3DCanvas params={params} dark={dark} cam={sd.cam} />
+              )}
+            </div>
+            {dim === '2d' && <SeamlessHint noun="The body" />}
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Amber: the thermal boundary layer, δ ≈ L/Nu. Cyan: the concentration
               boundary layer, δ ≈ L/Sh. In air they ride together (Pr ≈ Sc ≈ 1);

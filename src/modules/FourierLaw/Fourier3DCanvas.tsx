@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import { temperature, type FourierParams } from '../../lib/fourier';
+import { useOrbitCam, useOrbitControls, type OrbitCam } from '../shared/paint3d';
 import { gauss } from '../FicksLaw/FickCanvas';
 import { rampWarm } from './FourierCanvas';
 
@@ -40,23 +41,25 @@ export function Fourier3DCanvas({
   showMolecules,
   running,
   dark,
+  cam: camProp,
 }: {
   params: FourierParams;
   showMolecules: boolean;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
 }) {
   const molsRef = useRef<M3[]>([]);
   const geomKeyRef = useRef('');
   const paramsRef = useRef(params);
   paramsRef.current = params;
 
-  const yawRef = useRef(0.6);
-  const pitchRef = useRef(-0.35);
-  const zoomRef = useRef(1);
-  const [rotTick, setRotTick] = useState(0);
+  const internalCam = useOrbitCam(0.6, -0.35);
+  const cam = camProp ?? internalCam;
+  const { yawRef, pitchRef, zoomRef } = cam;
 
-  const redrawKey = `${params.geometry}|${params.k}|${params.T1}|${params.T2}|${params.L}|${params.r1}|${params.r2}|${dark}|${showMolecules}|${rotTick}`;
+  const redrawKey = `${params.geometry}|${params.k}|${params.T1}|${params.T2}|${params.L}|${params.r1}|${params.r2}|${dark}|${showMolecules}|${cam.camTick}`;
 
   useEffect(() => {
     molsRef.current = [];
@@ -417,68 +420,7 @@ export function Fourier3DCanvas({
     ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 10);
   }, { running: loopRunning, redrawKey });
 
-  useEffect(() => {
-    const el = canvasRef.current;
-    if (!el) return;
-    let dragging = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    const down = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      el.setPointerCapture(e.pointerId);
-      el.style.cursor = 'grabbing';
-    };
-    const move = (e: PointerEvent) => {
-      if (!dragging) return;
-      yawRef.current += (e.clientX - lastX) * 0.008;
-      pitchRef.current = Math.min(
-        1.35,
-        Math.max(-1.35, pitchRef.current - (e.clientY - lastY) * 0.008),
-      );
-      lastX = e.clientX;
-      lastY = e.clientY;
-      if (!loopRunning) setRotTick((t) => t + 1);
-    };
-    const up = (e: PointerEvent) => {
-      dragging = false;
-      el.releasePointerCapture(e.pointerId);
-      el.style.cursor = 'grab';
-    };
-    const reset = () => {
-      yawRef.current = 0.6;
-      pitchRef.current = -0.35;
-      zoomRef.current = 1;
-      setRotTick((t) => t + 1);
-    };
-    const wheel = (e: WheelEvent) => {
-      e.preventDefault();
-      zoomRef.current = Math.min(
-        3,
-        Math.max(0.5, zoomRef.current * Math.exp(-e.deltaY * 0.0012)),
-      );
-      if (!loopRunning) setRotTick((t) => t + 1);
-    };
-
-    el.style.cursor = 'grab';
-    el.style.touchAction = 'none';
-    el.addEventListener('pointerdown', down);
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-    el.addEventListener('dblclick', reset);
-    el.addEventListener('wheel', wheel, { passive: false });
-    return () => {
-      el.removeEventListener('pointerdown', down);
-      el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerup', up);
-      el.removeEventListener('pointercancel', up);
-      el.removeEventListener('dblclick', reset);
-      el.removeEventListener('wheel', wheel);
-    };
-  }, [canvasRef, loopRunning]);
+  useOrbitControls(canvasRef, cam, loopRunning);
 
   return (
     <canvas

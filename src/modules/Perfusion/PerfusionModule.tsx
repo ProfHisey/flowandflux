@@ -19,6 +19,7 @@ import {
 } from '../../lib/perfusion';
 import { mMToMolPerCm3, molPerCm3TomM } from '../../lib/fick';
 import { lengthCm, sci } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { PerfusionCanvas } from './PerfusionCanvas';
 import { Perfusion3DCanvas } from './Perfusion3DCanvas';
 import { PerfusionChart } from './PerfusionChart';
@@ -27,7 +28,9 @@ import { DEFAULT_PARAMS, PRESETS } from './presets';
 export function PerfusionModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<PerfusionParams>(DEFAULT_PARAMS);
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+
+  const sd = useSeamlessDim(false, { yaw: 0.6, pitch: -0.35 }); // both views static
+  const dim = sd.dim;
 
   const set = <K extends keyof PerfusionParams>(key: K, value: PerfusionParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -63,20 +66,20 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
                   value={dim}
-                  options={[
-                    { value: '2d', label: '2D', title: 'The cross-section painted from the solution' },
-                    { value: '3d', label: '3D', title: 'The device itself — drag to orbit, look underneath' },
-                  ]}
-                  onChange={setDim}
+                  options={SEAMLESS_DIM_OPTIONS}
+                  onChange={sd.setDim}
                 />
               </div>
             }
           >
-            {dim === '2d' ? (
-              <PerfusionCanvas params={params} dark={dark} />
-            ) : (
-              <Perfusion3DCanvas params={params} dark={dark} />
-            )}
+            <div {...sd.wrapperProps}>
+              {dim === '2d' ? (
+                <PerfusionCanvas params={params} dark={dark} />
+              ) : (
+                <Perfusion3DCanvas params={params} dark={dark} cam={sd.cam} />
+              )}
+            </div>
+            {dim === '2d' && <SeamlessHint noun="The device" />}
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Every colour is the analytic solution; the hatched red region is where the
               concentration has fallen below C_crit. Two separate drains stack against

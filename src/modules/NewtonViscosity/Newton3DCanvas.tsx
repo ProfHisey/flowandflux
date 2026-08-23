@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import type { NewtonParams } from '../../lib/newton';
+import { useOrbitCam, useOrbitControls, type OrbitCam } from '../shared/paint3d';
 import { rampFlow, type NewtonView } from './NewtonCanvas';
 
 /**
@@ -39,12 +40,15 @@ export function Newton3DCanvas({
   showParticles,
   running,
   dark,
+  cam: camProp,
 }: {
   params: NewtonParams;
   view: NewtonView;
   showParticles: boolean;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
 }) {
   const offsetsRef = useRef<number[]>([]);
   const patternRef = useRef<number[][]>([]);
@@ -57,12 +61,11 @@ export function Newton3DCanvas({
   const paramsRef = useRef(params);
   paramsRef.current = params;
 
-  const yawRef = useRef(0.6);
-  const pitchRef = useRef(-0.3);
-  const zoomRef = useRef(1);
-  const [rotTick, setRotTick] = useState(0);
+  const internalCam = useOrbitCam(0.6, -0.3);
+  const cam = camProp ?? internalCam;
+  const { yawRef, pitchRef, zoomRef } = cam;
 
-  const redrawKey = `${params.mu}|${params.U}|${params.H}|${params.A}|${dark}|${showParticles}|${view}|${rotTick}`;
+  const redrawKey = `${params.mu}|${params.U}|${params.H}|${params.A}|${dark}|${showParticles}|${view}|${cam.camTick}`;
 
   useEffect(() => {
     offsetsRef.current = [];
@@ -464,68 +467,7 @@ export function Newton3DCanvas({
     ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 10);
   }, { running: loopRunning, redrawKey });
 
-  useEffect(() => {
-    const el = canvasRef.current;
-    if (!el) return;
-    let dragging = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    const down = (e: PointerEvent) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      el.setPointerCapture(e.pointerId);
-      el.style.cursor = 'grabbing';
-    };
-    const move = (e: PointerEvent) => {
-      if (!dragging) return;
-      yawRef.current += (e.clientX - lastX) * 0.008;
-      pitchRef.current = Math.min(
-        1.35,
-        Math.max(-1.35, pitchRef.current - (e.clientY - lastY) * 0.008),
-      );
-      lastX = e.clientX;
-      lastY = e.clientY;
-      if (!loopRunning) setRotTick((t) => t + 1);
-    };
-    const up = (e: PointerEvent) => {
-      dragging = false;
-      el.releasePointerCapture(e.pointerId);
-      el.style.cursor = 'grab';
-    };
-    const reset = () => {
-      yawRef.current = 0.6;
-      pitchRef.current = -0.3;
-      zoomRef.current = 1;
-      setRotTick((t) => t + 1);
-    };
-    const wheel = (e: WheelEvent) => {
-      e.preventDefault();
-      zoomRef.current = Math.min(
-        3,
-        Math.max(0.5, zoomRef.current * Math.exp(-e.deltaY * 0.0012)),
-      );
-      if (!loopRunning) setRotTick((t) => t + 1);
-    };
-
-    el.style.cursor = 'grab';
-    el.style.touchAction = 'none';
-    el.addEventListener('pointerdown', down);
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-    el.addEventListener('dblclick', reset);
-    el.addEventListener('wheel', wheel, { passive: false });
-    return () => {
-      el.removeEventListener('pointerdown', down);
-      el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerup', up);
-      el.removeEventListener('pointercancel', up);
-      el.removeEventListener('dblclick', reset);
-      el.removeEventListener('wheel', wheel);
-    };
-  }, [canvasRef, loopRunning]);
+  useOrbitControls(canvasRef, cam, loopRunning);
 
   return (
     <canvas

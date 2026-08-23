@@ -18,6 +18,7 @@ import { molPerCm3TomM } from '../../lib/fick';
 import { lengthCm, sci, timeS } from '../../lib/format';
 import { D_LANDMARKS } from '../FicksLaw/presets';
 import { Segmented } from '../../components/ui/Segmented';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { UnsteadyCanvas, type PulseStats, type ReleaseMode } from './UnsteadyCanvas';
 import { Bolus3DCanvas } from './Bolus3DCanvas';
 import { UnsteadyChart } from './UnsteadyChart';
@@ -28,9 +29,11 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
   const [releaseTick, setReleaseTick] = useState(0);
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
   const [release, setRelease] = useState<ReleaseMode>('plane');
   const [stats, setStats] = useState<PulseStats | null>(null);
+
+  const sd = useSeamlessDim(running);
+  const dim = sd.dim;
 
   const set = <K extends keyof UnsteadyParams>(key: K, value: UnsteadyParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -70,11 +73,8 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={[
-                      { value: '2d', label: '2D', title: 'Planar burst against the analytic Gaussian' },
-                      { value: '3d', label: '3D', title: 'Point burst: σ = √(6Dt) — drag to orbit' },
-                    ]}
-                    onChange={setDim}
+                    options={SEAMLESS_DIM_OPTIONS}
+                    onChange={sd.setDim}
                   />
                 </div>
                 <IconButton
@@ -92,23 +92,31 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {dim === '2d' ? (
-              <UnsteadyCanvas
-                mode={release}
-                releaseTick={releaseTick}
-                running={running}
-                dark={dark}
-                onStats={setStats}
-              />
-            ) : (
-              <>
-                <Bolus3DCanvas releaseTick={releaseTick} running={running} dark={dark} />
-                <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  The point-release version: a burst spreads as a SPHERE, and the amber
-                  wireframe is the prediction σ = √(6Dt) — 2Dt per axis, three axes.
-                  The 2D tab's planar burst uses √(2Dt); geometry decides the factor.
-                </p>
-              </>
+            <div {...sd.wrapperProps}>
+              {dim === '2d' ? (
+                <UnsteadyCanvas
+                  mode={release}
+                  releaseTick={releaseTick}
+                  running={running}
+                  dark={dark}
+                  onStats={setStats}
+                />
+              ) : (
+                <Bolus3DCanvas
+                  releaseTick={releaseTick}
+                  running={running}
+                  dark={dark}
+                  cam={sd.cam}
+                />
+              )}
+            </div>
+            {dim === '2d' && <SeamlessHint noun="The burst" />}
+            {dim === '3d' && (
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                The point-release version: a burst spreads as a SPHERE, and the amber
+                wireframe is the prediction σ = √(6Dt) — 2Dt per axis, three axes.
+                The 2D tab's planar burst uses √(2Dt); geometry decides the factor.
+              </p>
             )}
             {dim === '2d' && stats && <SpreadReadout stats={stats} mode={release} />}
           </Panel>

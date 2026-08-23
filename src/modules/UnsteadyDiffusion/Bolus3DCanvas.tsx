@@ -7,6 +7,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
 
@@ -25,14 +26,18 @@ export function Bolus3DCanvas({
   releaseTick,
   running,
   dark,
+  cam: camProp,
 }: {
   releaseTick: number;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
 }) {
   const listRef = useRef<Vec3[]>([]);
   const tRef = useRef(0);
-  const cam = useOrbitCam(0.55, -0.3);
+  const internalCam = useOrbitCam(0.55, -0.3);
+  const cam = camProp ?? internalCam;
 
   const redrawKey = `${releaseTick}|${dark}|${cam.camTick}`;
 

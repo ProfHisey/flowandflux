@@ -18,6 +18,7 @@ import {
   type Geometry,
 } from '../../lib/fourier';
 import { lengthM, sci } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { FourierCanvas, type EnergyStats } from './FourierCanvas';
 import { Fourier3DCanvas } from './Fourier3DCanvas';
 import { FourierChart } from './FourierChart';
@@ -28,8 +29,10 @@ export function FourierLawModule({ dark }: { dark: boolean }) {
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
   const [showMolecules, setShowMolecules] = useState(true);
-  const [view, setView] = useState<'2d' | '3d'>('2d');
   const [stats, setStats] = useState<EnergyStats | null>(null);
+
+  const sd = useSeamlessDim(running && showMolecules, { yaw: 0.6, pitch: -0.35 });
+  const view = sd.dim;
 
   const set = <K extends keyof FourierParams>(key: K, value: FourierParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -71,11 +74,8 @@ export function FourierLawModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={view}
-                    options={[
-                      { value: '2d', label: '2D' },
-                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
-                    ]}
-                    onChange={setView}
+                    options={SEAMLESS_DIM_OPTIONS}
+                    onChange={sd.setDim}
                   />
                 </div>
                 <IconButton
@@ -94,29 +94,34 @@ export function FourierLawModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {view === '2d' ? (
-              <FourierCanvas
-                params={params}
-                showMolecules={showMolecules}
-                running={running}
-                dark={dark}
-                onStats={setStats}
-              />
-            ) : (
-              <>
+            <div {...sd.wrapperProps}>
+              {view === '2d' ? (
+                <FourierCanvas
+                  params={params}
+                  showMolecules={showMolecules}
+                  running={running}
+                  dark={dark}
+                  onStats={setStats}
+                />
+              ) : (
                 <Fourier3DCanvas
                   params={params}
                   showMolecules={showMolecules}
                   running={running}
                   dark={dark}
+                  cam={sd.cam}
                 />
-                <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Drag to rotate, double-click to reset. Note what is different from the
-                  diffusion module's 3D view: the molecule density is uniform everywhere,
-                  because in a conducting solid the matter never migrates — only the
-                  vigour of the vibration varies. All measurements live on the 2D tab.
-                </p>
-              </>
+              )}
+            </div>
+            {view === '2d' && <SeamlessHint noun="The picture" />}
+            {view === '3d' && (
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                Drag to rotate, double-click to lie it flat again. Note what is
+                different from the diffusion module's 3D view: the molecule density is
+                uniform everywhere, because in a conducting solid the matter never
+                migrates — only the vigour of the vibration varies. All measurements
+                live on the 2D tab.
+              </p>
             )}
 
             {view === '2d' && isSlab && showMolecules && stats && (

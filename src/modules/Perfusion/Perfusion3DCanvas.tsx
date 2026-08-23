@@ -13,6 +13,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
 } from '../shared/paint3d';
 
 /**
@@ -22,8 +23,18 @@ import {
  * growing out of the far-bottom corner. Rotate underneath it — the corner
  * problem is even more obvious from below.
  */
-export function Perfusion3DCanvas({ params, dark }: { params: PerfusionParams; dark: boolean }) {
-  const cam = useOrbitCam(0.6, -0.35);
+export function Perfusion3DCanvas({
+  params,
+  dark,
+  cam: camProp,
+}: {
+  params: PerfusionParams;
+  dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
+}) {
+  const internalCam = useOrbitCam(0.6, -0.35);
+  const cam = camProp ?? internalCam;
   const redrawKey = `${JSON.stringify(params)}|${dark}|${cam.camTick}`;
 
   const canvasRef = useCanvas((ctx, frame) => {

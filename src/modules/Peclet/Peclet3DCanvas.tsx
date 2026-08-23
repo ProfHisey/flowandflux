@@ -8,6 +8,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
 } from '../shared/paint3d';
 
 /**
@@ -32,15 +33,19 @@ export function Peclet3DCanvas({
   Pe,
   running,
   dark,
+  cam: camProp,
 }: {
   Pe: number;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
 }) {
   const listRef = useRef<P3[]>([]);
   const peRef = useRef(Pe);
   peRef.current = Pe;
-  const cam = useOrbitCam(0.55, -0.3);
+  const internalCam = useOrbitCam(0.55, -0.3);
+  const cam = camProp ?? internalCam;
 
   const peVis = Math.max(-PE_CAP, Math.min(PE_CAP, Pe));
   const seedKey = `${peVis.toFixed(3)}`;

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import { terminalVelocity, type StokesParams } from '../../lib/stokes';
+import { dragForce, gEff, terminalVelocity, type StokesParams } from '../../lib/stokes';
 import {
   FAINT,
   makePainter,
@@ -8,15 +8,17 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
 
 /**
  * The settling column as a volume: a glass box of particles all drifting
  * at terminal velocity (up, if they float), with the specimen sphere and
- * its strobe trail in the middle. The free-body arrows live on the 2D tab
- * where they read best; here the payoff is depth — a suspension, not a
- * diagram.
+ * its strobe trail in the middle — plus the same true-magnitude free-body
+ * arrows as the 2D tab, pinned to the sphere so they rotate with it. Drag
+ * opposes the motion (up beside buoyancy when settling, down beside weight
+ * when floating), and the two stacks balance at terminal velocity.
  */
 
 const COUNT = 90;
@@ -25,16 +27,20 @@ export function Stokes3DCanvas({
   params,
   running,
   dark,
+  cam: camProp,
 }: {
   params: StokesParams;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
 }) {
   const cloudRef = useRef<Vec3[]>([]);
   const strobeRef = useRef(0);
   const paramsRef = useRef(params);
   paramsRef.current = params;
-  const cam = useOrbitCam(0.55, -0.28);
+  const internalCam = useOrbitCam(0.55, -0.28);
+  const cam = camProp ?? internalCam;
 
   const redrawKey = `${JSON.stringify(params)}|${dark}|${cam.camTick}`;
 
@@ -106,8 +112,32 @@ export function Stokes3DCanvas({
     pt.seg([0, -dir * (R + 14), 0], [-5, -dir * (R + 5), 0], aCol, 2.5);
     pt.seg([0, -dir * (R + 14), 0], [5, -dir * (R + 5), 0], aCol, 2.5);
 
+    // Free-body arrows, true relative magnitudes — same semantics as the 2D
+    // tab: weight down, buoyancy up, drag OPPOSING the motion, the two
+    // stacks equal at terminal velocity. Model +y is up.
+    const Wg = p.rhoP * (4 / 3) * Math.PI * p.a ** 3 * gEff(p);
+    const B = p.rhoF * (4 / 3) * Math.PI * p.a ** 3 * gEff(p);
+    const Dg = Math.abs(dragForce(p.mu, p.a, terminalVelocity(p)));
+    const K = 70 / Math.max(Wg + (dir < 0 ? Dg : 0), B + (dir > 0 ? Dg : 0));
+    const arrow3 = (x: number, endY: number, color: string) => {
+      pt.seg([x, 0, 0], [x, endY, 0], color, 2.5);
+      const back = endY > 0 ? -7 : 7;
+      pt.seg([x, endY, 0], [x - 4.5, endY + back, 0], color, 2.5);
+      pt.seg([x, endY, 0], [x + 4.5, endY + back, 0], color, 2.5);
+    };
+    const xW = -(R + 20);
+    const xB = R + 20;
+    const xD = R + 36;
+    arrow3(xW, -Wg * K, dark ? '#f87171' : '#dc2626');
+    arrow3(xB, B * K, dark ? '#38bdf8' : '#0284c7');
+    arrow3(xD, dir * Dg * K, dark ? '#34d399' : '#047857');
+
     wireBox(pt, -BX, -BY, -BX, BX, BY, BX, faint);
     pt.flush();
+
+    pt.chip([xW, -Wg * K - 14, 0], 'weight', dark);
+    pt.chip([xB, B * K + 14, 0], 'buoyancy', dark);
+    pt.chip([xD, dir * Dg * K + dir * 14, 0], 'drag', dark);
 
     pt.chip(
       [0, BY + 14, 0],
@@ -116,7 +146,7 @@ export function Stokes3DCanvas({
         : dir > 0 ? 'settling at terminal velocity' : 'floating upward (ρp < ρf)',
       dark,
     );
-    pt.hint(dark, 'forces and numbers live on the 2D tab — this is the suspension itself');
+    pt.hint(dark, 'force arrows at true relative magnitude — the numbers live on the 2D tab');
   }, { running, redrawKey });
 
   useOrbitControls(canvasRef, cam, running);

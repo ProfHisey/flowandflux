@@ -16,6 +16,7 @@ import {
   type NewtonParams,
 } from '../../lib/newton';
 import { lengthM, sci } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { NewtonCanvas, type NewtonView } from './NewtonCanvas';
 import { Newton3DCanvas } from './Newton3DCanvas';
 import { NewtonChart } from './NewtonChart';
@@ -27,7 +28,9 @@ export function NewtonModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [showParticles, setShowParticles] = useState(true);
   const [view, setView] = useState<NewtonView>('links');
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+
+  const sd = useSeamlessDim(running && showParticles, { yaw: 0.6, pitch: -0.3 });
+  const dim = sd.dim;
 
   const set = <K extends keyof NewtonParams>(key: K, value: NewtonParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -63,11 +66,8 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={[
-                      { value: '2d', label: '2D' },
-                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
-                    ]}
-                    onChange={setDim}
+                    options={SEAMLESS_DIM_OPTIONS}
+                    onChange={sd.setDim}
                   />
                 </div>
                 <div className="w-36">
@@ -96,43 +96,47 @@ export function NewtonModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {dim === '3d' ? (
-              <>
+            <div {...sd.wrapperProps}>
+              {dim === '3d' ? (
                 <Newton3DCanvas
                   params={params}
                   view={view}
                   showParticles={showParticles}
                   running={running}
                   dark={dark}
+                  cam={sd.cam}
                 />
-                <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  {view === 'links' ? (
-                    <>
-                      Drag to rotate, double-click to reset. The 2D lanes become what
-                      they always secretly were: sheets. Note the two boundary sheets —
-                      the top one is glued to the marching plate and the bottom one to
-                      the still plate. That is the no-slip condition, and it is what
-                      drives the whole system: the plate never pushes the fluid, it
-                      simply refuses to let go of the layer touching it.
-                    </>
-                  ) : (
-                    <>
-                      Drag to rotate, double-click to reset. A vertical curtain of dye
-                      tilts into the velocity profile — every height carries its dye at
-                      its own speed — and the marked cube shears into a parallelepiped
-                      beside its resting ghost, at the rate dγ/dt = du/dy.
-                    </>
-                  )}
-                </p>
-              </>
-            ) : (
-              <NewtonCanvas
-                params={params}
-                view={view}
-                showParticles={showParticles}
-                running={running}
-                dark={dark}
-              />
+              ) : (
+                <NewtonCanvas
+                  params={params}
+                  view={view}
+                  showParticles={showParticles}
+                  running={running}
+                  dark={dark}
+                />
+              )}
+            </div>
+            {dim === '2d' && <SeamlessHint noun="The picture" />}
+            {dim === '3d' && (
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                {view === 'links' ? (
+                  <>
+                    Drag to rotate, double-click to lie it flat again. The 2D lanes
+                    become what they always secretly were: sheets. Note the two
+                    boundary sheets — the top one is glued to the marching plate and
+                    the bottom one to the still plate. That is the no-slip condition,
+                    and it is what drives the whole system: the plate never pushes the
+                    fluid, it simply refuses to let go of the layer touching it.
+                  </>
+                ) : (
+                  <>
+                    Drag to rotate, double-click to lie it flat again. A vertical
+                    curtain of dye tilts into the velocity profile — every height
+                    carries its dye at its own speed — and the marked cube shears into
+                    a parallelepiped beside its resting ghost, at the rate dγ/dt = du/dy.
+                  </>
+                )}
+              </p>
             )}
             {dim === '2d' && (view === 'links' ? (
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">

@@ -5,6 +5,7 @@ import {
   makePainter,
   useOrbitCam,
   useOrbitControls,
+  type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
 
@@ -15,11 +16,21 @@ import {
  * hugs the surface while the amber one floats well clear — the (Sc/Pr)^1/3
  * gap, now something you can orbit around.
  */
-export function Corr3DCanvas({ params, dark }: { params: CorrParams; dark: boolean }) {
+export function Corr3DCanvas({
+  params,
+  dark,
+  cam: camProp,
+}: {
+  params: CorrParams;
+  dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
+}) {
   const offsetRef = useRef(0);
   const paramsRef = useRef(params);
   paramsRef.current = params;
-  const cam = useOrbitCam(0.55, -0.28);
+  const internalCam = useOrbitCam(0.55, -0.28);
+  const cam = camProp ?? internalCam;
 
   const redrawKey = `${JSON.stringify({ ...params, fluid: params.fluid.name })}|${dark}|${cam.camTick}`;
 
