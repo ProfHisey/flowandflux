@@ -8,7 +8,6 @@ import { Segmented } from '../../components/ui/Segmented';
 import { EquationCard } from '../../components/ui/EquationCard';
 
 import { areaAvgT, mixingCupT, type MixingCupParams } from '../../lib/mixingcup';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { MixingCanvas, type CupStats } from './MixingCanvas';
 import { Mixing3DCanvas } from './Mixing3DCanvas';
 import { MixingChart } from './MixingChart';
@@ -25,9 +24,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [resetTick, setResetTick] = useState(0);
   const [stats, setStats] = useState<CupStats | null>(null);
-
-  const sd = useSeamlessDim(running, { yaw: 0.55, pitch: -0.3 });
-  const dim = sd.dim;
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   const set = <K extends keyof MixingCupParams>(key: K, value: MixingCupParams[K]) =>
     setParams((p) => ({ ...p, [key]: value }));
@@ -54,8 +51,11 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'Side view with the collecting cup — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'The tube in space — rotate end-on for the cross-section' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <IconButton label="Empty the cup & restart" onClick={() => setResetTick((t) => t + 1)}>
@@ -70,7 +70,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <div {...sd.wrapperProps}>
+            <div>
               {dim === '2d' ? (
                 <MixingCanvas
                   params={params}
@@ -87,11 +87,9 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                   resetTick={resetTick}
                   running={running}
                   dark={dark}
-                  cam={sd.cam}
                 />
               )}
             </div>
-            {dim === '2d' && <SeamlessHint noun="The tube" />}
 
             {dim === '2d' && stats && stats.samples > 0 && (
               <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">

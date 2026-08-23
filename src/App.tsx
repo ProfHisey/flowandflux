@@ -145,11 +145,9 @@ function AboutPage() {
 }
 
 export default function App() {
-  const [dark, setDark] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches,
-  );
+  // Night mode is the site default (white objects vanish on a light page);
+  // the header toggle still lets anyone switch.
+  const [dark, setDark] = useState(true);
   const [moduleId, setModuleId] = useState<ModuleId>(initialModule);
 
   useEffect(() => {

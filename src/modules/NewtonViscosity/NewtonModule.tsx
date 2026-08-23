@@ -16,7 +16,6 @@ import {
   type NewtonParams,
 } from '../../lib/newton';
 import { lengthM, sci } from '../../lib/format';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { NewtonCanvas, type NewtonView } from './NewtonCanvas';
 import { Newton3DCanvas } from './Newton3DCanvas';
 import { NewtonChart } from './NewtonChart';
@@ -28,9 +27,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [showParticles, setShowParticles] = useState(true);
   const [view, setView] = useState<NewtonView>('links');
-
-  const sd = useSeamlessDim(running && showParticles, { yaw: 0.6, pitch: -0.3 });
-  const dim = sd.dim;
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   const set = <K extends keyof NewtonParams>(key: K, value: NewtonParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -66,8 +63,11 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <div className="w-36">
@@ -96,7 +96,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <div {...sd.wrapperProps}>
+            <div>
               {dim === '3d' ? (
                 <Newton3DCanvas
                   params={params}
@@ -104,7 +104,6 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                   showParticles={showParticles}
                   running={running}
                   dark={dark}
-                  cam={sd.cam}
                 />
               ) : (
                 <NewtonCanvas
@@ -116,7 +115,6 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 />
               )}
             </div>
-            {dim === '2d' && <SeamlessHint noun="The picture" />}
             {dim === '3d' && (
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 {view === 'links' ? (

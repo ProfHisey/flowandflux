@@ -8,7 +8,6 @@ import { EquationCard } from '../../components/ui/EquationCard';
 
 import { N2, collisionRate, flightInDiameters, gasDiffusivity, meanSpeed } from '../../lib/kinetics';
 import { stokesEinstein } from '../../lib/fick';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { GasLiquidCanvas, type WanderStats } from './GasLiquidCanvas';
 import { GasLiquid3DCanvas } from './GasLiquid3DCanvas';
 
@@ -37,8 +36,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
   const [nGas, setNGas] = useState(30);
   const [phi, setPhi] = useState(0.7);
   const [stats, setStats] = useState<WanderStats | null>(null);
-
-  const sd = useSeamlessDim(running);
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   return (
     <div className="space-y-5">
@@ -53,9 +51,12 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
               <div className="flex shrink-0 items-center gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
-                    value={sd.dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    value={dim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'Hard spheres in two 3D boxes — drag to orbit' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <IconButton label="Restart both boxes" onClick={() => setResetTick((t) => t + 1)}>
@@ -70,8 +71,8 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <div {...sd.wrapperProps}>
-              {sd.dim === '3d' ? (
+            <div>
+              {dim === '3d' ? (
                 <GasLiquid3DCanvas
                   nGas={nGas}
                   phi={phi}
@@ -79,7 +80,6 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                   resetTick={resetTick}
                   running={running}
                   dark={dark}
-                  cam={sd.cam}
                 />
               ) : (
                 <GasLiquidCanvas
@@ -93,7 +93,6 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 />
               )}
             </div>
-            {sd.dim === '2d' && <SeamlessHint noun="Each box" />}
 
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Nothing here is scripted — every molecule just flies straight until it

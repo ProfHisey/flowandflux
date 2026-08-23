@@ -17,7 +17,6 @@ import {
 } from '../../lib/cooling';
 import { sci, timeS } from '../../lib/format';
 import { Segmented } from '../../components/ui/Segmented';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { CoolingCanvas } from './CoolingCanvas';
 import { FinCanvas } from './FinCanvas';
 import { Fin3DCanvas } from './Fin3DCanvas';
@@ -31,10 +30,9 @@ export function CoolingModule({ dark }: { dark: boolean }) {
   const [resetTick, setResetTick] = useState(0);
   const [view, setView] = useState<'flow' | 'fin'>('flow');
   const [finShape, setFinShape] = useState<'pin' | 'rect'>('pin');
-
-  // The seamless 2D/3D pair lives INSIDE the fin view; the Flow view is
-  // 2D-only (its 3D counterpart is the fin itself, a different subject).
-  const sd = useSeamlessDim(running, { yaw: 0.7, pitch: -0.3 });
+  // The 2D/3D pair lives INSIDE the fin view; the Flow view is 2D-only
+  // (its 3D counterpart is the fin itself, a different subject).
+  const [finDim, setFinDim] = useState<'2d' | '3d'>('2d');
 
   const set = <K extends keyof CoolingParams>(key: K, value: CoolingParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -91,9 +89,12 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                     </div>
                     <div className="w-28">
                       <Segmented<'2d' | '3d'>
-                        value={sd.dim}
-                        options={SEAMLESS_DIM_OPTIONS}
-                        onChange={sd.setDim}
+                        value={finDim}
+                        options={[
+                          { value: '2d', label: '2D', title: 'Side-on with the T(x) profile — drag to pan, scroll to zoom' },
+                          { value: '3d', label: '3D', title: 'The fin in the stream — drag to orbit' },
+                        ]}
+                        onChange={setFinDim}
                       />
                     </div>
                   </>
@@ -131,8 +132,8 @@ export function CoolingModule({ dark }: { dark: boolean }) {
               </>
             ) : (
               <>
-                <div {...sd.wrapperProps}>
-                  {sd.dim === '2d' ? (
+                <div>
+                  {finDim === '2d' ? (
                     <FinCanvas
                       params={{
                         h: params.h, k: params.k, R: 0.004, L: 0.08,
@@ -150,11 +151,9 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                       }}
                       running={running}
                       dark={dark}
-                      cam={sd.cam}
                     />
                   )}
                 </div>
-                {sd.dim === '2d' && <SeamlessHint noun="The fin" />}
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   {finShape === 'pin' ? (
                     <>

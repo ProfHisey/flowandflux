@@ -19,7 +19,6 @@ import {
 } from '../../lib/poiseuille';
 import { lengthM, sci } from '../../lib/format';
 import { MU_LANDMARKS } from '../NewtonViscosity/presets';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { PoiseuilleCanvas } from './PoiseuilleCanvas';
 import { Poiseuille3DCanvas } from './Poiseuille3DCanvas';
 import { PoiseuilleChart } from './PoiseuilleChart';
@@ -30,9 +29,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
   const [showParticles, setShowParticles] = useState(true);
-
-  const sd = useSeamlessDim(running && showParticles, { yaw: 0.65, pitch: -0.3 });
-  const dim = sd.dim;
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   const set = <K extends keyof PoiseuilleParams>(key: K, value: PoiseuilleParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -78,8 +75,11 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <IconButton
@@ -100,15 +100,12 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
           >
             {dim === '3d' ? (
               <>
-                <div {...sd.wrapperProps}>
-                  <Poiseuille3DCanvas
-                    params={params}
-                    showParticles={showParticles}
-                    running={running}
-                    dark={dark}
-                    cam={sd.cam}
-                  />
-                </div>
+                <Poiseuille3DCanvas
+                  params={params}
+                  showParticles={showParticles}
+                  running={running}
+                  dark={dark}
+                />
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   The classic dye-front demo: a flat sheet of dye is released and the
                   flow itself sculpts it — a bullet in the tube, a parabolic curtain
@@ -118,15 +115,12 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
               </>
             ) : (
               <>
-                <div {...sd.wrapperProps}>
-                  <PoiseuilleCanvas
-                    params={params}
-                    showParticles={showParticles}
-                    running={running}
-                    dark={dark}
-                  />
-                </div>
-                <SeamlessHint noun="The channel" />
+                <PoiseuilleCanvas
+                  params={params}
+                  showParticles={showParticles}
+                  running={running}
+                  dark={dark}
+                />
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   Tracers ride the profile without diffusing, and the on-screen peak speed
                   is fixed for legibility — the shape and every readout are physical. Watch

@@ -17,7 +17,6 @@ import {
 import { mMToMolPerCm3, molPerCm3TomM } from '../../lib/fick';
 import { lengthCm, sci, timeS } from '../../lib/format';
 import { D_LANDMARKS } from '../FicksLaw/presets';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { PecletCanvas } from './PecletCanvas';
 import { Peclet3DCanvas } from './Peclet3DCanvas';
 import { PecletChart } from './PecletChart';
@@ -27,9 +26,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<PecletParams>(DEFAULT_PARAMS);
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
-
-  const sd = useSeamlessDim(running, { yaw: 0.55, pitch: -0.3 });
-  const dim = sd.dim;
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   const set = <K extends keyof PecletParams>(key: K, value: PecletParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -68,8 +65,11 @@ export function PecletModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'Walkers vs the analytic profile — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'The same contest as a volume — drag to orbit' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <IconButton
@@ -81,14 +81,13 @@ export function PecletModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <div {...sd.wrapperProps}>
+            <div>
               {dim === '2d' ? (
                 <PecletCanvas Pe={derived.Pe} running={running} dark={dark} />
               ) : (
-                <Peclet3DCanvas Pe={derived.Pe} running={running} dark={dark} cam={sd.cam} />
+                <Peclet3DCanvas Pe={derived.Pe} running={running} dark={dark} />
               )}
             </div>
-            {dim === '2d' && <SeamlessHint noun="The channel" />}
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               One honest trick: the on-screen drift is chosen so the VISUAL Péclet
               number equals the physical one (clamped at 60 so extreme presets stay

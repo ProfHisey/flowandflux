@@ -169,9 +169,14 @@ export function FickCanvas({
   );
 }
 
-/** Scroll-to-zoom for the 2D canvases (double-click resets). Purely a
- *  camera move — the simulation always runs in unzoomed pixels. Shared by
- *  the Fick, Fourier, and Newton 2D views. */
+/** Per-canvas pan offsets, CSS px. Keyed by the element so applyZoom can
+ *  find them without every call site having to thread a camera through. */
+const PAN = new WeakMap<HTMLCanvasElement, { px: number; py: number }>();
+
+/** The 2D camera for every flat canvas: scroll zooms ABOUT THE CURSOR,
+ *  dragging pans, double-click resets. Purely a camera move — the
+ *  simulation always runs in unzoomed pixels. (Touch is left to the page:
+ *  a touch drag scrolls, as before.) */
 export function useWheelZoom(
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
   zoomRef: React.RefObject<number>,
@@ -180,36 +185,90 @@ export function useWheelZoom(
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
+    const pan = PAN.get(el) ?? { px: 0, py: 0 };
+    PAN.set(el, pan);
+
+    const clamp = () => {
+      const r = el.getBoundingClientRect();
+      const lim = 0.75 * Math.max(r.width, r.height) * zoomRef.current!;
+      pan.px = Math.min(lim, Math.max(-lim, pan.px));
+      pan.py = Math.min(lim, Math.max(-lim, pan.py));
+    };
     const wheel = (e: WheelEvent) => {
       e.preventDefault();
-      zoomRef.current = Math.min(
-        3,
-        Math.max(0.5, zoomRef.current! * Math.exp(-e.deltaY * 0.0012)),
-      );
+      const r = el.getBoundingClientRect();
+      const sx = e.clientX - r.left - r.width / 2; // cursor, centre-relative
+      const sy = e.clientY - r.top - r.height / 2;
+      const z0 = zoomRef.current!;
+      const z1 = Math.min(3, Math.max(0.5, z0 * Math.exp(-e.deltaY * 0.0012)));
+      // Keep the world point under the cursor fixed while the scale changes:
+      // screen = (world − centre)·z + centre + pan.
+      pan.px = sx - (sx - pan.px) * (z1 / z0);
+      pan.py = sy - (sy - pan.py) * (z1 / z0);
+      zoomRef.current = z1;
+      clamp();
       bump((t) => t + 1);
+    };
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return; // touch scrolls the page
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      el.setPointerCapture(e.pointerId);
+      el.style.cursor = 'grabbing';
+    };
+    const move = (e: PointerEvent) => {
+      if (!dragging) return;
+      pan.px += e.clientX - lastX;
+      pan.py += e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      clamp();
+      bump((t) => t + 1);
+    };
+    const up = (e: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      el.releasePointerCapture(e.pointerId);
+      el.style.cursor = '';
     };
     const reset = () => {
       zoomRef.current = 1;
+      pan.px = 0;
+      pan.py = 0;
       bump((t) => t + 1);
     };
     el.addEventListener('wheel', wheel, { passive: false });
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
     el.addEventListener('dblclick', reset);
     return () => {
       el.removeEventListener('wheel', wheel);
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
       el.removeEventListener('dblclick', reset);
     };
   }, [canvasRef, zoomRef, bump]);
 }
 
-/** Centre-anchored zoom transform for a draw frame. */
+/** Camera transform for a draw frame: centre-anchored zoom plus the
+ *  canvas's pan offset (looked up by element, see PAN above). */
 export function applyZoom(
   ctx: CanvasRenderingContext2D,
   zm: number,
   W: number,
   H: number,
 ) {
-  if (zm === 1) return;
-  ctx.translate(W / 2, H / 2);
+  const pan = PAN.get(ctx.canvas) ?? { px: 0, py: 0 };
+  if (zm === 1 && pan.px === 0 && pan.py === 0) return;
+  ctx.translate(W / 2 + pan.px, H / 2 + pan.py);
   ctx.scale(zm, zm);
   ctx.translate(-W / 2, -H / 2);
 }

@@ -18,7 +18,6 @@ import { molPerCm3TomM } from '../../lib/fick';
 import { lengthCm, sci, timeS } from '../../lib/format';
 import { D_LANDMARKS } from '../FicksLaw/presets';
 import { Segmented } from '../../components/ui/Segmented';
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { UnsteadyCanvas, type PulseStats, type ReleaseMode } from './UnsteadyCanvas';
 import { Bolus3DCanvas } from './Bolus3DCanvas';
 import { UnsteadyChart } from './UnsteadyChart';
@@ -31,9 +30,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
   const [releaseTick, setReleaseTick] = useState(0);
   const [release, setRelease] = useState<ReleaseMode>('plane');
   const [stats, setStats] = useState<PulseStats | null>(null);
-
-  const sd = useSeamlessDim(running);
-  const dim = sd.dim;
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   const set = <K extends keyof UnsteadyParams>(key: K, value: UnsteadyParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -73,8 +70,11 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     value={dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'The burst against its analytic prediction — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'Point burst: σ = √(6Dt) — drag to orbit' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <IconButton
@@ -92,7 +92,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <div {...sd.wrapperProps}>
+            <div>
               {dim === '2d' ? (
                 <UnsteadyCanvas
                   mode={release}
@@ -106,11 +106,9 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                   releaseTick={releaseTick}
                   running={running}
                   dark={dark}
-                  cam={sd.cam}
                 />
               )}
             </div>
-            {dim === '2d' && <SeamlessHint noun="The burst" />}
             {dim === '3d' && (
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 The point-release version: a burst spreads as a SPHERE, and the amber

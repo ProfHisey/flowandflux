@@ -5,7 +5,6 @@ import { Panel } from '../../components/ui/Panel';
 import { Slider } from '../../components/ui/Slider';
 import { Segmented } from '../../components/ui/Segmented';
 
-import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { DividerCanvas, type MixStats } from './DividerCanvas';
 import { DividerHeatCanvas, type HeatMixStats } from './DividerHeatCanvas';
 import { Divider3DCanvas } from './Divider3DCanvas';
@@ -43,8 +42,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
     resetExperiment();
   };
 
-  // The seamless 2D/3D handoff (shared/seamless.tsx) — prototyped here.
-  const sd = useSeamlessDim(running);
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
 
   return (
     <div className="space-y-5">
@@ -73,9 +71,12 @@ export function DividerModule({ dark }: { dark: boolean }) {
                 </div>
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
-                    value={sd.dim}
-                    options={SEAMLESS_DIM_OPTIONS}
-                    onChange={sd.setDim}
+                    value={dim}
+                    options={[
+                      { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'The same box in space — drag to orbit' },
+                    ]}
+                    onChange={setDim}
                   />
                 </div>
                 <IconButton
@@ -87,8 +88,8 @@ export function DividerModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            <div {...sd.wrapperProps}>
-              {sd.dim === '3d' ? (
+            <div>
+              {dim === '3d' ? (
                 <Divider3DCanvas
                   mode={mode}
                   nLeft={nLeft}
@@ -103,7 +104,6 @@ export function DividerModule({ dark }: { dark: boolean }) {
                   resetTick={resetTick}
                   running={running}
                   dark={dark}
-                  cam={sd.cam}
                 />
               ) : mode === 'mass' ? (
                 <DividerCanvas
@@ -131,7 +131,6 @@ export function DividerModule({ dark }: { dark: boolean }) {
                 />
               )}
             </div>
-            {sd.dim === '2d' && <SeamlessHint noun="The box" />}
 
             <div className="mt-3 flex flex-wrap items-center gap-3">
               {dividerIn ? (

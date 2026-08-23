@@ -15,6 +15,14 @@
     color: inherit;
     font-size: 1.05em;
   }
+  /* Canvas cursor with dual-contrast rings (white halo + dark core) so it
+     never vanishes against white objects in light mode or dark fields in
+     night mode. 3D canvases override to grab/grabbing via inline style. */
+  main canvas {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 17 17'%3E%3Ccircle cx='8.5' cy='8.5' r='5' fill='none' stroke='white' stroke-width='3'/%3E%3Ccircle cx='8.5' cy='8.5' r='5' fill='none' stroke='%230f172a' stroke-width='1.5'/%3E%3C/svg%3E")
+        8 8,
+      crosshair;
+  }
 }
 
 @layer components {
