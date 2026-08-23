@@ -126,7 +126,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                 label={<InlineMath math="\bar T_{area}" />}
                 value={derived.Tavg.toFixed(1)}
                 unit="°C"
-                hint="a traversing probe's average — a different number"
+                hint="the section's area-weighted mean — a different number"
               />
               <Stat
                 label={<InlineMath math="\bar T_{area} - T_{mc}" />}
@@ -194,7 +194,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
               <li>Watch a wall tracer for ten seconds. How many times has the cup sampled the core meanwhile?</li>
               <li>80 °C wall, 20 °C core, n = 2 — predict both averages before looking. (They are round numbers.)</li>
               <li>Swap the temperatures. Which side of the area average does the cup land on now?</li>
-              <li>Slide n to 8. Why do the two averages nearly meet — and what kind of flow looks like this?</li>
+              <li>Slide n from 2 to 8 and watch the gap readout. Both averages drift toward T𝒸 — but the gap between them barely closes (it even peaks near n ≈ 2.8). Why does flattening the temperature alone not kill it — and what ELSE has to flatten before it dies?</li>
             </ul>
           </Panel>
         </div>
@@ -216,7 +216,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Two averages, one honest"
             latex={String.raw`\text{parabolic } T,\; T_w = 80,\; T_c = 20: \qquad \bar T_{area} = 50\ ^\circ\mathrm{C}, \qquad T_{mc} = 40\ ^\circ\mathrm{C}`}
-            note="Ten degrees apart on the same cross-section, both computed correctly — they answer different questions. A traversing thermocouple gives the area average; an energy balance needs the cup. Mistaking one for the other is a 25% error in the driving ΔT here, and nothing about the pipe changed."
+            note="Ten degrees apart on the same cross-section, both computed correctly — they answer different questions. An area-weighted survey of the section (each annulus counted by its 2πr dr of area) gives the 50; an energy balance needs the cup's 40. Mistaking one for the other is a 25% error in the driving ΔT here, and nothing about the pipe changed."
             defaultOpen={false}
           />
         </div>
@@ -230,7 +230,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="When the distinction dies"
             latex={String.raw`n \to \infty:\ \ \bar T_{area} \to T_c, \quad T_{mc} \to T_c`}
-            note="Flatten the profile and every average of it is the same number — which is roughly what turbulence does to both velocity and temperature. The mixing-cup correction is a laminar, round-profile phenomenon: exactly the flows of the Poiseuille page, which is why the two modules are neighbours."
+            note="Flatten the profile and every average of it is the same number — which is roughly what turbulence does to both velocity and temperature. Note the sliders here flatten only T while v stays parabolic, so the gap dies slowly (~2ΔT/n); the real collapse needs the velocity plug too — with uniform v, the two averages are identical for ANY temperature profile. The mixing-cup correction is a laminar, round-profile phenomenon: exactly the flows of the Poiseuille page, which is why the two modules are neighbours."
             defaultOpen={false}
           />
         </div>

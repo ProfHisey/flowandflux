@@ -143,7 +143,7 @@ export function StokesModule({ dark }: { dark: boolean }) {
                 this particle has left the creeping-flow regime, and Stokes drag
                 underestimates the real drag badly — every number on this page is now
                 an overestimate of the speed. The formula did not break; its
-                assumptions did. (Real 1 mm raindrops fall ~6 m/s, not 120.)
+                assumptions did. (A real drop this size falls ~6 m/s, not 120.)
               </p>
             )}
 
@@ -303,7 +303,7 @@ export function StokesModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Terminal velocity, and the two knobs"
             latex={String.raw`v_\infty = \frac{2\,(\rho_p - \rho_f)\,g\,a^2}{9\,\mu}`}
-            note="a² is the tyranny: a cell does a centimetre per day, a protein a hundred times smaller would take a century. g is the liberation: it enters linearly and a centrifuge can supply a million of them. Every separation protocol — pellets, gradients, spins — is a negotiation between those two terms."
+            note="a² is the tyranny: a cell does a centimetre per day, a particle a hundred times smaller would take a quarter-century. g is the liberation: it enters linearly and a centrifuge can supply a million of them. Every separation protocol — pellets, gradients, spins — is a negotiation between those two terms."
             defaultOpen={false}
           />
 

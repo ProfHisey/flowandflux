@@ -119,19 +119,26 @@ export function hmOf(p: CorrParams): number {
 /** Validity notes per geometry — surfaced honestly in the UI. */
 export function validity(p: CorrParams): string | null {
   const Re = reynolds(p);
+  const Pr = prandtl(p.fluid);
+  const Sc = schmidt(p);
   switch (p.geometry) {
     case 'plate':
       if (Re > 1e7) return 'Re > 10⁷: beyond the mixed-boundary-layer fit.';
       if (Re > 5e5) return 'Re > 5×10⁵: the boundary layer has gone turbulent — using the mixed correlation.';
+      if (Re < 100) return 'Re < 100: boundary-layer theory (and this fit) assumes Re^½ ≫ 1.';
       return null;
     case 'sphere':
-      if (Re > 5e4) return 'Re > 5×10⁴: outside Ranz–Marshall\'s comfortable range.';
+      if (Re > 5e4) return 'Re > 5×10⁴: far beyond Ranz–Marshall\'s droplet-data roots — treat as an extrapolation.';
       return null;
     case 'cylinder':
-      if (Re * prandtl(p.fluid) < 0.2) return 'Re·Pr < 0.2: below Churchill–Bernstein\'s validity.';
+      if (Re * Pr < 0.2) return 'Re·Pr < 0.2: below Churchill–Bernstein\'s validity.';
       return null;
     case 'tube':
       if (Re >= 2300 && Re < 1e4) return 'Re in the transition region (2300–10⁴): neither correlation is trustworthy here.';
+      if (Re >= 1e4 && (Pr < 0.7 || Pr > 160))
+        return `Pr = ${Pr.toPrecision(2)}: outside Dittus–Boelter's fitted range (0.7–160).`;
+      if (Re >= 1e4 && (Sc < 0.7 || Sc > 160))
+        return `Sc = ${Sc.toPrecision(2)}: outside Dittus–Boelter's fitted range (0.7–160) — the Sh number is an extrapolation.`;
       return null;
   }
 }

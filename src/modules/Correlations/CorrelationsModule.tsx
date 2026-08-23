@@ -313,7 +313,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="One correlation, two coefficients"
             latex={String.raw`\mathrm{Nu} = f(\mathrm{Re}, \mathrm{Pr}) \;\;\xrightarrow{\;\mathrm{Pr}\,\to\,\mathrm{Sc}\;}\;\; \mathrm{Sh} = f(\mathrm{Re}, \mathrm{Sc}) \qquad \frac{\mathrm{Sh}}{\mathrm{Nu}} = \left(\frac{\mathrm{Sc}}{\mathrm{Pr}}\right)^{1/3}`}
-            note="The heat–mass analogy's final form (Chilton–Colburn): measure one coefficient, transcribe the other. In water Sc/Pr = α/D ≈ 100, so Sh ≈ 4.6 Nu everywhere — the mass film is always the thin one, and mass transfer at surfaces is usually the bottleneck."
+            note="The heat–mass analogy's final form (Chilton–Colburn): measure one coefficient, transcribe the other. The ⅓-power ratio is exact for the Pr^⅓ correlations (the plate family here) and a good approximation whenever Nu is well above the additive constant — near the sphere's 2 or the cylinder's 0.3 it breaks down, and Dittus–Boelter's 0.4 exponent shifts it. In water Sc/Pr = α/D ≈ 144, so Sh ≈ 5 Nu — the mass film is always the thin one, and mass transfer at surfaces is usually the bottleneck."
             defaultOpen={true}
           />
           <EquationCard

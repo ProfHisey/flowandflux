@@ -22,7 +22,7 @@ import { applyZoom, chip2d, gauss, useWheelZoom } from '../FicksLaw/FickCanvas';
  *
  * Cosmetic compromises, stated: jiggle amplitude is normalized to the current
  * temperature range (physically, amplitude scales with sqrt of absolute
- * temperature, so 0 degC vs 100 degC would be a ~16% difference — invisible).
+ * temperature, so 0 degC vs 100 degC would be a ~17% difference — invisible).
  * The exchange rate is a visual constant, like D_VIS. The energy ledger the
  * counter reports is in lattice units, and is labelled as such.
  */

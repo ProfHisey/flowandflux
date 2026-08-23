@@ -65,8 +65,15 @@ import {
 } from '../src/lib/mixingcup';
 
 let failures = 0;
-const close = (a: number, b: number, tol = 1e-6) =>
-  Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Math.abs(b));
+/** Relative comparison. For a target of exactly zero the tolerance is
+ *  absolute (there is no scale to be relative to). No Math.max(1, ...)
+ *  floor: with it, every check against a value << 1 silently became an
+ *  absolute comparison and could not catch the value being wrong by orders
+ *  of magnitude — the audit of Aug 2026 found the flux checks vacuous. */
+const close = (a: number, b: number, tol = 1e-6) => {
+  if (b === 0) return Math.abs(a) <= tol;
+  return Math.abs(a - b) <= tol * Math.max(Math.abs(a), Math.abs(b));
+};
 
 function check(name: string, ok: boolean, detail = '') {
   if (ok) console.log(`  PASS  ${name}`);
@@ -575,8 +582,14 @@ check('wall Bi=1: C1 = 1.1191', close(coefC1('wall', 1), 1.1191, 2e-4), String(c
 check('wall Bi=10: zeta1 = 1.4289', close(zeta1('wall', 10), 1.4289, 2e-4), String(zeta1('wall', 10)));
 check('sphere Bi=1: zeta1 = pi/2', close(zeta1('sphere', 1), Math.PI / 2, 2e-4), String(zeta1('sphere', 1)));
 check('sphere Bi=1: C1 = 1.2732', close(coefC1('sphere', 1), 1.2732, 2e-4), String(coefC1('sphere', 1)));
-check('small Bi limit: zeta1^2 -> Bi (wall becomes lumped)',
-  close(zeta1('wall', 0.01) ** 2, 0.01, 5e-3 * 0.01 + 1e-4), String(zeta1('wall', 0.01) ** 2));
+// The limit's truncation term is O(Bi/3): zeta1^2 = Bi(1 - Bi/3 + ...), so
+// at Bi = 0.01 the relative deviation is ~0.33% — real asymptotics, not error.
+check('small Bi limit: zeta1^2 -> Bi (wall becomes lumped, to O(Bi/3))',
+  close(zeta1('wall', 0.01) ** 2, 0.01, 5e-3), String(zeta1('wall', 0.01) ** 2));
+// And the sphere's counterpart: zeta1^2 -> 3Bi, which is exactly what makes
+// tau_lumped = rho c (R/3) / h fall out (V/A = R/3).
+check('small Bi limit: zeta1^2 -> 3Bi (sphere becomes lumped, to O(Bi))',
+  close(zeta1('sphere', 0.01) ** 2, 0.03, 5e-3), String(zeta1('sphere', 0.01) ** 2));
 
 // --- 33b. The boiled egg, worked by hand ---------------------------------------
 // 2 cm-radius egg (k = 0.5, rho = 1030, c = 3400) from 4 C into boiling
@@ -607,6 +620,24 @@ check('small Bi limit: zeta1^2 -> Bi (wall becomes lumped)',
     Math.abs(centerTemp({ ...p, t: 20000 }) - p.Tinf) < 0.5);
   check('theta never exceeds 1 (clamped near t = 0)',
     Math.abs(centerTemp({ ...p, t: 1e-6 }) - p.Ti) < 1e-6);
+}
+
+// --- 34a2. Concrete wall in a heat wave (preset hand-check) ------------------
+// alpha = 1.4/(2400*880) = 6.63e-7 m^2/s; Fo = 0.2 at t = 0.2*L^2/alpha ~ 50 min
+// (the original blurb claimed ~8 hours — off by ~10x; caught in the Aug 2026
+// audit). At the preset's t = 8 h, Fo ~ 1.9 and the midplane has closed about
+// two-thirds of the 15->35 degC gap.
+{
+  const wall: HeislerParams = {
+    geometry: 'wall', L: 0.1, k: 1.4, rho: 2400, c: 880,
+    h: 10, Ti: 15, Tinf: 35, t: 3017,
+  };
+  check('concrete: Fo = 0.2 at ~50 min', close(fourierOf(wall), 0.2, 1e-2),
+    String(fourierOf(wall)));
+  check('concrete: Fo ~ 1.9 at 8 h', close(fourierOf({ ...wall, t: 28800 }), 1.909, 1e-2),
+    String(fourierOf({ ...wall, t: 28800 })));
+  const T8h = centerTemp({ ...wall, t: 28800 });
+  check('concrete: midplane ~2/3 closed after 8 h', T8h > 27 && T8h < 28.5, String(T8h));
 }
 
 // --- 34b. The Bi-Fo triage ---------------------------------------------------
@@ -696,7 +727,7 @@ console.log('\nWall shear force balances');
 
 // --- 39. A cell-sized particle, worked by hand ---------------------------------
 // a = 1 um, rho_p = 1050, water: v_inf = 2 (50)(9.81) a^2 / 9 mu = 1.09e-7 m/s
-// (~1 cm/day), tau = 2 rho_p a^2 / 9 mu = 2.33e-7 s, Re ~ 2e-10.
+// (~1 cm/day), tau = 2 rho_p a^2 / 9 mu = 2.33e-7 s, Re ~ 2e-7.
 console.log('\nA cell-sized particle, worked by hand');
 const cell: StokesParams = {
   a: 1e-6, rhoP: 1050, rhoF: 1000, mu: 1e-3, gFactor: 1, Lint: 0.01,
@@ -833,7 +864,7 @@ check('tip is cooler than base but warmer than air',
 check('long-fin limit: profile -> e^{-mx}',
   close(
     finTemp({ ...rod, L: 10 }, 0.1),
-    rod.Tinf + (rod.T0 - rod.Tinf) * Math.exp(-finML(rod) / rod.L * 0.1 * rod.L / rod.L * 0.1 * 0 + -Math.sqrt(2 * rod.h / (rod.k * rod.R)) * 0.1),
+    rod.Tinf + (rod.T0 - rod.Tinf) * Math.exp(-Math.sqrt(2 * rod.h / (rod.k * rod.R)) * 0.1),
     1e-6,
   ), String(finTemp({ ...rod, L: 10 }, 0.1)));
 check('effectiveness = Q_fin / Q_bare and is >> 1 here',

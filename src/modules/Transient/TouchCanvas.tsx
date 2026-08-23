@@ -136,7 +136,7 @@ export function TouchCanvas({
     ctx.fillText(`${right.name} · started at ${fmtT(right.T)} °C`, xc + sideW / 2, y0 - 9);
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.textAlign = 'right';
-    ctx.fillText(`t = ${t.toFixed(1)} s (visual clock; front-speed ratio is real)`, x1, y1 + 20);
+    ctx.fillText(`t = ${t.toFixed(1)} s (visual clock; front-speed ordering is real, the spread compressed)`, x1, y1 + 20);
 
     // The payload: the contact temperature, pinned to the interface.
     chip2d(ctx, xc, (y0 + y1) / 2, `contact: ${fmtT(Tc)} °C — instantly, and it stays`, dark);

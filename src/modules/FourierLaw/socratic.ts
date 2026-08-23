@@ -31,7 +31,7 @@ export const FOURIER_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'A metal doorknob and a wooden door are both at 15 °C. The knob feels much colder. Your skin is not lying — what is it actually measuring?',
     resolution:
-      'Flux, not temperature. Skin reports the rate at which heat leaves it. With k(metal) ~ 100 W/m·K versus k(wood) ~ 0.1, the knob conducts heat away from your hand a thousand times faster, so it produces a bigger q″ at the same ΔT. Thermometers measure T; nerves measure q″. Confusing the two is the everyday version of confusing T with heat.',
+      'Flux, not temperature. Skin reports the rate at which heat leaves it. But be careful with the tempting k-ratio argument: touching is TRANSIENT contact, governed by effusivity e = √(kρc), not by k alone — your skin is itself part of the series path, and it is the bottleneck. The metal drags your skin surface down toward ~17 °C while wood holds it near ~31 °C (the sudden-contact module computes exactly this), so the flux difference is a factor of a few, not the thousand the k-ratio suggests. Thermometers measure T; nerves measure the flux at that shifted contact temperature. Confusing the two is the everyday version of confusing T with heat.',
   },
   {
     q: 'The jiggle amplitude on screen changes a lot between the hot and cold walls. Physically, should it?',

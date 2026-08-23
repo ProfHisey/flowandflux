@@ -9,7 +9,7 @@ export const GASLIQUID_QUESTIONS: SocraticQuestion[] = [
     q: 'Both boxes sit at the same temperature, so the tagged molecule moves just as fast in the liquid as in the gas. Yet the "net wander" readout says it gets almost nowhere. Where does all that speed go?',
     probe: 'Watch the orange trail in the liquid for ten seconds. How far apart are its farthest two points, in molecule widths?',
     resolution:
-      'Into reversals. The liquid molecule covers just as much PATH as the gas one, but every fraction of a diameter it hits a neighbour and its direction is randomized, so the path folds back on itself almost perfectly. Displacement grows with the number of FREE FLIGHTS times their length, not with speed alone — and in a liquid the free flight is a fraction of a diameter. Fast motion, tiny steps, slow diffusion.',
+      'Into reversals. The liquid molecule covers just as much PATH as the gas one, but every fraction of a diameter it hits a neighbour and its direction is randomized, so the path folds back on itself almost perfectly. Displacement grows as √(number of flights) × flight length — that is, √(path × step length) — so at equal path and equal time, the box with the longer step wins. In a liquid the step is a fraction of a diameter. Fast motion, tiny steps, slow diffusion.',
   },
   {
     q: 'Turn the temperature up. Both boxes speed up by the same factor — but which box\'s diffusion benefits more, and why does heating a liquid do more than this simulation shows?',

@@ -147,7 +147,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 label={<InlineMath math="M" />}
                 value={sci(params.M)}
                 unit="mol"
-                hint="area under the curve — conserved forever"
+                hint="the released amount — conserved forever"
               />
               <Stat
                 label={<InlineMath math="t" />}

@@ -40,7 +40,7 @@ export const PRESETS: Preset[] = [
     source: 'Kitchen',
     blurb:
       'Glycerin squeezed through a 1 mm slot, 10 cm long, 10 kPa of driving pressure. Viscosity three decades up; watch what it costs.',
-    check: 'v̄ = h²ΔP/12μL ≈ 6 mm/s — a thousand times slower than the water capillary',
+    check: 'v̄ = h²ΔP/12μL ≈ 6 mm/s — fifty times slower than the water capillary, even with ten times the pressure behind it',
     params: {
       geometry: 'plates', mu: 1.4, rho: 1260, dP: 10000, L: 0.1, R: 5e-4, h: 1e-3, W: 0.05,
     },

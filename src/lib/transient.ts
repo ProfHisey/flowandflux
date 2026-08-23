@@ -168,9 +168,11 @@ export type TransientRegime = 'lumped' | 'semi' | 'either' | 'oneterm';
 /**
  * The triage every unsteady conduction problem starts with. Bi < 0.1: the
  * inside keeps up, one lumped exponential is enough. Fo < 0.2: the far side
- * has not felt anything yet, the semi-infinite erf solution applies. Both:
- * either shortcut works. Neither: the full one-term machinery (the Heisler
- * page) is the tool.
+ * has not felt anything yet, so a SEMI-INFINITE treatment applies (the
+ * fixed-surface erf only if Bi is also large enough to pin the surface;
+ * otherwise the convective-surface variant). Both small: lumped is the
+ * tool — a fixed-surface erf would badly overstate the surface response at
+ * small Bi. Neither: the full one-term machinery (the Heisler page).
  */
 export function transientRegime(Bi: number, Fo: number): TransientRegime {
   const lumped = Bi < 0.1;

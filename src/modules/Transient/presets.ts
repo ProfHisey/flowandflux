@@ -21,7 +21,7 @@ export interface TouchPreset {
   name: string;
   source: string;
   blurb: string;
-  /** Right-hand material name (left is always skin at 33 degC). */
+  /** Right-hand material name (left is always skin, 37 degC by default). */
   material: string;
   T: number;
   check?: string;
@@ -119,7 +119,7 @@ export const HEISLER_PRESETS: HeislerPreset[] = [
     source: 'Building',
     blurb:
       'A 20 cm concrete wall, 15 °C from a cool night, hit by a 35 °C day on both faces. How long before the middle of the wall knows?',
-    check: 'Fo reaches 0.2 only after ~8 hours — massive walls time-shift the heat of the day, which is the whole trick of thermal mass',
+    check: 'Fo hits 0.2 in ~50 min; by the 8-hour mark Fo ≈ 1.9 and the midplane has closed about two-thirds of the 15→35 °C gap — thermal mass delays the day\'s heat by hours, not by the whole day',
     params: {
       geometry: 'wall', L: 0.1, k: 1.4, rho: 2400, c: 880,
       h: 10, Ti: 15, Tinf: 35, t: 28800,

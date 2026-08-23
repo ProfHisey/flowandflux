@@ -48,7 +48,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
         <div className="order-1 space-y-5 lg:col-start-1 lg:row-start-1">
           <Panel
             title="Two ways to wander"
-            subtitle="Same molecules, same temperature. Only the crowding differs — watch the orange one."
+            subtitle="Same kind of molecule, same temperature. Only the crowding differs — watch the orange one."
             right={
               <div className="flex shrink-0 items-center gap-1.5">
                 <div className="w-28">
@@ -102,8 +102,10 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
               then. The liquid molecule moves <em>just as fast</em>, but it cannot
               finish a single body length before a neighbour turns it around: it
               rattles in a cage, and only escapes when the cage happens to open. That
-              one difference is why a smell crosses a room in minutes but sugar takes
-              hours to sweeten unstirred tea.
+              one difference is why a smell diffuses across a centimetre of still air
+              in seconds while sugar takes a day to cross an unstirred teacup — same
+              distance-squared clock, four decades apart in D. (Crossing a whole room
+              is a different story: that is air currents, as the Péclet module shows.)
             </p>
           </Panel>
         </div>
@@ -119,7 +121,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 value={stats ? stats.gasFlight.toFixed(1) : '—'}
                 unit="diameters"
                 tone="accent"
-                hint="mean straight run between collisions"
+                hint="mean path between molecular collisions"
               />
               <Stat
                 label="Gas: collisions"
@@ -157,8 +159,8 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
             </div>
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               The honest caveat: even this on-screen "gas" is far denser than a real
-              one — drawn to true scale the box would be nearly empty and you would
-              wait minutes per collision. A real air molecule flies about{' '}
+              one — drawn to true scale the box would be nearly empty, with seconds
+              between collisions. A real air molecule flies about{' '}
               <strong>{Math.round(FLIGHT_DIAM)} diameters</strong> between collisions
               and is redirected <strong>{(COLL_RATE / 1e9).toFixed(0)} billion times
               per second</strong>; the cards below carry those real numbers. The
@@ -234,7 +236,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Where liquid D comes from — Stokes–Einstein"
             latex={String.raw`D = \frac{k_B T}{6 \pi \mu a}`}
-            note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbours, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than the gas √T.`}
+            note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbours, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than a gas's ~T^{3/2} at fixed pressure.`}
           />
           <EquationCard
             title="The four decades"

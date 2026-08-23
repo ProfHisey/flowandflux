@@ -5,7 +5,7 @@
  * per second. The honest single temperature is the one a cup at the outlet
  * would collect: velocity-weighted, not area-weighted,
  *
- *   T_mc = ∫ ρ c v T dA / ∫ ρ c v dA .
+ *   T_mc = ∫ ρ_f c v T dA / ∫ ρ_f c v dA   (ρ_f = fluid density).
  *
  * Every internal-flow h and every energy balance along a pipe is written
  * against THIS temperature; the plain area average is a different (and
@@ -18,7 +18,7 @@
  *
  * (T_c at the centreline, T_w at the wall; n = 2 is parabolic, large n is a
  * flat core with a thin wall layer). Both averages are then closed-form:
- * v̄, R, ρ and c all cancel, so the SHAPE alone decides the answer.
+ * v̄, R, the density and c all cancel, so the SHAPE alone decides the answer.
  */
 
 export interface MixingCupParams {

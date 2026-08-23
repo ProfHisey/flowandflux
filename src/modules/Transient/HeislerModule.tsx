@@ -305,7 +305,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The triage: which unsteady tool?"
             latex={String.raw`\mathrm{Bi} \ll 1:\ \text{lumped} \qquad \mathrm{Fo} \ll 1:\ \text{semi-infinite} \qquad \text{otherwise: this page}`}
-            note="Small Bi — the inside keeps up, the law-of-cooling module's single exponential is enough. Small Fo — the far side has not felt anything yet, the sudden-contact module's erf solution applies. Only the middle ground needs the full mode machinery, and this page IS that middle ground."
+            note="Small Bi — the inside keeps up, the law-of-cooling module's single exponential is enough. Small Fo — the far side has not felt anything yet, so treat the body as semi-infinite (the sudden-contact module's fixed-surface erf when Bi is large enough to pin the surface; the convective-surface variant otherwise). Only the middle ground needs the full mode machinery, and this page IS that middle ground. (Bi here uses L = half-thickness or radius, matching the charts; the lumped rule of thumb's V/A makes the sphere threshold 3× looser, so this triage errs on the safe side.)"
             defaultOpen={false}
           />
         </div>
@@ -313,7 +313,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The limits, and the bridge"
             latex={String.raw`\mathrm{Bi} \to 0:\ \ \zeta_1^2 \to \mathrm{Bi} \ \Rightarrow\ \theta_0/\theta_i \to e^{-\mathrm{Bi}\,\mathrm{Fo}} = e^{-t/\tau_{lumped}}`}
-            note="Let Bi shrink and the one-term solution collapses into the lumped exponential from the law-of-cooling module — τ = ρVc/hA falls out exactly. Large Bi is the opposite regime: the surface takes the fluid temperature at once and pure internal conduction sets the pace. One family of solutions, with lumped cooling and the semi-infinite solid as its two ends."
+            note="Let Bi shrink and the one-term solution collapses into the lumped exponential from the law-of-cooling module — for the wall, ζ₁² → Bi and τ = ρVc/hA falls out exactly (the sphere does the same through ζ₁² → 3Bi, which is precisely its V/A = R/3). Large Bi is the opposite regime: the surface takes the fluid temperature at once and pure internal conduction sets the pace. One family of solutions, with lumped cooling and the semi-infinite solid as its two ends."
             defaultOpen={false}
           />
           <EquationCard
@@ -340,13 +340,17 @@ function RegimeLine({ Bi, Fo }: { Bi: number; Fo: number }) {
     ) : regime === 'semi' ? (
       <>
         <strong>Fo &lt; 0.2: the far side has not felt anything yet.</strong> The
-        body might as well be infinite, so the sudden-contact module's erf
-        solution applies — and the one-term line here is still shaky this early.
+        body might as well be infinite — use a semi-infinite treatment (the
+        sudden-contact module's erf when Bi is large enough to pin the surface;
+        the convective-surface variant otherwise). The one-term line here is
+        still shaky this early.
       </>
     ) : regime === 'either' ? (
       <>
-        <strong>Both shortcuts apply.</strong> Small Bi and small Fo: the lumped
-        exponential and the erf solution both work here. Pick the cheaper one.
+        <strong>Small Bi and small Fo.</strong> The inside keeps up, so the
+        lumped exponential is the tool — barely anything has happened yet, and
+        it captures what has. (A fixed-surface erf would badly overstate the
+        surface response at this Bi.)
       </>
     ) : (
       <>

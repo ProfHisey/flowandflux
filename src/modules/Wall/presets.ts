@@ -44,7 +44,7 @@ export const PRESETS: Preset[] = [
     source: 'Building',
     blurb:
       'Same window, but with a 12 mm sealed air gap between two panes. One added layer of still air, nothing exotic.',
-    check: 'U drops from 5.9 to 1.6 W/m²K, and the air gap seizes ~73% of the whole ΔT',
+    check: 'conduction-only U drops from 5.9 to 1.6 W/m²K, the air gap seizing ~73% of the ΔT — real units land nearer 2.8, because radiation between the panes shorts part of the gap',
     params: {
       layers: [
         { name: 'Glass', k: 1.0, L: 0.004 },

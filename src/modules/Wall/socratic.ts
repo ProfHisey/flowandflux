@@ -14,7 +14,7 @@ export const WALL_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'Switch from single to double glazing. One 12 mm layer of ordinary air cuts the heat loss almost four-fold. Why does THAT layer matter when the air films already present did not do the job?',
     resolution:
-      'Because it is sealed. The gap is a captive slab of the best cheap insulator there is (k = 0.026 W/m·K), thick enough to add ~0.46 K/W — instantly the dominant resistor, taking ~73% of the whole ΔT. In series circuits only the biggest resistance matters much; the design lesson is to find the budget hog before optimizing anything else. Improving the glass here is polishing a doorknob on a house with no roof.',
+      'Because it is sealed. The gap is a captive slab of the best cheap insulator there is (k = 0.026 W/m·K), thick enough to add ~0.46 K/W by conduction — instantly the dominant resistor, taking ~73% of the whole ΔT in this circuit. (Honesty note: a real gap gives up roughly half of that, because the panes also exchange heat by radiation, a parallel path this conduction-only circuit omits — which is exactly what low-e coatings exist to suppress.) In series circuits only the biggest resistance matters much; the design lesson is to find the budget hog before optimizing anything else. Improving the glass here is polishing a doorknob on a house with no roof.',
   },
   {
     q: 'The temperature profile is steep in some layers and nearly flat in others. Same Q everywhere — so what sets the slope?',
@@ -24,7 +24,7 @@ export const WALL_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'The convection films appear on the chart as temperature cliffs — a drop with no thickness. Is that physical?',
     resolution:
-      'Almost. The drop really happens across the boundary layer, a fraction of a millimetre of nearly-still fluid, which at wall scale draws as a cliff. R = 1/hA is that thin film in circuit costume — the same h from the law-of-cooling module. Series-circuit thinking does not care whether a resistance is a solid layer or a film; ΔT_i = Q·R_i either way.',
+      'Almost. The drop really happens across the boundary layer — a few millimetres of nearly-still air for the natural-convection films here (δ ≈ k/h), thinner for water or forced flow — which at wall scale draws as a cliff. R = 1/hA is that thin film in circuit costume — the same h from the law-of-cooling module. Series-circuit thinking does not care whether a resistance is a solid layer or a film; ΔT_i = Q·R_i either way.',
   },
   {
     q: 'When is this whole circuit picture allowed — and what breaks it?',

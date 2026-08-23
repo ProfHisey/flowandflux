@@ -39,7 +39,7 @@ export const PRESETS: Preset[] = [
     name: 'Steel ball quenched in oil',
     source: 'Workshop',
     blurb:
-      'A 1 cm steel ball drops from the furnace into stirred oil (h ≈ 400 W/m²K). Metals are the lumped model at its best — check the Biot number.',
+      'A 2 cm steel ball drops from the furnace into stirred oil (h ≈ 400 W/m²K). Metals are the lumped model at its best — check the Biot number.',
     check: 'τ ≈ 32 s and Bi ≈ 0.03: the inside keeps up with the surface easily',
     params: {
       h: 400, A: 1.26e-3, V: 4.19e-6, rho: 7800, cp: 490, k: 45, T0: 150, Tinf: 40, t: 20,

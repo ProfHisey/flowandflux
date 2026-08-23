@@ -13,6 +13,10 @@
  * in proportion to resistance, so the dominant resistor is visible as the
  * biggest drop. Add a 1 cm air gap to a glass pane and watch it take over.
  *
+ * Conduction + films only — no radiation resistors. For a glazing cavity
+ * that omission matters (pane-to-pane radiation roughly halves the gap's
+ * real benefit); the UI copy owns that where it quotes real U-values.
+ *
  * Internal unit system is SI, matching the heat modules.
  */
 

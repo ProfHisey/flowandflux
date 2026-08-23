@@ -18,7 +18,7 @@ export const PRESETS: Preset[] = [
     source: 'Building',
     blurb:
       'A 1 m² window pane, 5 mm of glass. Room side held at 20 °C, outside at 0 °C. Single glazing is a spectacular way to heat the outdoors.',
-    check: 'R_th = 0.005 K/W and Q = 4000 W — glass is not the insulator, the air gap is',
+    check: 'R_th = 0.005 K/W and Q = 4000 W — glass is not the insulator, the still-air films on its two faces are',
     params: {
       geometry: 'slab', k: 1.0, T1: 20, T2: 0, L: 0.005, A: 1, r1: 0.05, r2: 0.15,
     },

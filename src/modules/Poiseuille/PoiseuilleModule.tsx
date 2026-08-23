@@ -359,7 +359,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
               { symbol: 'Q', meaning: 'volumetric flow rate, m³/s', maps: 'Q readout' },
               { symbol: 'R^4', meaning: 'the headline: area (R²) × faster centreline (R²)', maps: 'R slider' },
             ]}
-            note="Derived experimentally for blood by Poiseuille (1839) before anyone could derive it from first principles. The fourth power is the punchline: 20% narrower means 41% of the flow, which is why vessel radius — not the heart — is the body's flow-control knob, and why a stenosis is worse than it looks."
+            note="Established experimentally by Poiseuille (1840s) — a physician chasing blood flow, though blood clotted in his glass capillaries and he had to use water — decades before anyone could derive it from first principles. The fourth power is the punchline: 20% narrower means 41% of the flow, which is why vessel radius — not the heart — is the body's flow-control knob, and why a stenosis is worse than it looks."
           />
 
           <EquationCard
@@ -386,7 +386,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="When the parabola dies"
             latex={String.raw`\mathrm{Re} = \frac{\rho\,\bar{v}\,D}{\mu} \gtrsim 2000 \;\Rightarrow\; \text{turbulence}`}
-            note="Everything on this page assumes laminar flow. Push Re past ~2000 in a tube and the neat layers shred into eddies: pressure drop rises, profiles flatten, and Q ~ R⁴ fails. Blood flow is laminar almost everywhere (Re ~ 1 in capillaries, ~1000s only in the aorta) — one of nature's many quiet endorsements of the laminar regime."
+            note="Everything on this page assumes laminar flow. Push Re past ~2000 in a tube and the neat layers shred into eddies: pressure drop rises, profiles flatten, and Q ~ R⁴ fails. Blood flow is laminar almost everywhere (Re ~ 10⁻³ in capillaries, ~1 in arterioles, ~1000s only in the aorta) — one of nature's many quiet endorsements of the laminar regime."
             defaultOpen={false}
           />
         </div>

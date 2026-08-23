@@ -37,7 +37,7 @@ export const PRESETS: Preset[] = [
     name: 'Oxygen into a cell layer',
     source: 'Bioreactor',
     blurb:
-      'Culture medium carrying about 0.88 mM of dissolved O₂ feeds a 25 µm layer of cells and gel; the cells consume oxygen fast enough to hold the far face near zero.',
+      'Oxygen-enriched culture medium (~0.88 mM dissolved O₂ — air-equilibrated medium holds only ~0.2 mM) feeds a 25 µm acellular gel layer; the cell monolayer beneath consumes oxygen fast enough to hold that face near zero.',
     params: {
       geometry: 'slab',
       D: 2e-5,
@@ -54,7 +54,7 @@ export const PRESETS: Preset[] = [
     name: 'Drug from a microsphere',
     source: 'Controlled release',
     blurb:
-      'A drug-loaded microsphere releases into surrounding tissue. Its surface is held at C₀; far away the tissue clears the drug. The classic spherical steady-state problem.',
+      'A drug-loaded microsphere releases into surrounding tissue. Its surface is held at C₁; far away the tissue clears the drug. The classic spherical steady-state problem.',
     params: {
       geometry: 'sphere',
       D: 1e-6,
@@ -90,8 +90,8 @@ export const DEFAULT_PARAMS: FickParams = PRESETS[0].params;
 /** Landmark D values for the "how big is D, really" scale. */
 export const D_LANDMARKS: { label: string; D: number }[] = [
   { label: 'Gases', D: 0.1 },
-  { label: 'O₂ in water', D: 1e-5 },
+  { label: 'O₂ in water', D: 2e-5 },
   { label: 'Albumin in saline', D: 8e-7 },
-  { label: 'Macromolecule in a cell', D: 1e-9 },
+  { label: 'Large complex / DNA in cytoplasm', D: 1e-9 },
   { label: 'Solids', D: 1e-10 },
 ];

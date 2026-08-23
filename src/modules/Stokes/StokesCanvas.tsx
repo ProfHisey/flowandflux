@@ -137,11 +137,16 @@ export function StokesCanvas({
     ctx.fill();
 
     // Force arrows, true relative magnitudes. At terminal velocity:
-    // weight (down) = buoyancy + drag (up), so the drawn lengths balance.
+    // Drag opposes the motion: settling (v down) puts drag UP beside
+    // buoyancy, W = B + D; floating (v up) puts drag DOWN beside weight,
+    // B = W + D. Either way the two stacks are equal at terminal velocity
+    // and the drawn lengths balance.
     const Wg = p.rhoP * (4 / 3) * Math.PI * p.a ** 3 * gEff(p);
     const B = p.rhoF * (4 / 3) * Math.PI * p.a ** 3 * gEff(p);
     const Dg = Math.abs(dragForce(p.mu, p.a, vinf));
-    const K = 92 / Math.max(Wg, B + Dg);
+    const downSum = Wg + (dir < 0 ? Dg : 0);
+    const upSum = B + (dir > 0 ? Dg : 0);
+    const K = 92 / Math.max(downSum, upSum);
 
     const arrow = (x: number, yA: number, yB: number, color: string, w = 2.5) => {
       ctx.strokeStyle = color;
@@ -160,11 +165,11 @@ export function StokesCanvas({
       ctx.fill();
     };
 
-    // Weight, down from the centre.
+    // Weight, down from the centre; buoyancy up on the other side; drag
+    // beside whichever of them it reinforces (always opposing the motion).
     arrow(sx - 34, sy, sy + Wg * K, dark ? '#f87171' : '#dc2626');
-    // Buoyancy then drag, stacked upward on the other side.
     arrow(sx + 34, sy, sy - B * K, dark ? '#38bdf8' : '#0284c7');
-    arrow(sx + 58, sy, sy - Dg * K, dark ? '#34d399' : '#047857');
+    arrow(sx + 58, sy, sy - dir * Dg * K, dark ? '#34d399' : '#047857');
 
     ctx.font = '600 10px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'center';
@@ -173,7 +178,11 @@ export function StokesCanvas({
     ctx.fillStyle = dark ? '#38bdf8' : '#0284c7';
     ctx.fillText('buoyancy', sx + 34, sy - B * K - 8);
     ctx.fillStyle = dark ? '#34d399' : '#047857';
-    ctx.fillText('drag 6πμav', sx + 58 + 6, sy - Dg * K - 8);
+    ctx.fillText(
+      'drag 6πμav',
+      sx + 58 + 6,
+      dir > 0 ? sy - Dg * K - 8 : sy + Dg * K + 16,
+    );
 
     // Box and labels.
     ctx.strokeStyle = dark ? '#475569' : '#94a3b8';

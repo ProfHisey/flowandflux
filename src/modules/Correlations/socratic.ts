@@ -18,7 +18,7 @@ export const CORR_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'In water, Sh outruns Nu by a factor of ~5 in every one of these correlations. What property gap is that, and why ⅓-power?',
     resolution:
-      'Sc/Pr = (ν/D)/(ν/α) = α/D ≈ 100 in water — heat diffuses ~100× faster than solutes. The films scale with the ⅓ power of that (boundary-layer mathematics compresses diffusivity contrasts), so Sh/Nu = (Sc/Pr)^⅓ ≈ 4.6. The concentration film is the thinnest thing in the whole flow — which is precisely why mass transfer at surfaces is so often the bottleneck in bioreactors and membranes.',
+      'Sc/Pr = (ν/D)/(ν/α) = α/D ≈ 144 in water (this page\'s own property table) — heat diffuses two decades faster than solutes. The films scale with the ⅓ power of that (boundary-layer mathematics compresses diffusivity contrasts), so Sh/Nu = (Sc/Pr)^⅓ ≈ 5 for the ⅓-power correlations. The concentration film is the thinnest thing in the whole flow — which is precisely why mass transfer at surfaces is so often the bottleneck in bioreactors and membranes.',
   },
   {
     q: 'Fully developed laminar tube flow: Nu = 3.66, no Re anywhere in it. You double the pump speed and transfer per area does not improve. Why not — and what WOULD improve it?',

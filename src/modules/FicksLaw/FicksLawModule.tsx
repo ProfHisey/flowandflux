@@ -186,7 +186,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
               <Stat
                 label={
                   <>
-                    <InlineMath math="dC/dx" /> at {isSlab ? 'x = 0' : 'r₁'}
+                    <InlineMath math={isSlab ? 'dC/dx' : 'dC/dr'} /> at {isSlab ? 'x = 0' : 'r₁'}
                   </>
                 }
                 value={sci(derived.gradIn)}

@@ -130,7 +130,8 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                     <>
                       A pin fin (4 mm radius, 8 cm long — fixed for this view) grown from a
                       base at T₀, shaded by its own solution θ = cosh(m(L−x))/cosh(mL) with
-                      m = √(hP/kA) = √(2h/kR). Every colour is physical and answers to the
+                      m = √(hP/kA) = √(2h/kR) (the insulated-tip solution — a convecting
+                      tip is absorbed by adding R/2 to L). Every colour is physical and answers to the
                       sliders: raise h and the colour dies faster along the rod — the fluid
                       drains the fin before heat gets far; raise k (copper) and the whole rod
                       holds the base colour. When the far end reaches the fluid temperature,
@@ -409,7 +410,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The Biot number — when is one temperature honest?"
             latex={String.raw`\mathrm{Bi} = \frac{h\,L_c}{k}, \qquad L_c = \frac{V}{A}, \qquad \mathrm{Bi} \lesssim 0.1\ \text{lumped OK}`}
-            note="A race: convection stripping heat from the surface vs conduction resupplying it from inside. Bi small — the inside keeps up, the object really is one temperature (quenched steel: 0.03). Bi large — the centre lags the surface (the roast: 0.8) and you need the spatial solutions. Every lumped answer should arrive with its Bi attached."
+            note="A race: convection stripping heat from the surface vs conduction resupplying it from inside. Bi small — the inside keeps up, the object really is one temperature (quenched steel: 0.03). Bi large — the centre lags the surface (the roast: 0.8) and you need the spatial solutions. Every lumped answer should arrive with its Bi attached. (Convention alert: this Bi uses L_c = V/A; the Heisler charts use the half-thickness or radius — for a sphere those differ by 3×, so compare Bi values across the two pages with care.)"
             defaultOpen={false}
           />
 

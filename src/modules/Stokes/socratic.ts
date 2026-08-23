@@ -14,7 +14,7 @@ export const STOKES_QUESTIONS: SocraticQuestion[] = [
     q: 'v∞ goes as a². A cell settles a centimetre per day; what about the protein a hundred times smaller, and what rescues the situation?',
     probe: 'Slide the radius down two decades and watch the settling-time readout.',
     resolution:
-      'A hundred times smaller means ten thousand times slower — a century per centimetre. Gravity has effectively resigned. The rescue is the only linear knob left: g itself. Spin the sample at 100,000 g and the impossible century becomes a workable afternoon. Every centrifugation protocol is this arithmetic — choosing g and time to catch particles of one size while leaving smaller ones suspended.',
+      'A hundred times smaller means ten thousand times slower — a quarter-century per centimetre. Gravity has effectively resigned. The rescue is the only linear knob left: g itself. Spin the sample at 100,000 g and the impossible decades become a workable afternoon. Every centrifugation protocol is this arithmetic — choosing g and time to catch particles of one size while leaving smaller ones suspended.',
   },
   {
     q: 'The drag force 6πμav contains the same 6πμa as the Stokes–Einstein diffusivity D = k_BT/6πμa. Coincidence?',

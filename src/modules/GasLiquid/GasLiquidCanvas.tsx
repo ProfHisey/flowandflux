@@ -316,7 +316,7 @@ export function GasLiquidCanvas({
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('same molecules, same temperature — only the crowding differs', pad + 2, H - pad + 4);
+    ctx.fillText('same kind of molecule, same temperature — only the crowding differs', pad + 2, H - pad + 4);
     ctx.textAlign = 'right';
     ctx.fillText('sizes & speeds schematic', W - pad - 2, H - pad + 4);
 

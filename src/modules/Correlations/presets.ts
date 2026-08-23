@@ -24,7 +24,7 @@ export const PRESETS: Preset[] = [
     blurb:
       'A 5 m/s breeze across an arm (a 7 cm cylinder). Compare h against the still-air ~10 W/m²K from the cooling module — that difference IS wind chill.',
     geometry: 'cylinder', fluid: AIR, v: 5, L: 0.07, D: 2.6e-5,
-    check: 'Re ≈ 2.3×10⁴, Nu ≈ 90 → h ≈ 33 W/m²K: the breeze triples still-air cooling. Wind chill is a Nusselt number',
+    check: 'Re ≈ 2.3×10⁴, Nu ≈ 86 → h ≈ 32 W/m²K: the breeze triples still-air cooling. Wind chill is a Nusselt number',
   },
   {
     id: 'droplet',
@@ -33,7 +33,7 @@ export const PRESETS: Preset[] = [
     blurb:
       'A 1 mm water droplet falling through air at 4 m/s, losing vapour. Ranz–Marshall was fitted on exactly this experiment.',
     geometry: 'sphere', fluid: AIR, v: 4, L: 1e-3, D: 2.6e-5,
-    check: 'Re ≈ 267, Sh = 2 + 0.6·Re^½·Sc^⅓ ≈ 11: convection is ~5× the pure-diffusion (Sh = 2) evaporation rate',
+    check: 'Re ≈ 267, Sh = 2 + 0.6·Re^½·Sc^⅓ ≈ 10: convection is ~5× the pure-diffusion (Sh = 2) evaporation rate',
   },
   {
     id: 'tubing',

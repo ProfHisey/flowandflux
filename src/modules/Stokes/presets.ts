@@ -51,8 +51,8 @@ export const PRESETS: Preset[] = [
     name: 'A raindrop that breaks the rules',
     source: 'Fine print',
     blurb:
-      'A 1 mm raindrop, same formula. Stokes cheerfully predicts over 100 m/s — faster than a skydiver. Something has gone wrong, and the Re readout says what.',
-    check: 'Stokes gives v∞ ≈ 121 m/s — nonsense (real drops: ~6 m/s). Re ≫ 1: the formula has left its validity range, and honest tools say so',
+      'A raindrop of 1 mm radius, same formula. Stokes cheerfully predicts over 100 m/s — faster than a skydiver. Something has gone wrong, and the Re readout says what.',
+    check: 'Stokes gives v∞ ≈ 121 m/s — nonsense (a real 2 mm-diameter drop falls ~6 m/s). Re ≫ 1: the formula has left its validity range, and honest tools say so',
     params: { a: 1e-3, rhoP: 1000, rhoF: 1.2, mu: 1.8e-5, gFactor: 1, Lint: 100 },
   },
 ];

@@ -422,7 +422,7 @@ export function WallModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The U-value"
             latex={String.raw`U \equiv \frac{1}{R_{tot}\,A} \qquad [\mathrm{W/m^2K}] \qquad Q = U\,A\,\Delta T`}
-            note="Industry's way of quoting 1/R per square metre: single glazing ≈ 5.9, double ≈ 1.6–2.8, a code-compliant insulated wall ≈ 0.3 W/m²K — numbers this page reproduces from first principles. When a datasheet quotes U, it is quoting this circuit."
+            note="Industry's way of quoting 1/R per square metre: single glazing ≈ 5.9, double ≈ 1.6–2.8, a code-compliant insulated wall ≈ 0.3 W/m²K. This page's circuit is conduction-only, so its double-glazing number lands at the optimistic end: in a real unit, radiation between the panes acts in parallel with conduction across the gap and eats roughly half the gap's benefit (air-filled units measure nearer 2.8; the 1.6-and-below club is low-e coatings and argon, which exist precisely to suppress that radiation). When a datasheet quotes U, it is quoting this circuit plus that radiation path."
             defaultOpen={false}
           />
         </div>

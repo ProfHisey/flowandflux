@@ -9,7 +9,7 @@ export const TRANSIENT_QUESTIONS: SocraticQuestion[] = [
     q: 'Steel at 60 °C burns you; wood at 60 °C is pleasant. A thermometer pressed to either would read exactly 60. What is your finger measuring that the thermometer is not?',
     probe: 'Compare the two presets. Watch the contact-temperature chip, not the material temperatures.',
     resolution:
-      'The moment of contact sets the interface to the effusivity-weighted average T = (e₁T₁+e₂T₂)/(e₁+e₂), e = √(kρc) — and your nerves live at that interface. Steel (e ≈ 13,000) barely budges, so your skin surface is dragged to 57.8 °C; wood (e ≈ 400) is dragged nearly to skin temperature instead. Your finger measures a contest of effusivities, not a temperature. Same reason 20 °C tile "is" cold and 20 °C carpet "is" not — the floor temperature was never the question.',
+      'The moment of contact sets the interface to the effusivity-weighted average T = (e₁T₁+e₂T₂)/(e₁+e₂), e = √(kρc) — and your nerves live at that interface. Steel (e ≈ 7,500) barely budges, so your skin surface is dragged to 57.4 °C; wood (e ≈ 400) is dragged nearly to skin temperature instead. Your finger measures a contest of effusivities, not a temperature. Same reason 20 °C tile "is" cold and 20 °C carpet "is" not — the floor temperature was never the question.',
   },
   {
     q: 'The contact temperature appears INSTANTLY and then never changes, even as heat keeps flowing. How can the interface be finished when the process has barely started?',

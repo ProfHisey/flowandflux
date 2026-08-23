@@ -28,10 +28,10 @@ export const FICK_QUESTIONS: SocraticQuestion[] = [
     q: 'Double the thickness L. What happens to the flux, and what happens to the total amount of drug sitting inside the layer?',
     probe: 'Load the drug-through-skin example, note both readouts, then drag L.',
     resolution:
-      'Flux halves: the gradient ΔC/L is halved and D has not changed. The holdup doubles, and the reason is worth saying out loud — the profile stays linear between the same two boundary values, so the average concentration through the layer is still ΔC/2 no matter how thick it is. Only the volume changed. One slider, two quantities moving in opposite directions.',
+      'Flux halves: the gradient ΔC/L is halved and D has not changed. The holdup doubles, and the reason is worth saying out loud — the profile stays linear between the same two boundary values, so the average concentration through the layer is still (C₁+C₂)/2 — here C₂ = 0, so ΔC/2 — no matter how thick it is. Only the volume changed. One slider, two quantities moving in opposite directions.',
   },
   {
-    q: 'D for a gas is about 0.1 cm²/s; for a macromolecule inside a cell it is about 10⁻⁹ cm²/s. That is eight orders of magnitude. What physically differs?',
+    q: 'D for a gas is about 0.1 cm²/s; for a large complex or a piece of DNA in cytoplasm it can reach 10⁻⁹ cm²/s (a typical free protein sits nearer 10⁻⁷–10⁻⁸). That is eight orders of magnitude end to end. What physically differs?',
     probe: 'Use the D scale markers under the slider.',
     resolution:
       'Both numbers come from D ≈ v̄λ/3. In a gas the mean free path λ is enormous relative to the molecule and thermal speeds are hundreds of m/s. In a crowded cytoplasm λ collapses to essentially a molecular diameter and the effective drag is huge, so Stokes–Einstein D = k_BT/6πμa takes over: bigger a, bigger μ, smaller D. Same physics, wildly different regime.',
