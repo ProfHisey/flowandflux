@@ -7,6 +7,8 @@ export interface Preset {
   source: string;
   blurb: string;
   params: UnsteadyParams;
+  /** Release geometry the preset assumes. Default 'plane'. */
+  release?: 'plane' | 'point';
   /** Optional hand-checkable answer, so the simulator can be trusted. */
   check?: string;
 }
@@ -38,6 +40,16 @@ export const PRESETS: Preset[] = [
       'Sugar dissolves at the bottom of the cup. Wait for diffusion alone to sweeten the top — one centimetre away.',
     check: 't = L²/2D = 10⁵ s ≈ 28 hours. This is why you stir',
     params: { D: 5e-6, M: 1e-4, A: 20, t: 1e5, Lint: 1 },
+  },
+  {
+    id: 'depot',
+    name: 'Drug depot at a point',
+    source: 'Pharma',
+    blurb:
+      'One nanomole injected at a point in tissue — a depot, not a plane. After an hour, how big is the treated region, and how dilute has the dose become?',
+    release: 'point',
+    check: 'σᵣ = √(6Dt) ≈ 2.1 mm, and C(0) = M/(4πDt)^{3/2} ≈ 3.7 × 10⁻⁸ mol/cm³',
+    params: { D: 2e-6, M: 1e-9, A: 1, t: 3600, Lint: 0.2 },
   },
   {
     id: 'perfume',

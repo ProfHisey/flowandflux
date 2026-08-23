@@ -15,7 +15,8 @@ import {
 } from '../src/lib/newton';
 import {
   concentration as unsteadyC, concentrationPoint, diffusionTime,
-  peak as unsteadyPeak, sigma as unsteadySigma, type UnsteadyParams,
+  peak as unsteadyPeak, peakPoint, sigma as unsteadySigma, sigmaPoint,
+  type UnsteadyParams,
 } from '../src/lib/unsteady';
 import {
   biot, halfLife, heatRate as coolQ, massFlux, tau,
@@ -358,6 +359,42 @@ check('still room (3 m): 4.5e5 s', close(diffusionTime(300, 0.1), 4.5e5, 1e-12))
     total += concentrationPoint(M, D, t, r) * 4 * Math.PI * r * r * h;
   }
   check('point release: integral of C over all space = M', close(total, M, 1e-5), String(total));
+}
+
+// --- 22b. Point release: the depot injection, worked by hand ----------------
+// M = 1 nmol at a point in tissue, D = 2e-6 cm^2/s, t = 1 h = 3600 s.
+// sigma_r = sqrt(6 D t) = sqrt(0.0432) = 0.2078 cm ~ 2 mm.
+// C(0) = M / (4 pi D t)^{3/2} = 1e-9 / 0.090478^{1.5} = 3.674e-8 mol/cm^3.
+{
+  const M = 1e-9, D = 2e-6, t = 3600;
+  check('depot: sigma_r = sqrt(6Dt) = 0.208 cm (~2 mm in an hour)',
+    close(sigmaPoint(D, t), 0.20785, 1e-4), String(sigmaPoint(D, t)));
+  check('depot: C(0) = 3.674e-8 mol/cm^3',
+    close(peakPoint(M, D, t), 3.674e-8, 1e-3), String(peakPoint(M, D, t)));
+  check('peak falls as t^{-3/2}: C(0, 2t)/C(0, t) = 2^{-3/2}',
+    close(peakPoint(M, D, 2 * t) / peakPoint(M, D, t), Math.pow(2, -1.5), 1e-9));
+  check('sigma_r^2 = 3 x sigma_planar^2 — 2Dt per axis, three axes',
+    close(sigmaPoint(D, t) ** 2, 3 * unsteadySigma(D, t) ** 2, 1e-12));
+  // <r^2> = 6Dt by direct integration against the profile.
+  const s1 = unsteadySigma(D, t);
+  const h = (10 * s1) / 4000;
+  let num = 0;
+  for (let i = 0; i < 4000; i++) {
+    const r = h * (i + 0.5);
+    num += r * r * concentrationPoint(M, D, t, r) * 4 * Math.PI * r * r * h;
+  }
+  check('<r^2> integrates to 6Dt', close(num / M, 6 * D * t, 1e-4),
+    `${num / M} vs ${6 * D * t}`);
+  // The spherical diffusion equation: dC/dt = D (1/r^2) d/dr (r^2 dC/dr).
+  const r0 = 0.7 * s1;
+  const dr = 1e-4 * s1;
+  const dtn = 1e-4 * t;
+  const lhs = (concentrationPoint(M, D, t + dtn, r0) - concentrationPoint(M, D, t - dtn, r0)) / (2 * dtn);
+  const flux2 = (r: number) =>
+    r * r * ((concentrationPoint(M, D, t, r + dr) - concentrationPoint(M, D, t, r - dr)) / (2 * dr));
+  const rhs = (D / (r0 * r0)) * ((flux2(r0 + dr) - flux2(r0 - dr)) / (2 * dr));
+  check('satisfies the spherical diffusion equation', close(lhs, rhs, 1e-3),
+    `${lhs} vs ${rhs}`);
 }
 
 // ==========================================================================

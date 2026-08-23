@@ -89,10 +89,54 @@ export function profile(p: UnsteadyParams, n = 140, span?: number): ProfilePoint
 
 /**
  * Point (3D) release of amount M: C(r,t) = M / (4 pi D t)^{3/2} * exp(-r^2/4Dt).
- * Not surfaced in the UI yet — kept alongside the planar solution because the
- * spherical capsule is the natural follow-on, and verify.ts checks it now so
- * the UI work later starts from trusted math.
+ * The spherical capsule — a depot injection, an ink drop. Same Gaussian as
+ * the planar release, once per axis: the peak falls as t^{-3/2} (one factor
+ * of sqrt(t) per dimension) and the rms RADIUS is sqrt(6Dt) — 2Dt per axis,
+ * three axes.
  */
 export function concentrationPoint(M: number, D: number, t: number, r: number): number {
   return (M / Math.pow(4 * Math.PI * D * t, 1.5)) * Math.exp(-(r * r) / (4 * D * t));
+}
+
+/** RMS distance from the release point, cm: sqrt(<r^2>) = sqrt(6 D t). */
+export function sigmaPoint(D: number, t: number): number {
+  return Math.sqrt(6 * D * t);
+}
+
+/** Peak concentration C(0, t) of a point release, mol/cm^3. Falls as t^{-3/2}. */
+export function peakPoint(M: number, D: number, t: number): number {
+  return concentrationPoint(M, D, t, 0);
+}
+
+export interface RadialProfilePoint {
+  /** distance from the release point, cm */
+  r: number;
+  /** concentration now, mol/cm^3 */
+  C: number;
+  /** concentration at t/2 and t/4 — ghosts showing the evolution */
+  Chalf: number;
+  Cquarter: number;
+}
+
+/** Sampled radial profile for charting, from 0 out to span
+ *  (default 3.5 x the per-axis sigma). */
+export function profilePoint(
+  M: number,
+  D: number,
+  t: number,
+  n = 140,
+  span?: number,
+): RadialProfilePoint[] {
+  const s = span ?? 3.5 * sigma(D, t);
+  const out: RadialProfilePoint[] = [];
+  for (let i = 0; i <= n; i++) {
+    const r = (s * i) / n;
+    out.push({
+      r,
+      C: concentrationPoint(M, D, t, r),
+      Chalf: concentrationPoint(M, D, t / 2, r),
+      Cquarter: concentrationPoint(M, D, t / 4, r),
+    });
+  }
+  return out;
 }

@@ -9,44 +9,67 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { profile, sigma, type UnsteadyParams } from '../../lib/unsteady';
+import { profile, profilePoint, sigma, sigmaPoint, type UnsteadyParams } from '../../lib/unsteady';
 import { molPerCm3TomM } from '../../lib/fick';
 import { niceAxis, sci, tick } from '../../lib/format';
+import type { ReleaseMode } from './UnsteadyCanvas';
 
 /**
- * C(x, t) with its own past as ghosts, and sigma(t) with the current moment
- * marked. The first chart shows the shape (peak falls, width grows, area
- * fixed); the second shows the law (root-t: the curve bends over, which is
- * why diffusion feels fast at first and hopeless later).
+ * C(x, t) — or C(r, t) for a point release — with its own past as ghosts,
+ * and sigma(t) with the current moment marked. The first chart shows the
+ * shape (peak falls, width grows, amount fixed); the second shows the law
+ * (root-t: the curve bends over, which is why diffusion feels fast at
+ * first and hopeless later).
  */
-export function UnsteadyChart({ params, dark }: { params: UnsteadyParams; dark: boolean }) {
+export function UnsteadyChart({
+  params,
+  mode,
+  dark,
+}: {
+  params: UnsteadyParams;
+  mode: ReleaseMode;
+  dark: boolean;
+}) {
   const data = useMemo(
     () =>
-      profile(params, 140).map((d) => ({
-        x: d.x,
-        C: molPerCm3TomM(d.C),
-        Chalf: molPerCm3TomM(d.Chalf),
-        Cquarter: molPerCm3TomM(d.Cquarter),
-      })),
-    [params],
+      mode === 'plane'
+        ? profile(params, 140).map((d) => ({
+            x: d.x,
+            C: molPerCm3TomM(d.C),
+            Chalf: molPerCm3TomM(d.Chalf),
+            Cquarter: molPerCm3TomM(d.Cquarter),
+          }))
+        : profilePoint(params.M, params.D, params.t, 140).map((d) => ({
+            x: d.r,
+            C: molPerCm3TomM(d.C),
+            Chalf: molPerCm3TomM(d.Chalf),
+            Cquarter: molPerCm3TomM(d.Cquarter),
+          })),
+    [params, mode],
   );
 
   const sigmaData = useMemo(() => {
     const out: { tp: number; s: number }[] = [];
     for (let i = 0; i <= 60; i++) {
       const tp = (2 * params.t * i) / 60;
-      out.push({ tp, s: sigma(params.D, tp) });
+      out.push({ tp, s: mode === 'plane' ? sigma(params.D, tp) : sigmaPoint(params.D, tp) });
     }
     return out;
-  }, [params]);
+  }, [params, mode]);
 
   const cAxis = useMemo(
     () => niceAxis(Math.max(1e-12, ...data.map((d) => d.Cquarter))),
     [data],
   );
   const sAxis = useMemo(
-    () => niceAxis(Math.max(1e-12, sigma(params.D, 2 * params.t))),
-    [params],
+    () =>
+      niceAxis(
+        Math.max(
+          1e-12,
+          mode === 'plane' ? sigma(params.D, 2 * params.t) : sigmaPoint(params.D, 2 * params.t),
+        ),
+      ),
+    [params, mode],
   );
 
   const grid = dark ? '#1e293b' : '#e2e8f0';
@@ -54,7 +77,10 @@ export function UnsteadyChart({ params, dark }: { params: UnsteadyParams; dark: 
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <ChartFrame title="Concentration, with its past" formula="C(x, t)">
+      <ChartFrame
+        title="Concentration, with its past"
+        formula={mode === 'plane' ? 'C(x, t)' : 'C(r, t)'}
+      >
         <ResponsiveContainer width="100%" height={190}>
           <LineChart data={data} margin={{ top: 6, right: 10, bottom: 20, left: 4 }}>
             <CartesianGrid stroke={grid} strokeDasharray="3 3" />
@@ -65,7 +91,7 @@ export function UnsteadyChart({ params, dark }: { params: UnsteadyParams; dark: 
               tickFormatter={tick}
               stroke={axis}
               tick={{ fontSize: 11 }}
-              label={{ value: 'x (cm)', position: 'insideBottom', offset: -12, fontSize: 11, fill: axis }}
+              label={{ value: mode === 'plane' ? 'x (cm)' : 'r (cm)', position: 'insideBottom', offset: -12, fontSize: 11, fill: axis }}
             />
             <YAxis
               domain={[0, cAxis.max]}
@@ -82,7 +108,7 @@ export function UnsteadyChart({ params, dark }: { params: UnsteadyParams; dark: 
                 `${sci(Number(v))} mM`,
                 name === 'C' ? 'now' : name === 'Chalf' ? 'at t/2' : 'at t/4',
               ]) as never}
-              labelFormatter={((v: unknown) => `x = ${sci(Number(v))} cm`) as never}
+              labelFormatter={((v: unknown) => `${mode === 'plane' ? 'x' : 'r'} = ${sci(Number(v))} cm`) as never}
             />
             <ReferenceLine x={0} stroke={axis} strokeDasharray="2 2" />
             <Line type="monotone" dataKey="Cquarter" stroke={dark ? '#334155' : '#cbd5e1'} strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -92,7 +118,10 @@ export function UnsteadyChart({ params, dark }: { params: UnsteadyParams; dark: 
         </ResponsiveContainer>
       </ChartFrame>
 
-      <ChartFrame title="Spread vs time" formula="σ(t) = √(2Dt)">
+      <ChartFrame
+        title="Spread vs time"
+        formula={mode === 'plane' ? 'σ(t) = √(2Dt)' : 'σᵣ(t) = √(6Dt)'}
+      >
         <ResponsiveContainer width="100%" height={190}>
           <LineChart data={sigmaData} margin={{ top: 6, right: 10, bottom: 20, left: 4 }}>
             <CartesianGrid stroke={grid} strokeDasharray="3 3" />

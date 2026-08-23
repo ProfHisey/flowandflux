@@ -9,14 +9,16 @@ import { EquationCard } from '../../components/ui/EquationCard';
 import {
   diffusionTime,
   peak,
+  peakPoint,
   sigma,
+  sigmaPoint,
   type UnsteadyParams,
 } from '../../lib/unsteady';
 import { molPerCm3TomM } from '../../lib/fick';
 import { lengthCm, sci, timeS } from '../../lib/format';
 import { D_LANDMARKS } from '../FicksLaw/presets';
 import { Segmented } from '../../components/ui/Segmented';
-import { UnsteadyCanvas, type PulseStats } from './UnsteadyCanvas';
+import { UnsteadyCanvas, type PulseStats, type ReleaseMode } from './UnsteadyCanvas';
 import { Bolus3DCanvas } from './Bolus3DCanvas';
 import { UnsteadyChart } from './UnsteadyChart';
 import { DEFAULT_PARAMS, PRESETS } from './presets';
@@ -27,6 +29,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [releaseTick, setReleaseTick] = useState(0);
   const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  const [release, setRelease] = useState<ReleaseMode>('plane');
   const [stats, setStats] = useState<PulseStats | null>(null);
 
   const set = <K extends keyof UnsteadyParams>(key: K, value: UnsteadyParams[K]) => {
@@ -38,11 +41,14 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
 
   const derived = useMemo(
     () => ({
-      sigma: sigma(params.D, params.t),
-      peakmM: molPerCm3TomM(peak(params)),
+      sigma:
+        release === 'plane' ? sigma(params.D, params.t) : sigmaPoint(params.D, params.t),
+      peakmM: molPerCm3TomM(
+        release === 'plane' ? peak(params) : peakPoint(params.M, params.D, params.t),
+      ),
       tDiff: diffusionTime(params.Lint, params.D),
     }),
-    [params],
+    [params, release],
   );
 
   return (
@@ -53,8 +59,12 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
         {/* ---------------------------------------------------- canvas */}
         <div className="order-1 space-y-5 lg:col-start-1 lg:row-start-1">
           <Panel
-            title="The capsule burst"
-            subtitle="All the particles start in the middle. Everything after that is unbiased wandering."
+            title={release === 'plane' ? 'The capsule burst' : 'The depot burst'}
+            subtitle={
+              release === 'plane'
+                ? 'All the particles start in the middle. Everything after that is unbiased wandering.'
+                : 'All the particles start at one point. The cloud is a sphere from the first instant.'
+            }
             right={
               <div className="flex shrink-0 items-center gap-1.5">
                 <div className="w-28">
@@ -84,6 +94,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           >
             {dim === '2d' ? (
               <UnsteadyCanvas
+                mode={release}
                 releaseTick={releaseTick}
                 running={running}
                 dark={dark}
@@ -99,7 +110,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 </p>
               </>
             )}
-            {dim === '2d' && stats && <SpreadReadout stats={stats} />}
+            {dim === '2d' && stats && <SpreadReadout stats={stats} mode={release} />}
           </Panel>
 
         </div>
@@ -112,17 +123,25 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           >
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               <Stat
-                label={<InlineMath math="\sigma(t)" />}
+                label={<InlineMath math={release === 'plane' ? '\\sigma(t)' : '\\sigma_r(t)'} />}
                 value={lengthCm(derived.sigma)}
                 unit=""
                 tone="accent"
-                hint="√(2Dt) — how far the cloud has spread"
+                hint={
+                  release === 'plane'
+                    ? '√(2Dt) — how far the cloud has spread'
+                    : '√(6Dt) — rms radius: 2Dt per axis, three axes'
+                }
               />
               <Stat
                 label={<InlineMath math="C(0,t)" />}
                 value={sci(derived.peakmM)}
                 unit="mM"
-                hint="the peak — falls as 1/√t"
+                hint={
+                  release === 'plane'
+                    ? 'the peak — falls as 1/√t'
+                    : 'the peak — falls as t^(−3/2), one √t per axis'
+                }
               />
               <Stat
                 label={<InlineMath math="M" />}
@@ -148,10 +167,14 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 hint="L²/2D — the diffusion clock"
               />
               <Stat
-                label={<InlineMath math="2\sigma" />}
+                label={<InlineMath math={release === 'plane' ? '2\\sigma' : '2\\sigma_r'} />}
                 value={lengthCm(2 * derived.sigma)}
                 unit=""
-                hint="~95% of the released amount lies within ±2σ"
+                hint={
+                  release === 'plane'
+                    ? '~95% of the released amount lies within ±2σ'
+                    : 'the effective reach of the dose — the treated region'
+                }
               />
             </div>
 
@@ -164,7 +187,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           </Panel>
 
           <Panel title="Profiles">
-            <UnsteadyChart params={params} dark={dark} />
+            <UnsteadyChart params={params} mode={release} dark={dark} />
           </Panel>
         </div>
 
@@ -172,6 +195,18 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
         <div className="order-2 space-y-5 lg:col-start-2 lg:row-start-1 lg:row-span-2">
           <Panel title="Setup">
             <div className="space-y-5">
+              <Segmented<ReleaseMode>
+                label="Release geometry"
+                value={release}
+                options={[
+                  { value: 'plane', label: 'Plane', title: 'A thin sheet of material released across a plane — spreads along one axis' },
+                  { value: 'point', label: 'Point', title: 'Everything released at one point — a depot injection, an ink drop; spreads as a sphere' },
+                ]}
+                onChange={(m) => {
+                  setRelease(m);
+                  setPresetId('');
+                }}
+              />
               <Slider
                 label="Diffusion coefficient, D"
                 unit="cm²/s"
@@ -194,16 +229,18 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 format={sci}
                 onChange={(v) => set('M', v)}
               />
-              <Slider
-                label="Release area, A"
-                unit="cm²"
-                value={params.A}
-                min={1e-9}
-                max={100}
-                log
-                format={sci}
-                onChange={(v) => set('A', v)}
-              />
+              {release === 'plane' && (
+                <Slider
+                  label="Release area, A"
+                  unit="cm²"
+                  value={params.A}
+                  min={1e-9}
+                  max={100}
+                  log
+                  format={sci}
+                  onChange={(v) => set('A', v)}
+                />
+              )}
               <Slider
                 label="Time since release, t"
                 value={params.t}
@@ -239,6 +276,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
+                      setRelease(pr.release ?? 'plane');
                       setPresetId(pr.id);
                     }}
                     className={
@@ -266,6 +304,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 type="button"
                 onClick={() => {
                   setParams(DEFAULT_PARAMS);
+                  setRelease('plane');
                   setPresetId(PRESETS[0].id);
                 }}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
@@ -305,6 +344,13 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
             note="The solution for an instantaneous planar release in an open medium. The area under it is M/A at every instant — nothing appears or disappears — so as the width grows as √t, the peak must fall as 1/√t. Shape as bookkeeping."
             defaultOpen={false}
           />
+
+          <EquationCard
+            title="The point release — one Gaussian per axis"
+            latex={String.raw`C(r,t) = \frac{M}{(4\pi D t)^{3/2}}\;e^{-r^{2}/4Dt}, \qquad \sqrt{\langle r^2\rangle} = \sqrt{6Dt}`}
+            note="A depot injection, an ink drop: the same Gaussian, cubed — one factor of √(4πDt) per axis, so the peak falls as t^(−3/2) and dilution is brutally fast. The rms radius stacks 2Dt from each axis: √(6Dt). After an hour, a nanomole of drug with D = 2×10⁻⁶ cm²/s has reached about 2 mm — which is why a depot must sit next to its target, and why tissue beyond a millimetre or two of any source needs blood vessels to feed it."
+            defaultOpen={false}
+          />
         </div>
 
         <div className="space-y-4">
@@ -335,18 +381,19 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
 
 /**
  * Measured vs predicted spread — Einstein's relation checked live. The
- * measured figure is the sample standard deviation of 1200 walker positions;
- * the predicted figure is √(2Dt) on the same visual D and clock.
+ * measured figure comes straight from the 1200 walker positions (std dev of
+ * x for a plane, rms radius for a point); the predicted figure is the
+ * random-walk theory on the same visual D and clock.
  */
-function SpreadReadout({ stats }: { stats: PulseStats }) {
+function SpreadReadout({ stats, mode }: { stats: PulseStats; mode: ReleaseMode }) {
   return (
     <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 font-mono text-xs tabular-nums">
         <span className="text-slate-600 dark:text-slate-400">
-          measured σ = {stats.sigmaMeasured.toFixed(1)} px
+          measured {mode === 'plane' ? 'σ' : 'rms r'} = {stats.sigmaMeasured.toFixed(1)} px
         </span>
         <span className="text-amber-700 dark:text-amber-300">
-          √(2Dt) predicts {stats.sigmaPredicted.toFixed(1)} px
+          {mode === 'plane' ? '√(2Dt)' : '√(4Dt), two axes'} predicts {stats.sigmaPredicted.toFixed(1)} px
         </span>
         <span className="ml-auto text-[11px] font-normal text-slate-400 dark:text-slate-500">
           t = {stats.t.toFixed(1)} s · visual clock
