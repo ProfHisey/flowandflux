@@ -163,6 +163,24 @@ export function fourierOf(p: HeislerParams): number {
   return (alphaOf(p.k, p.rho, p.c) * p.t) / (p.L * p.L);
 }
 
+export type TransientRegime = 'lumped' | 'semi' | 'either' | 'oneterm';
+
+/**
+ * The triage every unsteady conduction problem starts with. Bi < 0.1: the
+ * inside keeps up, one lumped exponential is enough. Fo < 0.2: the far side
+ * has not felt anything yet, the semi-infinite erf solution applies. Both:
+ * either shortcut works. Neither: the full one-term machinery (the Heisler
+ * page) is the tool.
+ */
+export function transientRegime(Bi: number, Fo: number): TransientRegime {
+  const lumped = Bi < 0.1;
+  const semi = Fo < 0.2;
+  if (lumped && semi) return 'either';
+  if (lumped) return 'lumped';
+  if (semi) return 'semi';
+  return 'oneterm';
+}
+
 /** Centre temperature at time t, degC (one-term; honest for Fo > 0.2). */
 export function centerTemp(p: HeislerParams): number {
   const Bi = biotOf(p);

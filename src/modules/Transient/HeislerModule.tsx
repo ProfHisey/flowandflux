@@ -13,12 +13,14 @@ import {
   coefC1,
   fourierOf,
   tempAt,
+  transientRegime,
   zeta1,
   type HeislerParams,
   type TransientGeometry,
 } from '../../lib/transient';
 import { lengthM, sci, timeS } from '../../lib/format';
 import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
+import { BiFoMapCanvas } from './BiFoMapCanvas';
 import { HeislerCanvas } from './HeislerCanvas';
 import { Heisler3DCanvas } from './Heisler3DCanvas';
 import { HeislerChart } from './TransientChart';
@@ -278,6 +280,14 @@ export function HeislerModule({ dark }: { dark: boolean }) {
             )}
           </Panel>
 
+          <Panel
+            title="Which tool applies?"
+            subtitle="The triage, as a map — the dot is the setup on the right, live."
+          >
+            <BiFoMapCanvas params={hp} dark={dark} />
+            <RegimeLine Bi={derived.Bi} Fo={derived.Fo} />
+          </Panel>
+
           <Panel title="History">
             <HeislerChart params={hp} dark={dark} />
           </Panel>
@@ -315,6 +325,38 @@ export function HeislerModule({ dark }: { dark: boolean }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function RegimeLine({ Bi, Fo }: { Bi: number; Fo: number }) {
+  const regime = transientRegime(Bi, Fo);
+  const text =
+    regime === 'lumped' ? (
+      <>
+        <strong>Bi &lt; 0.1: the inside keeps up.</strong> The lumped single
+        exponential from the law-of-cooling module is all this setup needs — the
+        one-term machinery here agrees with it, at more effort.
+      </>
+    ) : regime === 'semi' ? (
+      <>
+        <strong>Fo &lt; 0.2: the far side has not felt anything yet.</strong> The
+        body might as well be infinite, so the sudden-contact module's erf
+        solution applies — and the one-term line here is still shaky this early.
+      </>
+    ) : regime === 'either' ? (
+      <>
+        <strong>Both shortcuts apply.</strong> Small Bi and small Fo: the lumped
+        exponential and the erf solution both work here. Pick the cheaper one.
+      </>
+    ) : (
+      <>
+        <strong>The middle ground — this page's reason to exist.</strong> Too much
+        internal resistance to lump, too far along to be semi-infinite: the
+        one-term solution is the tool.
+      </>
+    );
+  return (
+    <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{text}</p>
   );
 }
 

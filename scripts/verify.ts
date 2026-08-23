@@ -28,7 +28,8 @@ import {
 } from '../src/lib/network';
 import {
   alphaOf, biotOf, centerTemp, coefC1, contactTemp, effusivity, erf,
-  fourierOf, penetrationDepth, semiInfFlux, semiInfT, tempAt, zeta1,
+  fourierOf, penetrationDepth, semiInfFlux, semiInfT, tempAt,
+  transientRegime, zeta1,
   type ContactBody, type HeislerParams, type SemiInfParams,
 } from '../src/lib/transient';
 import {
@@ -603,6 +604,14 @@ check('small Bi limit: zeta1^2 -> Bi (wall becomes lumped)',
   check('theta never exceeds 1 (clamped near t = 0)',
     Math.abs(centerTemp({ ...p, t: 1e-6 }) - p.Ti) < 1e-6);
 }
+
+// --- 34b. The Bi-Fo triage ---------------------------------------------------
+check('triage: small Bi, long time -> lumped', transientRegime(0.05, 5) === 'lumped');
+check('triage: big Bi, early time -> semi-infinite', transientRegime(10, 0.05) === 'semi');
+check('triage: small Bi AND early time -> either shortcut', transientRegime(0.05, 0.1) === 'either');
+check('triage: the middle ground is the one-term page', transientRegime(1, 1) === 'oneterm');
+check('triage boundaries are Bi = 0.1 and Fo = 0.2 exactly',
+  transientRegime(0.1, 5) === 'oneterm' && transientRegime(5, 0.2) === 'oneterm');
 
 // ==========================================================================
 // Pressure-driven laminar flow (Poiseuille and friends)
