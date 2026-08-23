@@ -14,6 +14,7 @@ import { WallModule } from './modules/Wall/WallModule';
 import { TransientModule } from './modules/Transient/TransientModule';
 import { HeislerModule } from './modules/Transient/HeislerModule';
 import { CorrelationsModule } from './modules/Correlations/CorrelationsModule';
+import { MixingCupModule } from './modules/MixingCup/MixingCupModule';
 import { PerfusionModule } from './modules/Perfusion/PerfusionModule';
 
 /**
@@ -75,6 +76,7 @@ const GROUPS: ModuleGroup[] = [
     items: [
       { id: 'peclet', name: 'The Péclet number', tag: 'diffusion races the flow' },
       { id: 'cooling', name: 'Law of cooling', tag: 'h, τ = ρVc/hA, Biot — and the fin' },
+      { id: 'mixingcup', name: 'The mixing cup', tag: 'what "the" stream temperature means' },
       { id: 'correlations', name: 'Nu & Sh correlations', tag: 'the lookup chart, computed live' },
       // Hidden from the nav for now (module code intact — restore by
       // uncommenting): { id: 'perfusion', name: 'The perfused channel', tag: 'can the flow feed every cell?' },
@@ -224,6 +226,7 @@ export default function App() {
         {moduleId === 'poiseuille' && <PoiseuilleModule dark={dark} />}
         {moduleId === 'peclet' && <PecletModule dark={dark} />}
         {moduleId === 'cooling' && <CoolingModule dark={dark} />}
+        {moduleId === 'mixingcup' && <MixingCupModule dark={dark} />}
         {moduleId === 'correlations' && <CorrelationsModule dark={dark} />}
         {moduleId === 'perfusion' && <PerfusionModule dark={dark} />}
         {moduleId === 'about' && <AboutPage />}

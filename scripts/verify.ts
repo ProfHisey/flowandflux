@@ -59,6 +59,10 @@ import {
 import {
   N2, collisionRate, flightInDiameters, gasDiffusivity, meanFreePath, meanSpeed,
 } from '../src/lib/kinetics';
+import {
+  areaAvgT, areaAvgTNumeric, mixingCupT, mixingCupTNumeric, tempAt as mcTempAt,
+  velocityAt as mcVelocityAt, type MixingCupParams,
+} from '../src/lib/mixingcup';
 
 let failures = 0;
 const close = (a: number, b: number, tol = 1e-6) =>
@@ -990,6 +994,40 @@ check('mean free path scales as 1/P (compress -> liquid-ward)',
   check('gas/liquid D ratio ~ 1e4 — the four decades of lecture values',
     ratio > 3e3 && ratio < 3e4, String(ratio));
 }
+
+// ==========================================================================
+// The mixing cup
+// ==========================================================================
+
+// Hand-workable: parabolic T (n = 2), wall at 80, centre at 20.
+// T_avg = 80 + (20-80)*2/4 = 50 exactly.
+// T_mc  = 80 + (20-80)*(1 - 4/4 + 4/6) = 80 - 40 = 40 exactly.
+// The slow hot rim is over-counted by the area average by a full 10 degC.
+console.log('\nThe mixing cup, worked by hand');
+const cup: MixingCupParams = { Tw: 80, Tc: 20, n: 2 };
+check('parabolic: T_avg = 50 degC exactly', close(areaAvgT(cup), 50, 1e-12), String(areaAvgT(cup)));
+check('parabolic: T_mc = 40 degC exactly', close(mixingCupT(cup), 40, 1e-12), String(mixingCupT(cup)));
+check('hot wall: the cup runs COOLER than the area average (slow rim undercounted)',
+  mixingCupT(cup) < areaAvgT(cup));
+check('closed forms equal their defining integrals',
+  close(mixingCupT(cup), mixingCupTNumeric(cup), 1e-6) &&
+    close(areaAvgT(cup), areaAvgTNumeric(cup), 1e-6),
+  `${mixingCupT(cup)} vs ${mixingCupTNumeric(cup)}`);
+{
+  const odd: MixingCupParams = { Tw: 95, Tc: 5, n: 3.7 };
+  check('closed forms hold at non-integer n too',
+    close(mixingCupT(odd), mixingCupTNumeric(odd), 1e-5) &&
+      close(areaAvgT(odd), areaAvgTNumeric(odd), 1e-5));
+}
+check('uniform temperature: both averages are that temperature',
+  close(mixingCupT({ Tw: 37, Tc: 37, n: 2 }), 37, 1e-12) &&
+    close(areaAvgT({ Tw: 37, Tc: 37, n: 2 }), 37, 1e-12));
+check('flat-core limit (n large): both averages approach the core temperature',
+  Math.abs(mixingCupT({ Tw: 80, Tc: 20, n: 400 }) - 20) < 1 &&
+    Math.abs(areaAvgT({ Tw: 80, Tc: 20, n: 400 }) - 20) < 1);
+check('profile endpoints: T(0) = Tc, T(1) = Tw; v(0) = 2v̄, v(1) = 0 (no-slip)',
+  close(mcTempAt(cup, 0), 20, 1e-12) && close(mcTempAt(cup, 1), 80, 1e-12) &&
+    close(mcVelocityAt(0), 2, 1e-12) && close(mcVelocityAt(1), 0, 1e-12));
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);
