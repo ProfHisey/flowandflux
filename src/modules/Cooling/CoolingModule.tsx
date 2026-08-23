@@ -17,7 +17,9 @@ import {
 } from '../../lib/cooling';
 import { sci, timeS } from '../../lib/format';
 import { Segmented } from '../../components/ui/Segmented';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { CoolingCanvas } from './CoolingCanvas';
+import { FinCanvas } from './FinCanvas';
 import { Fin3DCanvas } from './Fin3DCanvas';
 import { CoolingChart } from './CoolingChart';
 import { DEFAULT_PARAMS, H_LANDMARKS, PRESETS } from './presets';
@@ -29,6 +31,10 @@ export function CoolingModule({ dark }: { dark: boolean }) {
   const [resetTick, setResetTick] = useState(0);
   const [view, setView] = useState<'flow' | 'fin'>('flow');
   const [finShape, setFinShape] = useState<'pin' | 'rect'>('pin');
+
+  // The seamless 2D/3D pair lives INSIDE the fin view; the Flow view is
+  // 2D-only (its 3D counterpart is the fin itself, a different subject).
+  const sd = useSeamlessDim(running, { yaw: 0.7, pitch: -0.3 });
 
   const set = <K extends keyof CoolingParams>(key: K, value: CoolingParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -61,27 +67,36 @@ export function CoolingModule({ dark }: { dark: boolean }) {
             subtitle="The flow keeps replacing the fluid at the surface. That replacement is what h measures."
             right={
               <div className="flex shrink-0 items-center gap-1.5">
-                <div className="w-36">
+                <div className="w-32">
                   <Segmented<'flow' | 'fin'>
                     value={view}
                     options={[
                       { value: 'flow', label: 'Flow', title: 'A lumped object in a stream' },
-                      { value: 'fin', label: 'Fin 3D', title: 'A pin fin shaded by its own solution — drag to orbit' },
+                      { value: 'fin', label: 'Fin', title: 'A fin shaded by its own solution — 2D profile view or 3D' },
                     ]}
                     onChange={setView}
                   />
                 </div>
                 {view === 'fin' && (
-                  <div className="w-28">
-                    <Segmented<'pin' | 'rect'>
-                      value={finShape}
-                      options={[
-                        { value: 'pin', label: 'Pin', title: 'A cylindrical rod: P = 2πR, A = πR²' },
-                        { value: 'rect', label: 'Plate', title: 'A rectangular blade: P = 2(w+t), A = wt — the heat-sink shape' },
-                      ]}
-                      onChange={setFinShape}
-                    />
-                  </div>
+                  <>
+                    <div className="w-28">
+                      <Segmented<'pin' | 'rect'>
+                        value={finShape}
+                        options={[
+                          { value: 'pin', label: 'Pin', title: 'A cylindrical rod: P = 2πR, A = πR²' },
+                          { value: 'rect', label: 'Plate', title: 'A rectangular blade: P = 2(w+t), A = wt — the heat-sink shape' },
+                        ]}
+                        onChange={setFinShape}
+                      />
+                    </div>
+                    <div className="w-28">
+                      <Segmented<'2d' | '3d'>
+                        value={sd.dim}
+                        options={SEAMLESS_DIM_OPTIONS}
+                        onChange={sd.setDim}
+                      />
+                    </div>
+                  </>
                 )}
                 <IconButton label="Reheat and restart" onClick={() => setResetTick((t) => t + 1)}>
                   <Zap size={15} />
@@ -116,15 +131,30 @@ export function CoolingModule({ dark }: { dark: boolean }) {
               </>
             ) : (
               <>
-                <Fin3DCanvas
-                  params={{
-                    h: params.h, k: params.k, R: 0.004, L: 0.08,
-                    T0: params.T0, Tinf: params.Tinf,
-                    shape: finShape, w: 0.04, t: 0.002,
-                  }}
-                  running={running}
-                  dark={dark}
-                />
+                <div {...sd.wrapperProps}>
+                  {sd.dim === '2d' ? (
+                    <FinCanvas
+                      params={{
+                        h: params.h, k: params.k, R: 0.004, L: 0.08,
+                        T0: params.T0, Tinf: params.Tinf,
+                        shape: finShape, w: 0.04, t: 0.002,
+                      }}
+                      dark={dark}
+                    />
+                  ) : (
+                    <Fin3DCanvas
+                      params={{
+                        h: params.h, k: params.k, R: 0.004, L: 0.08,
+                        T0: params.T0, Tinf: params.Tinf,
+                        shape: finShape, w: 0.04, t: 0.002,
+                      }}
+                      running={running}
+                      dark={dark}
+                      cam={sd.cam}
+                    />
+                  )}
+                </div>
+                {sd.dim === '2d' && <SeamlessHint noun="The fin" />}
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   {finShape === 'pin' ? (
                     <>
