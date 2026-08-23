@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Pause, Play } from 'lucide-react';
 
 import { Panel } from '../../components/ui/Panel';
 import { Slider } from '../../components/ui/Slider';
 import { Segmented } from '../../components/ui/Segmented';
 
+import { useOrbitCam } from '../shared/paint3d';
 import { DividerCanvas, type MixStats } from './DividerCanvas';
 import { DividerHeatCanvas, type HeatMixStats } from './DividerHeatCanvas';
 import { Divider3DCanvas } from './Divider3DCanvas';
@@ -43,6 +44,92 @@ export function DividerModule({ dark }: { dark: boolean }) {
     resetExperiment();
   };
 
+  // ------------------------------------------------------------------
+  // The seamless 2D/3D prototype: the box is "always 3D". Face-on it is
+  // drawn by the instrumented 2D canvas; the moment a drag starts, the 3D
+  // canvas mounts at the same face-on camera pose and the SAME drag keeps
+  // rotating it — no mode click. Double-click (or the 2D chip) animates
+  // the camera back to face-on and restores the 2D view.
+  const cam = useOrbitCam(0, 0); // init face-on: double-click reset = flat
+  const animRef = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(animRef.current), []);
+
+  const returnTo2D = () => {
+    cancelAnimationFrame(animRef.current);
+    if (document.hidden) {
+      // rAF is paused in hidden tabs — snap instead of stalling mid-flight.
+      cam.yawRef.current = 0;
+      cam.pitchRef.current = 0;
+      cam.zoomRef.current = 1;
+      setDim('2d');
+      return;
+    }
+    const y0 = cam.yawRef.current;
+    const p0 = cam.pitchRef.current;
+    const z0 = cam.zoomRef.current;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - t0) / 320);
+      const e = 1 - (1 - t) ** 3;
+      cam.yawRef.current = y0 * (1 - e);
+      cam.pitchRef.current = p0 * (1 - e);
+      cam.zoomRef.current = z0 + (1 - z0) * e;
+      if (!running) cam.setCamTick((k) => k + 1);
+      if (t < 1) animRef.current = requestAnimationFrame(step);
+      else setDim('2d');
+    };
+    animRef.current = requestAnimationFrame(step);
+  };
+
+  const setDimUI = (d: '2d' | '3d') => {
+    if (d === dim) return;
+    if (d === '3d') {
+      cancelAnimationFrame(animRef.current);
+      cam.yawRef.current = 0.55;
+      cam.pitchRef.current = -0.32;
+      cam.zoomRef.current = 1;
+      cam.setCamTick((t) => t + 1);
+      setDim('3d');
+    } else {
+      returnTo2D();
+    }
+  };
+
+  // Drag on the 2D view: hand the pointer straight to the 3D camera.
+  const onCanvasPointerDown = (e: React.PointerEvent) => {
+    if (dim !== '2d' || e.pointerType === 'touch') return; // touch scrolls
+    cancelAnimationFrame(animRef.current);
+    const sx = e.clientX;
+    const sy = e.clientY;
+    let flipped = false;
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - sx;
+      const dy = ev.clientY - sy;
+      if (!flipped) {
+        if (Math.hypot(dx, dy) < 5) return; // a click is not a drag
+        flipped = true;
+        setDim('3d');
+      }
+      cam.yawRef.current = dx * 0.008;
+      cam.pitchRef.current = Math.min(1.35, Math.max(-1.35, -dy * 0.008));
+      if (!running) cam.setCamTick((t) => t + 1);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  // In 3D, double-click means "back to 2D" — intercept before the canvas's
+  // own instant camera reset so the return can animate instead.
+  const onWrapperDoubleClickCapture = (e: React.MouseEvent) => {
+    if (dim !== '3d') return;
+    e.stopPropagation();
+    returnTo2D();
+  };
+
   return (
     <div className="space-y-5">
       <ModuleHeader />
@@ -72,10 +159,10 @@ export function DividerModule({ dark }: { dark: boolean }) {
                   <Segmented<'2d' | '3d'>
                     value={dim}
                     options={[
-                      { value: '2d', label: '2D' },
-                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
+                      { value: '2d', label: '2D', title: 'Face-on view with measurements — or double-click the 3D box' },
+                      { value: '3d', label: '3D', title: 'The same box in space — or just drag the 2D view' },
                     ]}
-                    onChange={setDim}
+                    onChange={setDimUI}
                   />
                 </div>
                 <IconButton
@@ -87,46 +174,59 @@ export function DividerModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {dim === '3d' ? (
-              <Divider3DCanvas
-                mode={mode}
-                nLeft={nLeft}
-                nRight={nRight}
-                dCyan={dCyan}
-                dOrange={dOrange}
-                temp={temp}
-                TLeft={TLeft}
-                TRight={TRight}
-                kScale={kScale}
-                dividerIn={dividerIn}
-                resetTick={resetTick}
-                running={running}
-                dark={dark}
-              />
-            ) : mode === 'mass' ? (
-              <DividerCanvas
-                nLeft={nLeft}
-                nRight={nRight}
-                dCyan={dCyan}
-                dOrange={dOrange}
-                temp={temp}
-                dividerIn={dividerIn}
-                resetTick={resetTick}
-                running={running}
-                dark={dark}
-                onStats={setMixStats}
-              />
-            ) : (
-              <DividerHeatCanvas
-                TLeft={TLeft}
-                TRight={TRight}
-                kScale={kScale}
-                dividerIn={dividerIn}
-                resetTick={resetTick}
-                running={running}
-                dark={dark}
-                onStats={setHeatStats}
-              />
+            <div
+              onPointerDown={onCanvasPointerDown}
+              onDoubleClickCapture={onWrapperDoubleClickCapture}
+              className={dim === '2d' ? 'cursor-grab' : undefined}
+            >
+              {dim === '3d' ? (
+                <Divider3DCanvas
+                  mode={mode}
+                  nLeft={nLeft}
+                  nRight={nRight}
+                  dCyan={dCyan}
+                  dOrange={dOrange}
+                  temp={temp}
+                  TLeft={TLeft}
+                  TRight={TRight}
+                  kScale={kScale}
+                  dividerIn={dividerIn}
+                  resetTick={resetTick}
+                  running={running}
+                  dark={dark}
+                  cam={cam}
+                />
+              ) : mode === 'mass' ? (
+                <DividerCanvas
+                  nLeft={nLeft}
+                  nRight={nRight}
+                  dCyan={dCyan}
+                  dOrange={dOrange}
+                  temp={temp}
+                  dividerIn={dividerIn}
+                  resetTick={resetTick}
+                  running={running}
+                  dark={dark}
+                  onStats={setMixStats}
+                />
+              ) : (
+                <DividerHeatCanvas
+                  TLeft={TLeft}
+                  TRight={TRight}
+                  kScale={kScale}
+                  dividerIn={dividerIn}
+                  resetTick={resetTick}
+                  running={running}
+                  dark={dark}
+                  onStats={setHeatStats}
+                />
+              )}
+            </div>
+            {dim === '2d' && (
+              <p className="mt-2 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+                The box is secretly 3D — drag it and it rotates out of the page.
+                Double-click the 3D view to lie it flat again.
+              </p>
             )}
 
             <div className="mt-3 flex flex-wrap items-center gap-3">

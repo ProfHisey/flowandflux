@@ -8,6 +8,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
 
@@ -50,6 +51,7 @@ export function Divider3DCanvas({
   resetTick,
   running,
   dark,
+  cam: camProp,
 }: {
   mode: 'mass' | 'heat';
   nLeft: number;
@@ -64,13 +66,17 @@ export function Divider3DCanvas({
   resetTick: number;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera, so a parent can hand off a drag that began
+   *  on the 2D view (the seamless 2D-to-3D prototype). */
+  cam?: OrbitCam;
 }) {
   const massRef = useRef<P3[]>([]);
   const molsRef = useRef<M3[]>([]);
   const energyRef = useRef<Float64Array | null>(null);
   const liveRef = useRef({ dividerIn, dCyan, dOrange, temp, kScale });
   liveRef.current = { dividerIn, dCyan, dOrange, temp, kScale };
-  const cam = useOrbitCam(0.55, -0.32);
+  const internalCam = useOrbitCam(0.55, -0.32);
+  const cam = camProp ?? internalCam;
 
   const redrawKey = `${mode}|${nLeft}|${nRight}|${TLeft}|${TRight}|${dividerIn}|${resetTick}|${dark}|${cam.camTick}`;
 
