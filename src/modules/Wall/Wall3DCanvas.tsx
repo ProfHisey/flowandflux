@@ -7,6 +7,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
 
@@ -17,8 +18,18 @@ import {
  * a thing someone would have to build. (The circuit stays on the 2D tab —
  * circuits are 2D creatures.)
  */
-export function Wall3DCanvas({ params, dark }: { params: WallParams; dark: boolean }) {
-  const cam = useOrbitCam(0.55, -0.3);
+export function Wall3DCanvas({
+  params,
+  dark,
+  cam: camProp,
+}: {
+  params: WallParams;
+  dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
+}) {
+  const internalCam = useOrbitCam(0.55, -0.3);
+  const cam = camProp ?? internalCam;
   const redrawKey = `${JSON.stringify(params)}|${dark}|${cam.camTick}`;
 
   const canvasRef = useCanvas((ctx, frame) => {

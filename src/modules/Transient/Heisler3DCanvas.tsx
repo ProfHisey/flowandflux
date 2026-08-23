@@ -7,6 +7,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
 
@@ -15,8 +16,18 @@ import {
  * wall as a translucent slab banded by T(x*), a sphere as a quarter-cut
  * shell stack. Static in time (the t slider drives it), rotatable in space.
  */
-export function Heisler3DCanvas({ params, dark }: { params: HeislerParams; dark: boolean }) {
-  const cam = useOrbitCam(0.6, -0.32);
+export function Heisler3DCanvas({
+  params,
+  dark,
+  cam: camProp,
+}: {
+  params: HeislerParams;
+  dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
+}) {
+  const internalCam = useOrbitCam(0.6, -0.32);
+  const cam = camProp ?? internalCam;
 
   const redrawKey = `${JSON.stringify(params)}|${dark}|${cam.camTick}`;
 

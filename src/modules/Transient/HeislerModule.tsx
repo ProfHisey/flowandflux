@@ -18,6 +18,7 @@ import {
   type TransientGeometry,
 } from '../../lib/transient';
 import { lengthM, sci, timeS } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { HeislerCanvas } from './HeislerCanvas';
 import { Heisler3DCanvas } from './Heisler3DCanvas';
 import { HeislerChart } from './TransientChart';
@@ -26,7 +27,7 @@ import { DEFAULT_HEISLER, HEISLER_PRESETS } from './presets';
 export function HeislerModule({ dark }: { dark: boolean }) {
   const [hp, setHp] = useState<HeislerParams>(DEFAULT_HEISLER);
   const [hPresetId, setHPresetId] = useState('pea');
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  const sd = useSeamlessDim(false); // both views are static — the t slider drives them
 
   const setH = <K extends keyof HeislerParams>(key: K, value: HeislerParams[K]) => {
     setHp((p) => ({ ...p, [key]: value }));
@@ -58,21 +59,21 @@ export function HeislerModule({ dark }: { dark: boolean }) {
             right={
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
-                  value={dim}
-                  options={[
-                    { value: '2d', label: '2D' },
-                    { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
-                  ]}
-                  onChange={setDim}
+                  value={sd.dim}
+                  options={SEAMLESS_DIM_OPTIONS}
+                  onChange={sd.setDim}
                 />
               </div>
             }
           >
-            {dim === '2d' ? (
-              <HeislerCanvas params={hp} dark={dark} />
-            ) : (
-              <Heisler3DCanvas params={hp} dark={dark} />
-            )}
+            <div {...sd.wrapperProps}>
+              {sd.dim === '2d' ? (
+                <HeislerCanvas params={hp} dark={dark} />
+              ) : (
+                <Heisler3DCanvas params={hp} dark={dark} cam={sd.cam} />
+              )}
+            </div>
+            {sd.dim === '2d' && <SeamlessHint noun="The body" />}
             {derived.Fo < 0.2 && (
               <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                 <span className="font-semibold">Fo = {sci(derived.Fo)} &lt; 0.2: </span>

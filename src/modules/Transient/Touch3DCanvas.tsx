@@ -8,6 +8,7 @@ import {
   useOrbitCam,
   useOrbitControls,
   wireBox,
+  type OrbitCam,
 } from '../shared/paint3d';
 
 /**
@@ -25,15 +26,19 @@ export function Touch3DCanvas({
   resetTick,
   running,
   dark,
+  cam: camProp,
 }: {
   left: ContactBody;
   right: ContactBody;
   resetTick: number;
   running: boolean;
   dark: boolean;
+  /** Optional shared camera for the seamless 2D-to-3D handoff. */
+  cam?: OrbitCam;
 }) {
   const tRef = useRef(0.02);
-  const cam = useOrbitCam(0.55, -0.3);
+  const internalCam = useOrbitCam(0.55, -0.3);
+  const cam = camProp ?? internalCam;
 
   const redrawKey = `${JSON.stringify(left)}|${JSON.stringify(right)}|${resetTick}|${dark}|${cam.camTick}`;
 

@@ -15,6 +15,7 @@ import {
   type ContactBody,
 } from '../../lib/transient';
 import { lengthM, sci, timeS } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { TouchCanvas } from './TouchCanvas';
 import { Touch3DCanvas } from './Touch3DCanvas';
 import { TouchChart } from './TransientChart';
@@ -25,7 +26,7 @@ const SKIN: Omit<ContactBody, 'T'> = TOUCH_MATERIALS[0];
 export function TransientModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [resetTick, setResetTick] = useState(0);
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  const sd = useSeamlessDim(running);
 
   const [skinT, setSkinT] = useState(37);
   const [matName, setMatName] = useState('Steel');
@@ -65,12 +66,9 @@ export function TransientModule({ dark }: { dark: boolean }) {
               <div className="flex shrink-0 items-center gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
-                    value={dim}
-                    options={[
-                      { value: '2d', label: '2D' },
-                      { value: '3d', label: '3D', title: 'Rotatable 3D view — drag to orbit' },
-                    ]}
-                    onChange={setDim}
+                    value={sd.dim}
+                    options={SEAMLESS_DIM_OPTIONS}
+                    onChange={sd.setDim}
                   />
                 </div>
                 <IconButton label="Touch again" onClick={() => setResetTick((t) => t + 1)}>
@@ -85,23 +83,27 @@ export function TransientModule({ dark }: { dark: boolean }) {
               </div>
             }
           >
-            {dim === '2d' ? (
-              <TouchCanvas
-                left={left}
-                right={right}
-                resetTick={resetTick}
-                running={running}
-                dark={dark}
-              />
-            ) : (
-              <Touch3DCanvas
-                left={left}
-                right={right}
-                resetTick={resetTick}
-                running={running}
-                dark={dark}
-              />
-            )}
+            <div {...sd.wrapperProps}>
+              {sd.dim === '2d' ? (
+                <TouchCanvas
+                  left={left}
+                  right={right}
+                  resetTick={resetTick}
+                  running={running}
+                  dark={dark}
+                />
+              ) : (
+                <Touch3DCanvas
+                  left={left}
+                  right={right}
+                  resetTick={resetTick}
+                  running={running}
+                  dark={dark}
+                  cam={sd.cam}
+                />
+              )}
+            </div>
+            {sd.dim === '2d' && <SeamlessHint noun="The pair of blocks" />}
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               Each side responds as erf(x/2√αt), at its own pace — the marked fronts
               are the two thermal penetration depths. Your nerves live at the

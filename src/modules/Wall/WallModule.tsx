@@ -18,6 +18,7 @@ import {
   type WallParams,
 } from '../../lib/network';
 import { lengthM, sci } from '../../lib/format';
+import { SEAMLESS_DIM_OPTIONS, SeamlessHint, useSeamlessDim } from '../shared/seamless';
 import { WallCanvas } from './WallCanvas';
 import { Wall3DCanvas } from './Wall3DCanvas';
 import { DEFAULT_PARAMS, MATERIALS, PRESETS } from './presets';
@@ -25,7 +26,7 @@ import { DEFAULT_PARAMS, MATERIALS, PRESETS } from './presets';
 export function WallModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<WallParams>(DEFAULT_PARAMS);
   const [presetId, setPresetId] = useState<string>('double');
-  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  const sd = useSeamlessDim(false); // both views are static
 
   const set = (patch: Partial<WallParams>) => {
     setParams((p) => ({ ...p, ...patch }));
@@ -78,22 +79,24 @@ export function WallModule({ dark }: { dark: boolean }) {
             right={
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
-                  value={dim}
-                  options={[
-                    { value: '2d', label: '2D', title: 'The wall with its circuit diagram' },
-                    { value: '3d', label: '3D', title: 'The layered slab in space — drag to orbit' },
-                  ]}
-                  onChange={setDim}
+                  value={sd.dim}
+                  options={SEAMLESS_DIM_OPTIONS}
+                  onChange={sd.setDim}
                 />
               </div>
             }
           >
             {derived.els.length > 0 ? (
-              dim === '2d' ? (
-                <WallCanvas params={params} dark={dark} />
-              ) : (
-                <Wall3DCanvas params={params} dark={dark} />
-              )
+              <>
+                <div {...sd.wrapperProps}>
+                  {sd.dim === '2d' ? (
+                    <WallCanvas params={params} dark={dark} />
+                  ) : (
+                    <Wall3DCanvas params={params} dark={dark} cam={sd.cam} />
+                  )}
+                </div>
+                {sd.dim === '2d' && <SeamlessHint noun="The wall" />}
+              </>
             ) : (
               <p className="py-16 text-center text-sm text-slate-500 dark:text-slate-400">
                 The stack is empty — add a layer or enable a film on the right.
