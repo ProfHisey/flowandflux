@@ -87,16 +87,53 @@ function initialModule(): ModuleId {
   return ALL.find((m) => m.id === h)?.id ?? 'divider';
 }
 
-/** Deliberately near-empty for now — Prof. Hisey will write this himself. */
 function AboutPage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-4 py-10">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-        About
-      </h1>
-      <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-        Coming soon.
-      </p>
+    <div className="mx-auto max-w-2xl space-y-8 py-10">
+      <div className="space-y-3">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+          About
+        </h1>
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          FlowAndFlux is a collection of interactive simulations for learning
+          transport phenomena — diffusion, heat conduction, viscous flow, and
+          convection. Each module lets you drive the physics with your own
+          numbers and watch what the equations actually describe.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Disclaimer
+        </h2>
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          This site is for <strong>visualization and educational purposes
+          only</strong>. The simulations are built to make transport concepts
+          visible and intuitive — not to produce authoritative numbers. They
+          are not intended for research, engineering design work, solving
+          homework problems, or any application where the results matter
+          beyond building your own understanding. Some visual choices (such as
+          animation speeds) are deliberately not to physical scale; where that
+          is the case, the page says so.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Contact
+        </h2>
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          For tool requests, bug reports, or any other feedback, contact
+          Prof. Colin Hisey at{' '}
+          <a
+            href="mailto:colin.hisey@northwestern.edu"
+            className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:decoration-sky-700 dark:hover:text-sky-300"
+          >
+            colin.hisey@northwestern.edu
+          </a>
+          .
+        </p>
+      </div>
     </div>
   );
 }

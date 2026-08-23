@@ -787,6 +787,34 @@ check('effectiveness = Q_fin / Q_bare and is >> 1 here',
   close(finEffectiveness(rod), finHeat(rod) / bareHeat(rod), 1e-12) && finEffectiveness(rod) > 10,
   String(finEffectiveness(rod)));
 
+// --- 46b. Rectangular (plate) fin, worked by hand ---------------------------
+// Aluminium plate: k = 205, h = 20, w = 10 cm, t = 2 mm, L = 5 cm, theta0 = 80.
+// P = 2(w + t) = 0.204 m, A = wt = 2e-4 m^2
+// m = sqrt(hP/kA) = sqrt(4.08 / 0.041) = 9.9756 1/m, mL = 0.49878
+// Q = sqrt(hPkA) * theta0 * tanh(mL) = 0.40900 * 80 * 0.46116 = 15.090 W
+// T_tip = 20 + 80 / cosh(mL) = 90.99 degC
+console.log('\nAluminium plate fin, worked by hand');
+const plateFin: FinParams = {
+  h: 20, k: 205, R: 0.004, L: 0.05, T0: 100, Tinf: 20,
+  shape: 'rect', w: 0.1, t: 0.002,
+};
+check('m = 9.976 1/m', close(finML(plateFin) / plateFin.L, 9.9756, 1e-4),
+  String(finML(plateFin) / plateFin.L));
+check('Q_fin = 15.09 W', close(finHeat(plateFin), 15.090, 1e-3), String(finHeat(plateFin)));
+check('tip at 90.99 degC', close(finTemp(plateFin, plateFin.L), 90.99, 1e-3),
+  String(finTemp(plateFin, plateFin.L)));
+check('thin-wide limit: m -> sqrt(2h/kt) within 1% when w >> t',
+  close(finML(plateFin) / plateFin.L,
+    Math.sqrt((2 * plateFin.h) / (plateFin.k * plateFin.t!)), 1.1e-2),
+  String(Math.sqrt((2 * plateFin.h) / (plateFin.k * plateFin.t!))));
+check("explicit shape:'pin' matches the legacy pin formulas",
+  close(finML({ ...rod, shape: 'pin' }), finML(rod), 1e-12) &&
+    close(finHeat({ ...rod, shape: 'pin' }), finHeat(rod), 1e-12));
+check('plate effectiveness = Q_fin/Q_bare and is >> 1 here',
+  close(finEffectiveness(plateFin), finHeat(plateFin) / bareHeat(plateFin), 1e-12) &&
+    finEffectiveness(plateFin) > 10,
+  String(finEffectiveness(plateFin)));
+
 // ==========================================================================
 // Nu & Sh correlations
 // ==========================================================================

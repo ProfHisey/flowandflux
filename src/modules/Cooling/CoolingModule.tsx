@@ -28,6 +28,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
   const [resetTick, setResetTick] = useState(0);
   const [view, setView] = useState<'flow' | 'fin'>('flow');
+  const [finShape, setFinShape] = useState<'pin' | 'rect'>('pin');
 
   const set = <K extends keyof CoolingParams>(key: K, value: CoolingParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -70,6 +71,18 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                     onChange={setView}
                   />
                 </div>
+                {view === 'fin' && (
+                  <div className="w-28">
+                    <Segmented<'pin' | 'rect'>
+                      value={finShape}
+                      options={[
+                        { value: 'pin', label: 'Pin', title: 'A cylindrical rod: P = 2πR, A = πR²' },
+                        { value: 'rect', label: 'Plate', title: 'A rectangular blade: P = 2(w+t), A = wt — the heat-sink shape' },
+                      ]}
+                      onChange={setFinShape}
+                    />
+                  </div>
+                )}
                 <IconButton label="Reheat and restart" onClick={() => setResetTick((t) => t + 1)}>
                   <Zap size={15} />
                 </IconButton>
@@ -107,19 +120,34 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   params={{
                     h: params.h, k: params.k, R: 0.004, L: 0.08,
                     T0: params.T0, Tinf: params.Tinf,
+                    shape: finShape, w: 0.04, t: 0.002,
                   }}
                   running={running}
                   dark={dark}
                 />
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  A pin fin (4 mm radius, 8 cm long — fixed for this view) grown from a
-                  base at T₀, shaded by its own solution θ = cosh(m(L−x))/cosh(mL) with
-                  m = √(2h/kR). Every colour is physical and answers to the sliders:
-                  raise h and the colour dies faster along the rod — the fluid drains
-                  the fin before heat gets far; raise k (copper) and the whole rod holds
-                  the base colour. When the far end reaches the fluid temperature, extra
-                  length adds nothing: the frying-pan-handle regime, and why you can
-                  grab one.
+                  {finShape === 'pin' ? (
+                    <>
+                      A pin fin (4 mm radius, 8 cm long — fixed for this view) grown from a
+                      base at T₀, shaded by its own solution θ = cosh(m(L−x))/cosh(mL) with
+                      m = √(hP/kA) = √(2h/kR). Every colour is physical and answers to the
+                      sliders: raise h and the colour dies faster along the rod — the fluid
+                      drains the fin before heat gets far; raise k (copper) and the whole rod
+                      holds the base colour. When the far end reaches the fluid temperature,
+                      extra length adds nothing: the frying-pan-handle regime, and why you
+                      can grab one.
+                    </>
+                  ) : (
+                    <>
+                      A rectangular plate fin (4 cm wide, 2 mm thick, 8 cm long — fixed for
+                      this view): the same solution θ = cosh(m(L−x))/cosh(mL), because the
+                      shape enters ONLY through m = √(hP/kA). Thin and wide means P/A ≈ 2/t,
+                      so m ≈ √(2h/kt) — the thinner the blade, the faster it fades. Plates
+                      pack far more surface per gram of metal than pins, which is why every
+                      CPU heat sink you have ever seen is a row of these, faces along the
+                      flow.
+                    </>
+                  )}
                 </p>
               </>
             )}

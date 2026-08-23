@@ -111,10 +111,15 @@ export function Fin3DCanvas({
     const norm = (T: number) => (T - tLo) / span;
 
     // Model: a modest base flange on the left, the fin as the star.
+    const isRect = p.shape === 'rect';
     const FL = 1.5 * fit;
-    const FR = 0.19 * fit;
+    const FR = 0.19 * fit; // pin radius (visual)
+    const TH = 0.055 * fit; // plate half-thickness (visual — thin is the point)
+    const WD = 0.5 * fit; // plate half-width, spanwise along the flow (z)
+    const topR = isRect ? TH : FR; // surface standoff in y, both shapes
     const baseW = 0.09 * fit;
     const baseH = 0.62 * fit;
+    const baseZ = isRect ? WD + 0.05 * fit : baseH / 2;
     const xOff = -FL / 2 - baseW / 2;
 
     // Base flange at T0 — deliberately small and outlined, so it reads as
@@ -122,10 +127,10 @@ export function Fin3DCanvas({
     const baseCol = rampWarm(norm(p.T0), dark);
     const edgeCol = dark ? 'rgba(226,232,240,0.55)' : 'rgba(51,65,85,0.55)';
     const B: Vec3[] = [
-      [xOff - baseW, -baseH / 2, -baseH / 2], [xOff, -baseH / 2, -baseH / 2],
-      [xOff, baseH / 2, -baseH / 2], [xOff - baseW, baseH / 2, -baseH / 2],
-      [xOff - baseW, -baseH / 2, baseH / 2], [xOff, -baseH / 2, baseH / 2],
-      [xOff, baseH / 2, baseH / 2], [xOff - baseW, baseH / 2, baseH / 2],
+      [xOff - baseW, -baseH / 2, -baseZ], [xOff, -baseH / 2, -baseZ],
+      [xOff, baseH / 2, -baseZ], [xOff - baseW, baseH / 2, -baseZ],
+      [xOff - baseW, -baseH / 2, baseZ], [xOff, -baseH / 2, baseZ],
+      [xOff, baseH / 2, baseZ], [xOff - baseW, baseH / 2, baseZ],
     ];
     quad([B[0], B[1], B[2], B[3]], baseCol);
     quad([B[4], B[5], B[6], B[7]], baseCol);
@@ -139,57 +144,82 @@ export function Fin3DCanvas({
     ];
     for (const [a, b] of BE) seg(B[a], B[b], edgeCol, 1);
 
-    // The fin: rings of quads, each coloured by ITS OWN temperature.
+    // The fin: slices along x, each coloured by ITS OWN temperature.
     const NX = 30;
-    const NT = 18;
-    const dth = (Math.PI * 2) / NT;
-    for (let i = 0; i < NX; i++) {
-      const xa = xOff + (FL * i) / NX;
-      const xb = xOff + (FL * (i + 1)) / NX;
-      const Tmid = finTemp(p, ((i + 0.5) / NX) * p.L);
-      const col = rampWarm(norm(Tmid), dark);
+    const tipCol = rampWarm(norm(finTemp(p, p.L)), dark);
+    if (isRect) {
+      // Plate fin: thin in y, wide along the flow (z) — a heat-sink blade.
+      for (let i = 0; i < NX; i++) {
+        const xa = xOff + (FL * i) / NX;
+        const xb = xOff + (FL * (i + 1)) / NX;
+        const col = rampWarm(norm(finTemp(p, ((i + 0.5) / NX) * p.L)), dark);
+        quad([[xa, TH, -WD], [xb, TH, -WD], [xb, TH, WD], [xa, TH, WD]], col);
+        quad([[xa, -TH, -WD], [xb, -TH, -WD], [xb, -TH, WD], [xa, -TH, WD]], col);
+        quad([[xa, -TH, -WD], [xb, -TH, -WD], [xb, TH, -WD], [xa, TH, -WD]], col);
+        quad([[xa, -TH, WD], [xb, -TH, WD], [xb, TH, WD], [xa, TH, WD]], col);
+      }
+      quad(
+        [[xOff + FL, -TH, -WD], [xOff + FL, TH, -WD], [xOff + FL, TH, WD], [xOff + FL, -TH, WD]],
+        tipCol,
+      );
+      // Silhouette edges so the cold end never dissolves.
+      for (const [yy, zz] of [[TH, -WD], [TH, WD], [-TH, -WD], [-TH, WD]] as const) {
+        seg([xOff, yy, zz], [xOff + FL, yy, zz], edgeCol, 1);
+      }
+      for (const s of [-1, 1] as const) {
+        seg([xOff + FL, -TH, s * WD], [xOff + FL, TH, s * WD], edgeCol, 1);
+        seg([xOff + FL, s * TH, -WD], [xOff + FL, s * TH, WD], edgeCol, 1);
+      }
+    } else {
+      const NT = 18;
+      const dth = (Math.PI * 2) / NT;
+      for (let i = 0; i < NX; i++) {
+        const xa = xOff + (FL * i) / NX;
+        const xb = xOff + (FL * (i + 1)) / NX;
+        const Tmid = finTemp(p, ((i + 0.5) / NX) * p.L);
+        const col = rampWarm(norm(Tmid), dark);
+        for (let j = 0; j < NT; j++) {
+          const t0 = j * dth;
+          const t1 = t0 + dth;
+          quad(
+            [
+              [xa, FR * Math.sin(t0), FR * Math.cos(t0)],
+              [xb, FR * Math.sin(t0), FR * Math.cos(t0)],
+              [xb, FR * Math.sin(t1), FR * Math.cos(t1)],
+              [xa, FR * Math.sin(t1), FR * Math.cos(t1)],
+            ],
+            col,
+          );
+        }
+      }
+      // Tip cap.
       for (let j = 0; j < NT; j++) {
         const t0 = j * dth;
         const t1 = t0 + dth;
         quad(
           [
-            [xa, FR * Math.sin(t0), FR * Math.cos(t0)],
-            [xb, FR * Math.sin(t0), FR * Math.cos(t0)],
-            [xb, FR * Math.sin(t1), FR * Math.cos(t1)],
-            [xa, FR * Math.sin(t1), FR * Math.cos(t1)],
+            [xOff + FL, 0, 0],
+            [xOff + FL, FR * Math.sin(t0), FR * Math.cos(t0)],
+            [xOff + FL, FR * Math.sin(t1), FR * Math.cos(t1)],
+            [xOff + FL, 0, 0],
           ],
-          col,
+          tipCol,
         );
       }
-    }
-    // Tip cap.
-    const tipCol = rampWarm(norm(finTemp(p, p.L)), dark);
-    for (let j = 0; j < NT; j++) {
-      const t0 = j * dth;
-      const t1 = t0 + dth;
-      quad(
-        [
-          [xOff + FL, 0, 0],
+      // Silhouette lines so the cold end of the rod never dissolves into the
+      // background, however dark theta gets.
+      for (const [yy, zz] of [[FR, 0], [-FR, 0], [0, FR], [0, -FR]] as const) {
+        seg([xOff, yy, zz], [xOff + FL, yy, zz], edgeCol, 1);
+      }
+      for (let j = 0; j < NT; j++) {
+        const t0 = j * dth;
+        const t1 = t0 + dth;
+        seg(
           [xOff + FL, FR * Math.sin(t0), FR * Math.cos(t0)],
           [xOff + FL, FR * Math.sin(t1), FR * Math.cos(t1)],
-          [xOff + FL, 0, 0],
-        ],
-        tipCol,
-      );
-    }
-    // Silhouette lines so the cold end of the rod never dissolves into the
-    // background, however dark theta gets.
-    for (const [yy, zz] of [[FR, 0], [-FR, 0], [0, FR], [0, -FR]] as const) {
-      seg([xOff, yy, zz], [xOff + FL, yy, zz], edgeCol, 1);
-    }
-    for (let j = 0; j < NT; j++) {
-      const t0 = j * dth;
-      const t1 = t0 + dth;
-      seg(
-        [xOff + FL, FR * Math.sin(t0), FR * Math.cos(t0)],
-        [xOff + FL, FR * Math.sin(t1), FR * Math.cos(t1)],
-        edgeCol, 1,
-      );
+          edgeCol, 1,
+        );
+      }
     }
 
     // ---------------------------------------------------------- tracers
@@ -198,7 +228,7 @@ export function Fin3DCanvas({
     // warmth that matches the LOCAL fin temperature.
     const ZB = 0.9 * fit;
     const YB = 0.55 * fit;
-    const film = FR * 0.45;
+    const film = (isRect ? 2 * TH : FR) * 0.45;
     const list = tracersRef.current;
     if (list.length === 0) {
       for (let i = 0; i < COUNT; i++) {
@@ -212,16 +242,26 @@ export function Fin3DCanvas({
     }
     for (const q of list) {
       if (dt > 0) {
-        // Radial standoff from the fin axis, in the (y, z) plane.
-        const onFin = q.x >= xOff && q.x <= xOff + FL;
-        const rho = Math.hypot(q.y, q.z);
+        // Standoff from the fin surface: radial for the pin, |y|-based for
+        // the plate (the stream runs along the plate's wide faces).
+        const onFin =
+          q.x >= xOff && q.x <= xOff + FL && (!isRect || Math.abs(q.z) < WD + 2);
         let slow = 1;
         if (onFin) {
-          const gap = Math.max(0, rho - FR);
-          if (rho < FR + 1.5) {
-            const s = (FR + 1.5) / (rho || 1);
-            q.y *= s;
-            q.z *= s;
+          const gap = isRect
+            ? Math.max(0, Math.abs(q.y) - TH)
+            : Math.max(0, Math.hypot(q.y, q.z) - FR);
+          if (isRect) {
+            if (Math.abs(q.y) < TH + 1.5) {
+              q.y = Math.sign(q.y || 1) * (TH + 1.5);
+            }
+          } else {
+            const rho = Math.hypot(q.y, q.z);
+            if (rho < FR + 1.5) {
+              const s = (FR + 1.5) / (rho || 1);
+              q.y *= s;
+              q.z *= s;
+            }
           }
           slow = gap > film * 2 ? 1 : Math.max(0.1, 1 - Math.exp(-(gap / film) * 1.4));
           if (gap < film) {
@@ -282,8 +322,8 @@ export function Fin3DCanvas({
       ctx.textBaseline = 'alphabetic';
     };
     chip([xOff - baseW / 2, baseH / 2 + 14, 0], `base at ${fmtT(p.T0)} °C`);
-    chip([xOff + FL, -FR - 18, 0], `tip: ${fmtT(finTemp(p, p.L))} °C`);
-    chip([xOff + FL / 2, FR + 22, 0], `mL = ${fmtT(finML(p))} · Q = ${fmtT(finHeat(p))} W · ε = ${fmtT(finEffectiveness(p))}×`);
+    chip([xOff + FL, -topR - 18, 0], `tip: ${fmtT(finTemp(p, p.L))} °C`);
+    chip([xOff + FL / 2, topR + 22, 0], `mL = ${fmtT(finML(p))} · Q = ${fmtT(finHeat(p))} W · ε = ${fmtT(finEffectiveness(p))}×`);
 
     ctx.textAlign = 'right';
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
@@ -360,7 +400,11 @@ export function Fin3DCanvas({
     <canvas
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
-      aria-label="A 3D pin fin shaded by its own temperature solution, with fluid tracers streaming past and carrying off its heat"
+      aria-label={
+        params.shape === 'rect'
+          ? 'A 3D rectangular plate fin shaded by its own temperature solution, with fluid tracers streaming along its faces'
+          : 'A 3D pin fin shaded by its own temperature solution, with fluid tracers streaming past and carrying off its heat'
+      }
     />
   );
 }
