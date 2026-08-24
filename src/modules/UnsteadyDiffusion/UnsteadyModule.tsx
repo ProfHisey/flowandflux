@@ -65,11 +65,17 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
         {/* ---------------------------------------------------- canvas */}
         <div className="order-1 space-y-5 lg:col-start-1 lg:row-start-1">
           <Panel
-            title={release === 'plane' ? 'The capsule burst' : 'The depot burst'}
+            title={
+              cargo === 'heat'
+                ? 'The heat pulse'
+                : release === 'plane' ? 'The capsule burst' : 'The depot burst'
+            }
             subtitle={
-              release === 'plane'
-                ? 'All the particles start in the middle. Everything after that is unbiased wandering.'
-                : 'All the particles start at one point. The cloud is a sphere from the first instant.'
+              cargo === 'heat'
+                ? 'The molecules are already everywhere — and they stay put. Only the energy spreads.'
+                : release === 'plane'
+                  ? 'All the particles start in the middle. Everything after that is unbiased wandering.'
+                  : 'All the particles start at one point. The cloud is a sphere from the first instant.'
             }
             right={
               <div className="flex shrink-0 items-center gap-1.5">
@@ -110,6 +116,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 />
               ) : (
                 <Bolus3DCanvas
+                  cargo={cargo}
                   releaseTick={releaseTick}
                   running={running}
                   dark={dark}
@@ -123,7 +130,9 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 The 2D tab's planar burst uses √(2Dt); geometry decides the factor.
               </p>
             )}
-            {dim === '2d' && stats && <SpreadReadout stats={stats} mode={release} />}
+            {dim === '2d' && stats && (
+              <SpreadReadout stats={stats} mode={release} cargo={cargo} />
+            )}
           </Panel>
 
         </div>
@@ -432,7 +441,15 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
  * x for a plane, rms radius for a point); the predicted figure is the
  * random-walk theory on the same visual D and clock.
  */
-function SpreadReadout({ stats, mode }: { stats: PulseStats; mode: ReleaseMode }) {
+function SpreadReadout({
+  stats,
+  mode,
+  cargo = 'mass',
+}: {
+  stats: PulseStats;
+  mode: ReleaseMode;
+  cargo?: BolusCargo;
+}) {
   return (
     <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-800/50">
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 font-mono text-xs tabular-nums">
@@ -458,10 +475,23 @@ function SpreadReadout({ stats, mode }: { stats: PulseStats; mode: ReleaseMode }
           </>
         ) : (
           <>
-            The spread of the walkers, measured directly, against Einstein's{' '}
-            ⟨x²⟩ = 2Dt on the same clock — two independent measurements of one number.
-            The cloud runs on a visual D (real diffusion at this scale would take
-            minutes to watch); the shape of everything it does is physical.
+            {cargo === 'heat' ? (
+              <>
+                The spread of the ENERGY — measured as the energy-weighted width of
+                the lattice's own field — against √(2Dt) on the exchange rule's own
+                clock. No site consulted that formula; hot sites simply hand more
+                energy to their neighbours than they get back, and the Gaussian
+                emerges. The matter never moves an inch.
+              </>
+            ) : (
+              <>
+                The spread of the walkers, measured directly, against Einstein's{' '}
+                ⟨x²⟩ = 2Dt on the same clock — two independent measurements of one
+                number. The cloud runs on a visual D (real diffusion at this scale
+                would take minutes to watch); the shape of everything it does is
+                physical.
+              </>
+            )}
           </>
         )}
       </p>
