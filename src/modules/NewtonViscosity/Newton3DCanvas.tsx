@@ -10,7 +10,7 @@ import { rampFlow, type NewtonView } from './NewtonCanvas';
  * painter on plain canvas 2D).
  *
  * The 2D lanes become what they always secretly were: SHEETS. And the two
- * design points Prof. Hisey asked for are built in deliberately:
+ * design points below are built in deliberately:
  *
  *  - The plates are OPAQUE and heavily textured (cross-hatched, top and
  *    front), because the no-slip grip at the moving plate is what drives

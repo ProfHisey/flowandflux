@@ -7,7 +7,7 @@ import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
  * Couette flow between plates: the top plate slides, the bottom one is
  * fixed, and the fluid in between shears.
  *
- * Design decision (Prof. Hisey): NO random walk here. In reality molecules
+ * Design decision: NO random walk here. In reality molecules
  * do diffuse while all this happens, but the jitter buries the thing this
  * module exists to show — layers of fluid sliding over one another, each
  * one dragging its neighbour. So the particles ride their layers cleanly,

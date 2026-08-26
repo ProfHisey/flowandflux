@@ -126,18 +126,12 @@ function AboutPage() {
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          Contact
+          Feedback
         </h2>
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          For tool requests, bug reports, or any other feedback, contact
-          Prof. Colin Hisey at{' '}
-          <a
-            href="mailto:colin.hisey@northwestern.edu"
-            className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:decoration-sky-700 dark:hover:text-sky-300"
-          >
-            colin.hisey@northwestern.edu
-          </a>
-          .
+          A channel for tool requests and bug reports is coming; until then,
+          this site is published without attribution while it is still finding
+          its shape.
         </p>
       </div>
     </div>
@@ -232,8 +226,8 @@ export default function App() {
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4">
         <p className="text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-          FlowAndFlux · built for BME 378 at Northwestern, and for anyone else learning
-          transport. Physics is real; animation speed is not.
+          FlowAndFlux · built for anyone learning transport phenomena.
+          Physics is real; animation speed is not.
         </p>
       </footer>
     </div>
