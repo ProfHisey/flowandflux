@@ -104,7 +104,8 @@ function AboutPage() {
           FlowAndFlux is a collection of interactive simulations for learning
           transport phenomena — diffusion, heat conduction, viscous flow, and
           convection. Each module lets you drive the physics with your own
-          numbers and watch what the equations actually describe.
+          numbers and watch what the equations actually describe. It is an
+          independent side project, built and maintained by Colin Hisey.
         </p>
       </div>
 
@@ -126,12 +127,23 @@ function AboutPage() {
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Independence
+        </h2>
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          This is a <strong>personal project, developed independently on
+          personal time</strong>. It is not affiliated with, endorsed by, or a
+          production of any university, department, or employer, and nothing
+          here is official course material or represents any institution's
+          views. The examples throughout are invented and course-neutral.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Feedback
         </h2>
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          A channel for tool requests and bug reports is coming; until then,
-          this site is published without attribution while it is still finding
-          its shape.
+          A channel for tool requests and bug reports is coming.
         </p>
       </div>
     </div>
@@ -226,7 +238,8 @@ export default function App() {
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4">
         <p className="text-xs leading-relaxed text-slate-400 dark:text-slate-500">
-          FlowAndFlux · built for anyone learning transport phenomena.
+          FlowAndFlux · an independent personal project, not affiliated with or
+          endorsed by any institution · built for anyone learning transport.
           Physics is real; animation speed is not.
         </p>
       </footer>

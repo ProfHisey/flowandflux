@@ -4,11 +4,14 @@ Interactive simulations for transport phenomena — diffusion, conduction, fluid
 and convective transport — built to replace static slides with something a student
 can push on.
 
-Built first for a university biomedical mass and heat transfer course, and written
-to be useful to anyone learning transport: general principles only, with invented,
-course-neutral examples throughout.
+Written to be useful to anyone learning transport: general principles only, with
+invented, course-neutral examples throughout.
 
 **[flowandflux.org](https://flowandflux.org)**
+
+> An independent personal project, developed on personal time. It is not affiliated
+> with, endorsed by, or a production of any university, department, or employer,
+> and nothing here is official course material.
 
 ---
 
