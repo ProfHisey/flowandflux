@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import { D_VIS, gauss } from '../FicksLaw/FickCanvas';
-import { rampWarm } from '../FourierLaw/FourierCanvas';
+import { rampMolecule } from '../FourierLaw/FourierCanvas';
 import {
   FAINT,
   makePainter,
@@ -33,9 +33,18 @@ interface M3 {
   oy: number;
   oz: number;
   col: number; // lattice column index
+  /** Drawn position this frame (rattle + orbit); the bonds use it too. */
+  dx: number;
+  dy: number;
+  dz: number;
+  /** Orbit phase and direction, for under-coordinated molecules. */
+  ph: number;
+  spin: number;
 }
 
 const NXE = 20; // heat-mode energy columns
+/** Fraction of lattice bonds that exist — see DividerHeatCanvas. */
+const BOND_KEEP = 0.66;
 
 export function Divider3DCanvas({
   mode,
@@ -73,6 +82,8 @@ export function Divider3DCanvas({
   const massRef = useRef<P3[]>([]);
   const molsRef = useRef<M3[]>([]);
   const energyRef = useRef<Float64Array | null>(null);
+  const bondsRef = useRef<{ keep: Float32Array; coord: Uint8Array } | null>(null);
+  const boundsRef = useRef({ lo: 0, hi: 1, span0: 1 });
   const liveRef = useRef({ dividerIn, dCyan, dOrange, temp, kScale });
   liveRef.current = { dividerIn, dCyan, dOrange, temp, kScale };
   const internalCam = useOrbitCam(0.55, -0.32);
@@ -84,6 +95,7 @@ export function Divider3DCanvas({
     massRef.current = [];
     molsRef.current = [];
     energyRef.current = null;
+    bondsRef.current = null;
   }, [mode, nLeft, nRight, TLeft, TRight, resetTick]);
 
   const canvasRef = useCanvas((ctx, frame) => {
@@ -138,6 +150,9 @@ export function Divider3DCanvas({
         E = new Float64Array(NXE);
         for (let i = 0; i < NXE; i++) E[i] = (i < NXE / 2 ? TLeft : TRight) + 273.15;
         energyRef.current = E;
+        const bLo = Math.min(TLeft, TRight) + 273.15;
+        const bHi = Math.max(TLeft, TRight) + 273.15;
+        boundsRef.current = { lo: bLo, hi: bHi, span0: Math.max(1, bHi - bLo) };
       }
       if (dt > 0) {
         const total = Math.min(0.5, 7 * live.kScale * dt);
@@ -155,15 +170,39 @@ export function Divider3DCanvas({
           for (let i = 0; i < NXE; i++) E[i] += dE[i];
         }
       }
-      const lo = Math.min(TLeft, TRight) + 273.15;
-      const span = Math.abs(TLeft - TRight) || 1;
+      // The colour range FOLLOWS the field, exactly as in the 2D view: a
+      // scale pinned to the starting temperatures collapses every molecule
+      // onto one mid-orange the moment the halves start meeting. Eased, with
+      // a floor so a uniform box does not amplify noise.
+      const bnd = boundsRef.current;
+      let fLo = Infinity;
+      let fHi = -Infinity;
+      for (let i = 0; i < NXE; i++) {
+        if (E[i] < fLo) fLo = E[i];
+        if (E[i] > fHi) fHi = E[i];
+      }
+      const floorSpan = Math.max(0.1 * bnd.span0, 1.5);
+      let tLo = fLo;
+      let tHi = fHi;
+      if (tHi - tLo < floorSpan) {
+        const mid = (tLo + tHi) / 2;
+        tLo = mid - floorSpan / 2;
+        tHi = mid + floorSpan / 2;
+      }
+      if (dt > 0) {
+        const kEase = 1 - Math.exp(-dt / 0.45);
+        bnd.lo += (tLo - bnd.lo) * kEase;
+        bnd.hi += (tHi - bnd.hi) * kEase;
+      }
+      const lo = bnd.lo;
+      const span = bnd.hi - bnd.lo || 1;
       const norm = (e: number) => Math.min(1, Math.max(0, (e - lo) / span));
 
+      const NY = 6;
+      const NZ = 6;
       let mols = molsRef.current;
       if (mols.length === 0) {
         mols = [];
-        const NY = 6;
-        const NZ = 6;
         for (let i = 0; i < NXE; i++) {
           for (let j = 0; j < NY; j++) {
             for (let k = 0; k < NZ; k++) {
@@ -172,48 +211,97 @@ export function Divider3DCanvas({
                 y: -BH / 2 + ((j + 0.5) / NY) * BH,
                 z: -BD / 2 + ((k + 0.5) / NZ) * BD,
                 ox: 0, oy: 0, oz: 0, col: i,
+                dx: 0, dy: 0, dz: 0,
+                ph: Math.random() * Math.PI * 2,
+                spin: Math.random() < 0.5 ? -1 : 1,
               });
             }
           }
         }
         molsRef.current = mols;
       }
-      // Molecules wear their own energy as colour, joined by faint bonds so
-      // the solid reads as a lattice (Aug 2026 review: background tinting
-      // alone did not carry the field in 3D).
-      const NY = 6;
-      const NZ = 6;
-      const bondCol = dark ? 'rgba(148,163,184,0.18)' : 'rgba(100,116,139,0.18)';
-      for (const q of mols) {
-        const amp = 0.7 + 4.2 * norm(E[q.col]);
+      // Which bonds exist: fixed at seed, so the network keeps its shape
+      // while energy moves through it. Broken bonds leave terminal atoms
+      // free to swing, which is the point — a molecular solid, not a
+      // crystal lattice. coord counts each molecule's surviving bonds.
+      let bonds = bondsRef.current;
+      if (!bonds) {
+        const nMol = NXE * NY * NZ;
+        const keep = new Float32Array(nMol * 3); // +z, +y, +x per molecule
+        for (let i = 0; i < keep.length; i++) keep[i] = Math.random();
+        const coord = new Uint8Array(nMol);
+        const bump = (a: number, c: number) => {
+          coord[a]++;
+          coord[c]++;
+        };
+        for (let i = 0; i < NXE; i++) {
+          for (let j = 0; j < NY; j++) {
+            for (let k = 0; k < NZ; k++) {
+              const n = (i * NY + j) * NZ + k;
+              if (k < NZ - 1 && keep[n * 3] < BOND_KEEP) bump(n, n + 1);
+              if (j < NY - 1 && keep[n * 3 + 1] < BOND_KEEP) bump(n, n + NZ);
+              if (i < NXE - 1 && keep[n * 3 + 2] < BOND_KEEP) bump(n, n + NY * NZ);
+            }
+          }
+        }
+        bonds = { keep, coord };
+        bondsRef.current = bonds;
+      }
+
+      // Rattle plus, for under-coordinated molecules, a swing whose radius
+      // and rate both grow with the site's energy: kinetic energy stays
+      // legible as MOTION even where colour has run out of range.
+      for (let n = 0; n < mols.length; n++) {
+        const q = mols[n];
+        const u = norm(E[q.col]);
+        const free = Math.max(0, 4 - bonds.coord[n]) / 4;
+        const amp = (0.7 + 4.6 * u) * (1 - 0.4 * free);
         if (dt > 0) {
           q.ox = 0.55 * q.ox + 0.45 * amp * gauss() * 0.8;
           q.oy = 0.55 * q.oy + 0.45 * amp * gauss() * 0.8;
           q.oz = 0.55 * q.oz + 0.45 * amp * gauss() * 0.8;
+          q.ph += dt * q.spin * (0.9 + 6 * u) * (0.4 + 1.6 * free);
         }
+        const orbit = free * (0.6 + 2.8 * u);
+        q.dx = q.x + q.ox + orbit * Math.cos(q.ph);
+        q.dy = q.y + q.oy + orbit * Math.sin(q.ph);
+        q.dz = q.z + q.oz;
       }
       const at = (n: number): Vec3 => {
         const q = mols[n];
-        return [q.x + q.ox, q.y + q.oy, q.z + q.oz];
+        return [q.dx, q.dy, q.dz];
+      };
+      // Hot bonds draw faintest — the lattice loosens where it jiggles hardest.
+      const bondAt = (n: number, m: number) => {
+        const u = (norm(E[mols[n].col]) + norm(E[mols[m].col])) / 2;
+        const a = (0.3 - 0.18 * u).toFixed(3);
+        pt.seg(at(n), at(m), dark ? `rgba(203,213,225,${a})` : `rgba(71,85,105,${a})`);
       };
       for (let i = 0; i < NXE; i++) {
         for (let j = 0; j < NY; j++) {
           for (let k = 0; k < NZ; k++) {
             const n = (i * NY + j) * NZ + k;
-            if (k < NZ - 1) pt.seg(at(n), at(n + 1), bondCol);
-            if (j < NY - 1) pt.seg(at(n), at(n + NZ), bondCol);
+            if (k < NZ - 1 && bonds.keep[n * 3] < BOND_KEEP) bondAt(n, n + 1);
+            if (j < NY - 1 && bonds.keep[n * 3 + 1] < BOND_KEEP) bondAt(n, n + NZ);
             // The divider severs the middle bonds while it is in.
-            if (i < NXE - 1 && !(live.dividerIn && i === NXE / 2 - 1)) {
-              pt.seg(at(n), at(n + NY * NZ), bondCol);
+            if (
+              i < NXE - 1 &&
+              bonds.keep[n * 3 + 2] < BOND_KEEP &&
+              !(live.dividerIn && i === NXE / 2 - 1)
+            ) {
+              bondAt(n, n + NY * NZ);
             }
           }
         }
       }
+      // Colour AND size rise together, so a hot molecule stays obvious once
+      // the temperature range itself has collapsed.
       for (const q of mols) {
-        const css = rampWarm(norm(E[q.col]), dark);
+        const u = norm(E[q.col]);
+        const css = rampMolecule(u, dark);
         const m = css.match(/(\d+),(\d+),(\d+)/);
         const rgb = m ? `${m[1]},${m[2]},${m[3]}` : '226,232,240';
-        pt.dot([q.x + q.ox, q.y + q.oy, q.z + q.oz], fit, rgb, 1.4, 1.15);
+        pt.dot([q.dx, q.dy, q.dz], fit, rgb, 1.1 + 1.1 * u, 0.85 + 0.5 * u);
       }
     }
 

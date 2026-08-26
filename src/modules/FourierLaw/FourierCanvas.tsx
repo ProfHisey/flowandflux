@@ -76,6 +76,28 @@ export function rampWarm(u: number, dark: boolean, alpha = 1): string {
   return alpha < 1 ? `rgba(${r},${g},${b},${alpha})` : `rgb(${r},${g},${b})`;
 }
 
+/**
+ * Molecule-level heat ramp: a subdued gold when cool, an incandescent red
+ * when hot. Deliberately NOT rampWarm — rampWarm fades its cool end into
+ * the page background, which is right for a shaded field and wrong for
+ * discrete objects that must stay visible at every temperature. Hotter is
+ * redder here (the thermal-camera convention, not blackbody).
+ */
+export function rampMolecule(u: number, dark: boolean, alpha = 1): string {
+  const t = Math.min(1, Math.max(0, u));
+  let r: number, g: number, b: number;
+  if (dark) {
+    r = Math.round(158 + t * 97); // 158 -> 255
+    g = Math.round(142 - t * 84); // 142 -> 58
+    b = Math.round(72 - t * 40); // 72 -> 32
+  } else {
+    r = Math.round(184 + t * 30);
+    g = Math.round(150 - t * 118);
+    b = Math.round(56 - t * 34);
+  }
+  return alpha < 1 ? `rgba(${r},${g},${b},${alpha})` : `rgb(${r},${g},${b})`;
+}
+
 export function FourierCanvas({
   params,
   showMolecules,

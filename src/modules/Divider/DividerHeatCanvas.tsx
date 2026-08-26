@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import { applyZoom, gauss, useWheelZoom } from '../FicksLaw/FickCanvas';
-import { rampWarm } from '../FourierLaw/FourierCanvas';
+import { rampMolecule } from '../FourierLaw/FourierCanvas';
 
 /**
  * The mixing box, heat edition: a hot half and a cold half of the same
@@ -27,12 +27,23 @@ interface Molecule {
   ay: number;
   ox: number;
   oy: number;
+  /** Drawn position this frame (rattle + orbit); the bonds use it too. */
+  dx: number;
+  dy: number;
+  /** Orbit phase and direction, for under-coordinated molecules. */
+  ph: number;
+  spin: number;
 }
 
 const NX = 36;
 const NY = 10;
 const EX_RATE = 7;
 const K0 = 273.15;
+/** Fraction of lattice bonds that actually exist. Below 1 the grid stops
+ *  reading as a crystal and starts reading as a molecular network: chains,
+ *  rings, and terminal atoms dangling off the side with room to swing.
+ *  Fixed at seed time — the breaks are structure, not temperature. */
+const BOND_KEEP = 0.66;
 
 export function DividerHeatCanvas({
   TLeft,
@@ -62,7 +73,12 @@ export function DividerHeatCanvas({
   dividerRef.current = dividerIn;
   const kRef = useRef(kScale);
   kRef.current = kScale;
-  const boundsRef = useRef({ lo: 0, hi: 1 });
+  const bondsRef = useRef<{
+    h: Float32Array;
+    v: Float32Array;
+    coord: Uint8Array;
+  } | null>(null);
+  const boundsRef = useRef({ lo: 0, hi: 1, span0: 1 });
   const zoomRef = useRef(1);
   const [zoomTick, setZoomTick] = useState(0);
 
@@ -71,6 +87,7 @@ export function DividerHeatCanvas({
   useEffect(() => {
     energyRef.current = null;
     moleculesRef.current = [];
+    bondsRef.current = null;
   }, [TLeft, TRight, resetTick]);
 
   const canvasRef = useCanvas((ctx, frame) => {
@@ -94,10 +111,9 @@ export function DividerHeatCanvas({
         for (let r = 0; r < NY; r++) E[r * NX + i] = T + K0;
       }
       energyRef.current = E;
-      boundsRef.current = {
-        lo: Math.min(TLeft, TRight) + K0,
-        hi: Math.max(TLeft, TRight) + K0,
-      };
+      const bLo = Math.min(TLeft, TRight) + K0;
+      const bHi = Math.max(TLeft, TRight) + K0;
+      boundsRef.current = { lo: bLo, hi: bHi, span0: Math.max(1, bHi - bLo) };
     }
 
     const dt = running ? frame.dt : 0;
@@ -138,22 +154,50 @@ export function DividerHeatCanvas({
       // Fourier module's pinned baths is the lesson.
     }
 
-    // Faint cell wash from the lattice's own energies — muted, because the
-    // MOLECULES carry the colour now (Aug 2026 review: background tinting
-    // alone did not read, especially in 3D).
-    const { lo, hi } = boundsRef.current;
-    const span = hi - lo || 1;
+    // ---- the colour range FOLLOWS the field ---------------------------
+    // With the scale pinned to the starting 15-90 degC, every molecule
+    // converges on the same mid-orange within seconds of pulling the
+    // divider: the picture goes flat exactly when conduction becomes the
+    // story. Easing the displayed range onto the field's current min/max
+    // keeps whatever gradient is left legible all the way down. A floor
+    // stops it amplifying noise once the box really is uniform, and the
+    // canvas prints the range it is using, so the collapse stays visible
+    // instead of being hidden by the rescaling.
+    const b = boundsRef.current;
+    let fLo = Infinity;
+    let fHi = -Infinity;
+    for (let i = 0; i < E.length; i++) {
+      if (E[i] < fLo) fLo = E[i];
+      if (E[i] > fHi) fHi = E[i];
+    }
+    const floorSpan = Math.max(0.1 * b.span0, 1.5);
+    let tLo = fLo;
+    let tHi = fHi;
+    if (tHi - tLo < floorSpan) {
+      const mid = (tLo + tHi) / 2;
+      tLo = mid - floorSpan / 2;
+      tHi = mid + floorSpan / 2;
+    }
+    if (dt > 0) {
+      const k = 1 - Math.exp(-dt / 0.45);
+      b.lo += (tLo - b.lo) * k;
+      b.hi += (tHi - b.hi) * k;
+    }
+    const lo = b.lo;
+    const span = b.hi - b.lo || 1;
+    const uAt = (n: number) => Math.min(1, Math.max(0, (E[n] - lo) / span));
+
+    // Faint cell wash — the molecules carry the colour; this only stops the
+    // two halves reading as empty space.
     const cw = boxW / NX;
     const ch = boxH / NY;
     for (let r = 0; r < NY; r++) {
       for (let i = 0; i < NX; i++) {
-        const u = (E[r * NX + i] - lo) / span;
-        ctx.fillStyle = rampWarm(Math.min(1, Math.max(0, u)), dark, 0.2);
+        ctx.fillStyle = rampMolecule(uAt(r * NX + i), dark, 0.13);
         ctx.fillRect(x0 + i * cw, y0 + r * ch, cw + 0.5, ch + 0.5);
       }
     }
 
-    // Molecules jiggling in place, amplitude from their own site's energy.
     let list = moleculesRef.current;
     if (list.length === 0) {
       list = [];
@@ -164,52 +208,121 @@ export function DividerHeatCanvas({
             ay: y0 + (r + 0.5) * ch,
             ox: 0,
             oy: 0,
+            dx: 0,
+            dy: 0,
+            ph: Math.random() * Math.PI * 2,
+            spin: Math.random() < 0.5 ? -1 : 1,
           });
         }
       }
       moleculesRef.current = list;
     }
-    // Advance the jiggle, then draw the bonds between CURRENT positions —
-    // the solid reads as a bonded lattice whose springs carry the energy.
+    // Which bonds exist at all — fixed at seed, so the network keeps its
+    // shape while the energy moves through it. coord counts each molecule's
+    // surviving bonds: the low-coordination ones are the terminal atoms.
+    let bonds = bondsRef.current;
+    if (!bonds) {
+      const h = new Float32Array((NX - 1) * NY);
+      const v = new Float32Array(NX * (NY - 1));
+      for (let i = 0; i < h.length; i++) h[i] = Math.random();
+      for (let i = 0; i < v.length; i++) v[i] = Math.random();
+      const coord = new Uint8Array(NX * NY);
+      for (let r = 0; r < NY; r++) {
+        for (let i = 0; i < NX - 1; i++) {
+          if (h[r * (NX - 1) + i] < BOND_KEEP) {
+            coord[r * NX + i]++;
+            coord[r * NX + i + 1]++;
+          }
+        }
+      }
+      for (let r = 0; r < NY - 1; r++) {
+        for (let i = 0; i < NX; i++) {
+          if (v[r * NX + i] < BOND_KEEP) {
+            coord[r * NX + i]++;
+            coord[(r + 1) * NX + i]++;
+          }
+        }
+      }
+      bonds = { h, v, coord };
+      bondsRef.current = bonds;
+    }
+
+    // Advance the motion first, then draw everything from the same drawn
+    // positions. A fully bonded molecule rattles in place; an
+    // under-coordinated one also swings on a small orbit — and both the
+    // rattle and the swing grow with that site's own energy, so kinetic
+    // energy is legible as motion even where colour has run out of range.
     for (let n = 0; n < list.length; n++) {
       const q = list[n];
-      const u = Math.min(1, Math.max(0, (E[n] - lo) / span));
-      const amp = 0.7 + 4.6 * u;
+      const u = uAt(n);
+      const free = Math.max(0, 3 - bonds.coord[n]) / 3;
+      const amp = (0.7 + 5.2 * u) * (1 - 0.4 * free);
       if (dt > 0) {
         q.ox = 0.55 * q.ox + 0.45 * amp * gauss() * 0.8;
         q.oy = 0.55 * q.oy + 0.45 * amp * gauss() * 0.8;
+        q.ph += dt * q.spin * (0.9 + 6 * u) * (0.4 + 1.6 * free);
       }
+      const orbit = free * (0.7 + 3.2 * u);
+      q.dx = q.ax + q.ox + orbit * Math.cos(q.ph);
+      q.dy = q.ay + q.oy + orbit * Math.sin(q.ph);
     }
-    ctx.strokeStyle = dark ? 'rgba(148,163,184,0.35)' : 'rgba(100,116,139,0.35)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
+
+    // Bonds, bucketed by temperature so each bucket strokes in one path.
+    // The hottest springs draw faintest — the lattice reads as loosening
+    // where the jiggling is hardest. (A cue for agitation; the breaks
+    // themselves are fixed structure, not a melting front.)
+    const NB = 4;
+    const buckets: number[][] = [[], [], [], []];
+    const addBond = (a: Molecule, c: Molecule, u: number) => {
+      buckets[Math.min(NB - 1, Math.floor(u * NB))].push(a.dx, a.dy, c.dx, c.dy);
+    };
     for (let r = 0; r < NY; r++) {
       for (let i = 0; i < NX; i++) {
         const n = r * NX + i;
-        const q = list[n];
         // The divider severs the middle bonds while it is in — the missing
         // springs ARE the insulation, drawn.
-        if (i < NX - 1 && !(dividerRef.current && i === NX / 2 - 1)) {
-          const nb = list[n + 1];
-          ctx.moveTo(q.ax + q.ox, q.ay + q.oy);
-          ctx.lineTo(nb.ax + nb.ox, nb.ay + nb.oy);
+        if (
+          i < NX - 1 &&
+          bonds.h[r * (NX - 1) + i] < BOND_KEEP &&
+          !(dividerRef.current && i === NX / 2 - 1)
+        ) {
+          addBond(list[n], list[n + 1], (uAt(n) + uAt(n + 1)) / 2);
         }
-        if (r < NY - 1) {
-          const nb = list[n + NX];
-          ctx.moveTo(q.ax + q.ox, q.ay + q.oy);
-          ctx.lineTo(nb.ax + nb.ox, nb.ay + nb.oy);
+        if (r < NY - 1 && bonds.v[r * NX + i] < BOND_KEEP) {
+          addBond(list[n], list[n + NX], (uAt(n) + uAt(n + NX)) / 2);
         }
       }
     }
-    ctx.stroke();
-    // Each molecule wears its own energy as colour.
-    const edge = dark ? 'rgba(226,232,240,0.55)' : 'rgba(15,23,42,0.45)';
+    ctx.lineWidth = 1;
+    for (let bi = 0; bi < NB; bi++) {
+      const seg = buckets[bi];
+      if (seg.length === 0) continue;
+      const a = (0.42 - 0.26 * ((bi + 0.5) / NB)).toFixed(3);
+      ctx.strokeStyle = dark ? `rgba(203,213,225,${a})` : `rgba(71,85,105,${a})`;
+      ctx.beginPath();
+      for (let s = 0; s < seg.length; s += 4) {
+        ctx.moveTo(seg[s], seg[s + 1]);
+        ctx.lineTo(seg[s + 2], seg[s + 3]);
+      }
+      ctx.stroke();
+    }
+
+    // The molecules: colour, size AND a halo all rise together, so a hot
+    // one stays obvious after the temperature range itself has collapsed.
+    const edge = dark ? 'rgba(226,232,240,0.5)' : 'rgba(15,23,42,0.4)';
     for (let n = 0; n < list.length; n++) {
       const q = list[n];
-      const u = Math.min(1, Math.max(0, (E[n] - lo) / span));
-      ctx.fillStyle = rampWarm(u, dark);
+      const u = uAt(n);
+      const rad = 2.2 + 2.2 * u;
+      if (u > 0.45) {
+        ctx.fillStyle = rampMolecule(u, dark, 0.25 * (u - 0.45));
+        ctx.beginPath();
+        ctx.arc(q.dx, q.dy, rad * 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = rampMolecule(u, dark);
       ctx.beginPath();
-      ctx.arc(q.ax + q.ox, q.ay + q.oy, 2.8, 0, Math.PI * 2);
+      ctx.arc(q.dx, q.dy, rad, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = edge;
       ctx.lineWidth = 0.8;
@@ -238,6 +351,17 @@ export function DividerHeatCanvas({
     ctx.strokeStyle = dark ? '#475569' : '#94a3b8';
     ctx.lineWidth = 2;
     ctx.strokeRect(x0, y0, boxW, boxH);
+
+    // The scale is following the field, so say what it currently spans —
+    // watching this number close IS the equilibration.
+    ctx.font = '500 10px ui-sans-serif, system-ui, sans-serif';
+    ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
+    ctx.textAlign = 'right';
+    ctx.fillText(
+      `colour scale ${(lo - K0).toFixed(0)}–${(b.hi - K0).toFixed(0)} °C · it narrows as the halves meet`,
+      x1 - 2,
+      y1 + 11,
+    );
 
     emitRef.current += frame.dt;
     if (emitRef.current >= 0.4 && onStats) {
