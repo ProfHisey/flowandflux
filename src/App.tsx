@@ -140,6 +140,19 @@ function AboutPage() {
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          How it was built
+        </h2>
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          FlowAndFlux was developed with <strong>AI assistance</strong>. Every
+          physics function is checked against hand-worked solutions by an
+          automated test suite that runs before each deploy and blocks it on
+          failure, and deliberate visual compromises — animation speeds,
+          schematic sizes — are labelled as such on the page where they occur.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Feedback
         </h2>
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">

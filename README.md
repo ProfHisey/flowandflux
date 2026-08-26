@@ -12,6 +12,11 @@ invented, course-neutral examples throughout.
 > An independent personal project, developed on personal time. It is not affiliated
 > with, endorsed by, or a production of any university, department, or employer,
 > and nothing here is official course material.
+>
+> Developed with AI assistance. Every physics function is checked against
+> hand-worked solutions by `npm run verify`, which runs in CI and blocks
+> deployment on failure; deliberate visual compromises are labelled on the page
+> where they occur.
 
 ---
 
