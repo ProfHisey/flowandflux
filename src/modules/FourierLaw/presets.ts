@@ -39,8 +39,8 @@ export const PRESETS: Preset[] = [
     name: 'Insulated hot pipe',
     source: 'Process',
     blurb:
-      'A pipe at 120 °C wrapped in foam insulation from r₁ = 2 cm out to r₂ = 5 cm, per metre of length. The classic cylindrical-shell problem.',
-    check: 'R_th ≈ 2.92 K/W, Q ≈ 33 W per metre of pipe',
+      'A pipe at 120 °C wrapped in foam insulation from r₁ = 2 cm out to r₂ = 5 cm, per meter of length. The classic cylindrical-shell problem.',
+    check: 'R_th ≈ 2.92 K/W, Q ≈ 33 W per meter of pipe',
     params: {
       geometry: 'cylinder', k: 0.05, T1: 120, T2: 25, L: 1, A: 1, r1: 0.02, r2: 0.05,
     },

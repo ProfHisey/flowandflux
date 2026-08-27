@@ -66,7 +66,7 @@ export function Heisler3DCanvas({
       pt.quad([ctr([BW, 0, 0]), ctr([BW, BH, 0]), ctr([BW, BH, BD]), ctr([BW, 0, BD])], endCol);
       wireBox(pt, -BW / 2, -BH / 2, -BD / 2, BW / 2, BH / 2, BD / 2, faint);
       pt.flush();
-      pt.chip([0, 0, 0], `centre: ${fmt(centerTemp(p))} °C`, dark);
+      pt.chip([0, 0, 0], `center: ${fmt(centerTemp(p))} °C`, dark);
       pt.chip([BW / 2, BH / 2 + 14, 0], `surface: ${fmt(tempAt(p, 1))} °C · fluid at ${fmt(p.Tinf)} °C`, dark);
     } else {
       // Sphere: quarter-wedge cutaway, shells shaded by their own theta.
@@ -130,7 +130,7 @@ export function Heisler3DCanvas({
       ctx.beginPath();
       ctx.arc(W / 2, H / 2, rOut * cam.zoomRef.current, 0, Math.PI * 2);
       ctx.stroke();
-      pt.chip([0, 0, 0], `centre: ${fmt(centerTemp(p))} °C`, dark);
+      pt.chip([0, 0, 0], `center: ${fmt(centerTemp(p))} °C`, dark);
       pt.chip([0, rOut + 16, 0], `surface: ${fmt(tempAt(p, 1))} °C · fluid at ${fmt(p.Tinf)} °C`, dark);
     }
 

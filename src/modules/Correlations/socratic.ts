@@ -23,7 +23,7 @@ export const CORR_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'Fully developed laminar tube flow: Nu = 3.66, no Re anywhere in it. You double the pump speed and transfer per area does not improve. Why not — and what WOULD improve it?',
     resolution:
-      'Fully developed means the profile has stopped changing shape: the film has grown to fill the tube radius and stays there, so h ≈ k/R regardless of speed — pumping faster only makes the SAME transfer happen over more length before saturation. To improve it: thinner tubes (h ~ 1/d — why capillaries and dialysis fibres are hair-fine), disrupt the development (bends, pulsation), or go turbulent and pay the pressure bill.',
+      'Fully developed means the profile has stopped changing shape: the film has grown to fill the tube radius and stays there, so h ≈ k/R regardless of speed — pumping faster only makes the SAME transfer happen over more length before saturation. To improve it: thinner tubes (h ~ 1/d — why capillaries and dialysis fibers are hair-fine), disrupt the development (bends, pulsation), or go turbulent and pay the pressure bill.',
   },
   {
     q: 'Wind chill: the air temperature has not changed, yet you lose heat faster in wind. Which number changed, and why does a thermometer not feel it?',

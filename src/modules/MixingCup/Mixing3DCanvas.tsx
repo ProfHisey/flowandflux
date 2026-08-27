@@ -12,7 +12,7 @@ import {
 
 /**
  * The heated tube in 3D: a translucent cylinder with tracers riding the
- * Poiseuille profile, each coloured by the temperature of its own radius.
+ * Poiseuille profile, each colored by the temperature of its own radius.
  * Rotate it end-on and the cross-section tells the whole story — a slow
  * rim wrapped around a fast core. No readouts here; the cup and
  * the numbers live on the 2D tab.
@@ -143,7 +143,7 @@ export function Mixing3DCanvas({
       }
     }
 
-    // Tracers. rampWarm returns a css colour; pt.dot wants "r,g,b".
+    // Tracers. rampWarm returns a css color; pt.dot wants "r,g,b".
     for (const q of list) {
       const css = rampWarm(norm(tempAt(p, q.rho)), dark);
       const m = css.match(/(\d+),\s*(\d+),\s*(\d+)/);
@@ -170,7 +170,7 @@ export function Mixing3DCanvas({
       role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
-      aria-label="A 3D tube with tracers riding the parabolic velocity profile, coloured by the temperature at their radius"
+      aria-label="A 3D tube with tracers riding the parabolic velocity profile, colored by the temperature at their radius"
     />
   );
 }

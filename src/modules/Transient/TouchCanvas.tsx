@@ -101,7 +101,7 @@ export function TouchCanvas({
     }
     ctx.stroke();
 
-    // Penetration front markers, each side at its own pace — LABELLED as
+    // Penetration front markers, each side at its own pace — LABELED as
     // the 99% penetration depth (Aug 2026 review).
     ctx.setLineDash([4, 4]);
     ctx.strokeStyle = dark ? 'rgba(251,191,36,0.65)' : 'rgba(217,119,6,0.6)';

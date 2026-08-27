@@ -6,10 +6,10 @@ import { applyZoom, gauss, useWheelZoom } from '../FicksLaw/FickCanvas';
  * Two boxes of the same molecules at the same temperature — the only
  * difference is crowding. In the gas a molecule flies many diameters
  * between collisions; in the liquid it never escapes the cage of its
- * neighbours, and diffusion happens one rare cage-hop at a time. Same
+ * neighbors, and diffusion happens one rare cage-hop at a time. Same
  * random-walk mathematics downstream, four decades apart in D.
  *
- * The dynamics are real hard-disc collisions (elastic, equal mass), not a
+ * The dynamics are real hard-disk collisions (elastic, equal mass), not a
  * scripted animation — the caging emerges from nothing but crowding. The
  * liquid is a BIDISPERSE mixture (radius ratio 1.4): in 2D a one-size
  * liquid crystallizes into a hexagonal solid at exactly the packings where
@@ -149,7 +149,7 @@ function step(box: BoxSim, dt: number, temp: number) {
         const d = Math.sqrt(d2);
         const nx = dx / d;
         const ny = dy / d;
-        // Separate overlapping discs to contact.
+        // Separate overlapping disks to contact.
         const push = (rr - d) / 2;
         a.x -= nx * push; a.y -= ny * push;
         b.x += nx * push; b.y += ny * push;
@@ -341,7 +341,7 @@ export function GasLiquidCanvas({
       role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
-      aria-label="Two boxes of colliding molecules: a dilute gas whose tagged molecule flies long straight paths, and a dense liquid whose tagged molecule rattles in a cage of neighbours"
+      aria-label="Two boxes of colliding molecules: a dilute gas whose tagged molecule flies long straight paths, and a dense liquid whose tagged molecule rattles in a cage of neighbors"
     />
   );
 }

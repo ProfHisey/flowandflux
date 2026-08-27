@@ -103,7 +103,7 @@ export function HeislerCanvas({ params, dark }: { params: HeislerParams; dark: b
       ctx.fillText(`fluid at ${fmtT(p.Tinf)} °C · h`, (x1 + W - pad) / 2, y0 - 9);
       ctx.fillText('2L', xc, y1 + 20);
 
-      chip2d(ctx, xc, (y0 + y1) / 2, `centre: ${fmtT(T0)} °C`, dark);
+      chip2d(ctx, xc, (y0 + y1) / 2, `center: ${fmtT(T0)} °C`, dark);
       chip2d(ctx, x1 - 40, y0 + 18, `surface: ${fmtT(Tsurf)} °C`, dark);
     } else {
       // Sphere cross-section.
@@ -134,7 +134,7 @@ export function HeislerCanvas({ params, dark }: { params: HeislerParams; dark: b
       ctx.textAlign = 'center';
       ctx.fillText(`fluid at ${fmtT(p.Tinf)} °C · h everywhere on the surface`, cx, pad + 10);
 
-      chip2d(ctx, cx, cy, `centre: ${fmtT(T0)} °C`, dark);
+      chip2d(ctx, cx, cy, `center: ${fmtT(T0)} °C`, dark);
       chip2d(ctx, cx, cy - maxR + 16, `surface: ${fmtT(Tsurf)} °C`, dark);
     }
 

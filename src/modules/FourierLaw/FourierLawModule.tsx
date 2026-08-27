@@ -118,7 +118,7 @@ export function FourierLawModule({ dark }: { dark: boolean }) {
                 Drag to rotate, double-click to reset the view. Note what is
                 different from the diffusion module's 3D view: the molecule density is
                 uniform everywhere, because in a conducting solid the matter never
-                migrates — only the vigour of the vibration varies. All measurements
+                migrates — only the vigor of the vibration varies. All measurements
                 live on the 2D tab.
               </p>
             )}
@@ -448,7 +448,7 @@ R_{th} \equiv \frac{\Delta T}{Q} =
 /**
  * The energy ledger at the midplane — the conduction counterpart of the
  * diffusion module's two-way traffic counter. Each collision hands energy
- * BOTH ways; conduction is the imbalance. Lattice units, and labelled so:
+ * BOTH ways; conduction is the imbalance. Lattice units, and labeled so:
  * the exchange rate is visual, like D_VIS, but the measured and predicted
  * figures share it, so their agreement is real.
  */
@@ -509,8 +509,8 @@ function ModuleHeader() {
       </h1>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
         Steady-state conduction through a wall. Same mathematics as diffusion, different
-        cargo: here no molecule goes anywhere — energy is handed from neighbour to
-        neighbour, and the counter at the midplane shows that hand-off happening in both
+        cargo: here no molecule goes anywhere — energy is handed from neighbor to
+        neighbor, and the counter at the midplane shows that hand-off happening in both
         directions at once.
       </p>
     </header>

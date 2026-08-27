@@ -10,7 +10,7 @@ import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
  * Design decision (Prof. Hisey): NO random walk here. In reality molecules
  * do diffuse while all this happens, but the jitter buries the thing this
  * module exists to show — layers of fluid sliding over one another, each
- * one dragging its neighbour. So the particles ride their layers cleanly,
+ * one dragging its neighbor. So the particles ride their layers cleanly,
  * and the momentum transfer is drawn instead as GRIP LINKS between adjacent
  * layers: each particle leans on the nearest particle in the layer below,
  * and because the upper layer is always pulling ahead, the links tilt
@@ -28,7 +28,7 @@ const PER_LANE = 12;
 /** Top-plate speed on screen, px/s. Visual, like D_VIS. */
 const U_VIS = 80;
 
-/** Momentum ramp: low-to-high speed, the third colour family (emerald),
+/** Momentum ramp: low-to-high speed, the third color family (emerald),
  *  next to indigo/cyan for mass and red/amber for heat. */
 export function rampFlow(u: number, dark: boolean, alpha = 1): string {
   const t = Math.min(1, Math.max(0, u));

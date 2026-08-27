@@ -114,7 +114,7 @@ export function Wall3DCanvas({
     }
     pt.chip([-half, -BH / 2 - 16, 0], `${fmt(p.Tin)} °C fluid`, dark);
     pt.chip([half, -BH / 2 - 16, 0], `${fmt(p.Tout)} °C fluid`, dark);
-    pt.hint(dark, 'every band coloured by its own node-to-node temperature drop');
+    pt.hint(dark, 'every band colored by its own node-to-node temperature drop');
   }, { running: false, redrawKey });
 
   useOrbitControls(canvasRef, cam, false);

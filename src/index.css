@@ -10,7 +10,7 @@
   body {
     @apply antialiased;
   }
-  /* KaTeX inherits colour so equations stay legible in both themes. */
+  /* KaTeX inherits color so equations stay legible in both themes. */
   .katex {
     color: inherit;
     font-size: 1.05em;

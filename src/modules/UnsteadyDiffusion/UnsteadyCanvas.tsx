@@ -11,7 +11,7 @@ import { rampWarm } from '../FourierLaw/FourierCanvas';
  * Two release geometries share the canvas:
  *   - 'plane': a thin band across the middle, columns shaded by walker
  *     density, against the 1D Gaussian (amber curve);
- *   - 'point': everything starts at the centre and spreads radially,
+ *   - 'point': everything starts at the center and spreads radially,
  *     against the rms-radius prediction (amber ring). The screen has two
  *     axes, so the ring grows as sqrt(4Dt) and the caption says so — a
  *     real 3D burst adds the third axis: sqrt(6Dt), which the 3D tab and
@@ -26,7 +26,7 @@ export type ReleaseMode = 'plane' | 'point';
 export type BolusCargo = 'mass' | 'heat';
 
 export interface PulseStats {
-  /** Plane: sample std dev of walker x. Point: rms distance from centre. Px.
+  /** Plane: sample std dev of walker x. Point: rms distance from center. Px.
    *  Heat cargo: the same, but ENERGY-weighted over the anchored lattice. */
   sigmaMeasured: number;
   /** Plane: sqrt(2 D t). Point: sqrt(4 D t). Px, on the relevant visual D. */
@@ -50,7 +50,7 @@ const BINS = 40;
 // energy travels, exactly as in the Fourier and Divider heat views. Same
 // exchange rule (each bond hands energy both ways, proportional to the
 // giver's own energy); the pulse is a spike of energy dropped on the
-// centre sites at t = 0. Nothing consults a gradient; the spreading
+// center sites at t = 0. Nothing consults a gradient; the spreading
 // Gaussian emerges. Effective visual diffusivity: D_lat = EXH * cell^2.
 interface LatticeMol {
   ax: number;
@@ -76,7 +76,7 @@ export function UnsteadyCanvas({
 }: {
   mode: ReleaseMode;
   /** Mass (walkers are molecules) or heat (walkers are energy packets —
-   *  same random walk, different cargo and colour family). */
+   *  same random walk, different cargo and color family). */
   cargo?: BolusCargo;
   /** Increment to re-burst the capsule. */
   releaseTick: number;
@@ -118,13 +118,13 @@ export function UnsteadyCanvas({
     const yc = (y0 + y1) / 2;
 
     // ---------------------------------------------------- heat cargo
-    // Anchored lattice, energy spike, neighbour exchange — the matter is
+    // Anchored lattice, energy spike, neighbor exchange — the matter is
     // already there and never moves. See the constants block up top.
     if (cargo === 'heat') {
       const dtH = running ? Math.min(frame.dt, 0.05) : 0;
       let dims = latDimsRef.current;
       let E = latERef.current;
-      // Reseed only on a REAL layout change. dims.x0 is the (centred) grid
+      // Reseed only on a REAL layout change. dims.x0 is the (centerd) grid
       // origin, NOT the canvas x0 — compare against the recomputed origin,
       // or the check fires every frame and the pulse restarts forever (the
       // frozen-peak bug of Aug 2026).
@@ -192,7 +192,7 @@ export function UnsteadyCanvas({
       }
       const t = Math.max(tRef.current, 0.02);
 
-      // Anchored molecules + bonds, coloured by their own excess energy.
+      // Anchored molecules + bonds, colored by their own excess energy.
       let mols = latMolsRef.current;
       if (mols.length === 0) {
         mols = [];
@@ -346,7 +346,7 @@ export function UnsteadyCanvas({
     const dt = running ? frame.dt : 0;
     const list = particlesRef.current;
 
-    // The burst: a thin band (plane) or a pinpoint (point) at the centre.
+    // The burst: a thin band (plane) or a pinpoint (point) at the center.
     if (list.length === 0) {
       for (let i = 0; i < COUNT; i++) {
         list.push(

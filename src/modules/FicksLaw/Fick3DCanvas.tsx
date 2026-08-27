@@ -230,7 +230,7 @@ export function Fick3DCanvas({
           const rB = rA + dr;
           // Translucent so the walkers stay visible through the surface at
           // any rotation — losing the particles was worse than losing a
-          // little colour saturation.
+          // little color saturation.
           const col = rampColor(normAt(toPhys(rA + dr / 2)), dark, 0.55);
           for (let j = 0; j < NT; j++) {
             const t0 = j * dth;
@@ -290,7 +290,7 @@ export function Fick3DCanvas({
           ],
           coreCol,
         );
-        // End discs so the rod is closed when viewed down the axis.
+        // End disks so the rod is closed when viewed down the axis.
         for (const end of [-AL / 2, AL / 2]) {
           quad(
             [

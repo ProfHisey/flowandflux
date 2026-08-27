@@ -370,7 +370,7 @@ check('copper handle: 10 cm in ~43 s',
 check('steel handle of the same length: ~7 minutes',
   diffusionTime(10, 0.118) > 6 * 60 && diffusionTime(10, 0.118) < 8 * 60,
   String(diffusionTime(10, 0.118)));
-check('still water: ~6 min per centimetre',
+check('still water: ~6 min per centimeter',
   close(diffusionTime(1, 1.43e-3), 350, 1e-2), String(diffusionTime(1, 1.43e-3)));
 
 // --- 22. Point release: conservation in 3D ----------------------------------
@@ -608,7 +608,7 @@ check('small Bi limit: zeta1^2 -> 3Bi (sphere becomes lumped, to O(Bi))',
 // 2 cm-radius egg (k = 0.5, rho = 1030, c = 3400) from 4 C into boiling
 // water, h = 1200: Bi = hR/k = 48 (surface capitulates at once). At
 // t = 560 s, Fo = alpha t / R^2 ~ 0.20 and the one-term solution puts the
-// centre near 71 C — a just-set yolk in about nine minutes.
+// center near 71 C — a just-set yolk in about nine minutes.
 {
   const egg: HeislerParams = {
     geometry: 'sphere', L: 0.02, k: 0.5, rho: 1030, c: 3400,
@@ -617,7 +617,7 @@ check('small Bi limit: zeta1^2 -> 3Bi (sphere becomes lumped, to O(Bi))',
   check('egg: Bi = 48', close(biotOf(egg), 48, 1e-9), String(biotOf(egg)));
   check('egg: Fo(560 s) ~ 0.20', close(fourierOf(egg), 0.2, 3e-2), String(fourierOf(egg)));
   const Tc = centerTemp(egg);
-  check('egg centre ~ 71 C after ~9 min', Tc > 68 && Tc < 74, String(Tc));
+  check('egg center ~ 71 C after ~9 min', Tc > 68 && Tc < 74, String(Tc));
 }
 
 // --- 34. Heisler structure -----------------------------------------------------
@@ -627,9 +627,9 @@ check('small Bi limit: zeta1^2 -> 3Bi (sphere becomes lumped, to O(Bi))',
     h: 100, Ti: 5, Tinf: 95, t: 600,
   };
   check('Bi and Fo compute', close(biotOf(p), (100 * 0.02) / 0.5, 1e-12) && fourierOf(p) > 0);
-  check('surface sits closer to the fluid than the centre',
+  check('surface sits closer to the fluid than the center',
     Math.abs(tempAt(p, 1) - p.Tinf) < Math.abs(centerTemp(p) - p.Tinf));
-  check('centre approaches Tinf as t grows',
+  check('center approaches Tinf as t grows',
     Math.abs(centerTemp({ ...p, t: 20000 }) - p.Tinf) < 0.5);
   check('theta never exceeds 1 (clamped near t = 0)',
     Math.abs(centerTemp({ ...p, t: 1e-6 }) - p.Ti) < 1e-6);
@@ -885,12 +885,12 @@ check('effectiveness = Q_fin / Q_bare and is >> 1 here',
   String(finEffectiveness(rod)));
 
 // --- 46b. Rectangular (plate) fin, worked by hand ---------------------------
-// Aluminium plate: k = 205, h = 20, w = 10 cm, t = 2 mm, L = 5 cm, theta0 = 80.
+// Aluminum plate: k = 205, h = 20, w = 10 cm, t = 2 mm, L = 5 cm, theta0 = 80.
 // P = 2(w + t) = 0.204 m, A = wt = 2e-4 m^2
 // m = sqrt(hP/kA) = sqrt(4.08 / 0.041) = 9.9756 1/m, mL = 0.49878
 // Q = sqrt(hPkA) * theta0 * tanh(mL) = 0.40900 * 80 * 0.46116 = 15.090 W
 // T_tip = 20 + 80 / cosh(mL) = 90.99 degC
-console.log('\nAluminium plate fin, worked by hand');
+console.log('\nAluminum plate fin, worked by hand');
 const plateFin: FinParams = {
   h: 20, k: 205, R: 0.004, L: 0.05, T0: 100, Tinf: 20,
   shape: 'rect', w: 0.1, t: 0.002,
@@ -1043,7 +1043,7 @@ check('mean free path scales as 1/P (compress -> liquid-ward)',
 // The mixing cup
 // ==========================================================================
 
-// Hand-workable: parabolic T (n = 2), wall at 80, centre at 20.
+// Hand-workable: parabolic T (n = 2), wall at 80, center at 20.
 // T_avg = 80 + (20-80)*2/4 = 50 exactly.
 // T_mc  = 80 + (20-80)*(1 - 4/4 + 4/6) = 80 - 40 = 40 exactly.
 // The slow hot rim is over-counted by the area average by a full 10 degC.

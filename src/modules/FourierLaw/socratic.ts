@@ -9,10 +9,10 @@ export const FOURIER_QUESTIONS: SocraticQuestion[] = [
     q: 'In the diffusion module the dots physically travel across the wall. Here no molecule ever leaves its spot — yet energy still gets from the hot side to the cold side. What, exactly, is moving?',
     probe: 'Watch the lattice with molecules on. Compare with the Fick module side by side.',
     resolution:
-      'Energy is moving; matter is not. Each collision hands kinetic energy between neighbours, and a hot molecule gives more than it gets back, so energy drifts down the temperature gradient while every molecule stays bonded to its site. Conduction is diffusion of energy — the same mathematics as Fick, with a different cargo. In fluids and metals other carriers (bulk motion, free electrons) join in, which is why those conduct better.',
+      'Energy is moving; matter is not. Each collision hands kinetic energy between neighbors, and a hot molecule gives more than it gets back, so energy drifts down the temperature gradient while every molecule stays bonded to its site. Conduction is diffusion of energy — the same mathematics as Fick, with a different cargo. In fluids and metals other carriers (bulk motion, free electrons) join in, which is why those conduct better.',
   },
   {
-    q: 'Every pair of neighbouring molecules exchanges energy in BOTH directions, constantly. So why does heat flow only one way?',
+    q: 'Every pair of neighboring molecules exchanges energy in BOTH directions, constantly. So why does heat flow only one way?',
     probe: 'Watch the midplane counter: compare the two one-way figures with the net.',
     resolution:
       'It does not flow only one way — the ledger shows enormous energy traffic in each direction, and conduction is the small imbalance between the two. The hot side sends slightly more per hand-off because it has slightly more to send. This is the same statistical structure as diffusion: the macroscopic law describes the imbalance, not the traffic.',

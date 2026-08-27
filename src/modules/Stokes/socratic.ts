@@ -11,10 +11,10 @@ export const STOKES_QUESTIONS: SocraticQuestion[] = [
       'The right to ignore acceleration entirely. For anything small in a viscous fluid, F = ma collapses to F = 0 — forces balance at every instant, and velocity is whatever makes the drag close the books. This "overdamped" regime is where cells, proteins, and every microfluidic device live: nothing coasts, nothing overshoots, and stopping the force stops the motion immediately. Microscale life has no momentum, only friction.',
   },
   {
-    q: 'v∞ goes as a². A cell settles a centimetre per day; what about the protein a hundred times smaller, and what rescues the situation?',
+    q: 'v∞ goes as a². A cell settles a centimeter per day; what about the protein a hundred times smaller, and what rescues the situation?',
     probe: 'Slide the radius down two decades and watch the settling-time readout.',
     resolution:
-      'A hundred times smaller means ten thousand times slower — a quarter-century per centimetre. Gravity has effectively resigned. The rescue is the only linear knob left: g itself. Spin the sample at 100,000 g and the impossible decades become a workable afternoon. Every centrifugation protocol is this arithmetic — choosing g and time to catch particles of one size while leaving smaller ones suspended.',
+      'A hundred times smaller means ten thousand times slower — a quarter-century per centimeter. Gravity has effectively resigned. The rescue is the only linear knob left: g itself. Spin the sample at 100,000 g and the impossible decades become a workable afternoon. Every centrifugation protocol is this arithmetic — choosing g and time to catch particles of one size while leaving smaller ones suspended.',
   },
   {
     q: 'The drag force 6πμav contains the same 6πμa as the Stokes–Einstein diffusivity D = k_BT/6πμa. Coincidence?',
@@ -28,7 +28,7 @@ export const STOKES_QUESTIONS: SocraticQuestion[] = [
       'The assumption under the algebra. Stokes drag is the Re < 1 answer, where fluid creeps around the sphere; at Re in the thousands the wake separates, pressure drag takes over, and the real drag is far larger than 6πμav — so the real terminal velocity (~6 m/s) is far smaller. Every formula ships with a validity range, and the professional habit is checking the dimensionless number BEFORE trusting the output. This preset exists to reward that habit.',
   },
   {
-    q: 'Blood in a tube: the red cells settle a few millimetres per hour, and hospitals bill for watching it happen. Why is that number diagnostically useful?',
+    q: 'Blood in a tube: the red cells settle a few millimeters per hour, and hospitals bill for watching it happen. Why is that number diagnostically useful?',
     resolution:
       'Because v∞ ∝ a²: inflammation coats red cells with fibrinogen and makes them stack into rouleaux — effectively larger particles — and the sedimentation rate jumps quadratically with that size change. The ESR is Stokes law repurposed as a $10 inflammation assay: no molecular biology, just a glass tube, an hour, and a ruler. Transport physics as diagnostics.',
   },

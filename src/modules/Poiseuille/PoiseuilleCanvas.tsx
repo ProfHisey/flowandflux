@@ -105,7 +105,7 @@ export function PoiseuilleCanvas({
         }
       }
 
-      // Centreline (tube) / mid-gap marker.
+      // Centerline (tube) / mid-gap marker.
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = dark ? '#64748b' : '#94a3b8';
       ctx.lineWidth = 1;
@@ -163,7 +163,7 @@ export function PoiseuilleCanvas({
       const y0 = pad + 24;
       const y1 = H - pad - 24;
       const filmW = Math.min(W * 0.34, 180) * (0.4 + 0.6 * tS);
-      // Centre the whole group (wall + film + gravity annotation) in the
+      // Center the whole group (wall + film + gravity annotation) in the
       // canvas — anchored hard-left it looked lost on wide screens.
       const annotW = 46 + 140; // g-arrow offset + its label
       const x0 = Math.max(

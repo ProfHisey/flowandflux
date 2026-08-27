@@ -66,7 +66,7 @@ export function MixingChart({ params, dark }: { params: MixingCupParams; dark: b
               tickFormatter={tick}
               stroke={axis}
               tick={{ fontSize: 11 }}
-              label={{ value: 'r/R (centre → wall)', position: 'insideBottom', offset: -12, fontSize: 11, fill: axis }}
+              label={{ value: 'r/R (center → wall)', position: 'insideBottom', offset: -12, fontSize: 11, fill: axis }}
             />
             <YAxis
               domain={yDomain}

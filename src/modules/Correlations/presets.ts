@@ -31,7 +31,7 @@ export const PRESETS: Preset[] = [
     name: 'A drying droplet',
     source: 'Sphere',
     blurb:
-      'A 1 mm water droplet falling through air at 4 m/s, losing vapour. Ranz–Marshall was fitted on exactly this experiment.',
+      'A 1 mm water droplet falling through air at 4 m/s, losing vapor. Ranz–Marshall was fitted on exactly this experiment.',
     geometry: 'sphere', fluid: AIR, v: 4, L: 1e-3, D: 2.6e-5,
     check: 'Re ≈ 267, Sh = 2 + 0.6·Re^½·Sc^⅓ ≈ 10: convection is ~5× the pure-diffusion (Sh = 2) evaporation rate',
   },
@@ -49,7 +49,7 @@ export const PRESETS: Preset[] = [
     name: 'Breeze over a pond',
     source: 'Flat plate',
     blurb:
-      'A 3 m/s breeze along a metre of water surface, carrying off heat and vapour at once. The two films — and the two coefficients — part company in the water below.',
+      'A 3 m/s breeze along a meter of water surface, carrying off heat and vapor at once. The two films — and the two coefficients — part company in the water below.',
     geometry: 'plate', fluid: AIR, v: 3, L: 1, D: 2.6e-5,
     check: 'Re = 2×10⁵ (still laminar), Nu ≈ 264. In air Pr ≈ Sc so Sh ≈ Nu — the films coincide; switch the fluid to water to watch them split',
   },

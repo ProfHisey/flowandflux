@@ -160,7 +160,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                 onChange={(v) => set('Tw', v)}
               />
               <Slider
-                label="Centreline temperature, T_c"
+                label="Centerline temperature, T_c"
                 unit="°C"
                 value={params.Tc}
                 min={0}
@@ -211,7 +211,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
             latex={String.raw`T_{mc} = \frac{\int \rho c_p\, v\, T\; dA}{\int \rho c_p\, v\; dA}`}
             terms={[
               { symbol: 'v\\,dA', meaning: 'fluid delivered per second by each ring of the cross-section', maps: 'tracer arrivals' },
-              { symbol: 'T', meaning: 'what that ring’s fluid carries', maps: 'tracer colour' },
+              { symbol: 'T', meaning: 'what that ring’s fluid carries', maps: 'tracer color' },
               { symbol: 'T_{mc}', meaning: 'the temperature of the collected outflow', maps: 'the cup' },
             ]}
             note="Energy flow divided by heat-capacity flow: the temperature the stream would have if you caught it in a cup and stirred. Slow fluid is real fluid, but it arrives slowly, so it barely moves the answer — the cup leans toward whatever the fast core is doing."
@@ -233,7 +233,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="When the distinction dies"
             latex={String.raw`n \to \infty:\ \ \bar T_{area} \to T_c, \quad T_{mc} \to T_c`}
-            note="Flatten the profile and every average of it is the same number — which is roughly what turbulence does to both velocity and temperature. Note the sliders here flatten only T while v stays parabolic, so the gap dies slowly — exactly 2nΔT/((n+2)(n+4)), which only becomes ~2ΔT/n once n ≫ 4; the real collapse needs the velocity plug too — with uniform v, the two averages are identical for ANY temperature profile. The mixing-cup correction is a laminar, round-profile phenomenon: exactly the flows of the Poiseuille page, which is why the two modules are neighbours."
+            note="Flatten the profile and every average of it is the same number — which is roughly what turbulence does to both velocity and temperature. Note the sliders here flatten only T while v stays parabolic, so the gap dies slowly — exactly 2nΔT/((n+2)(n+4)), which only becomes ~2ΔT/n once n ≫ 4; the real collapse needs the velocity plug too — with uniform v, the two averages are identical for ANY temperature profile. The mixing-cup correction is a laminar, round-profile phenomenon: exactly the flows of the Poiseuille page, which is why the two modules are neighbors."
             defaultOpen={false}
           />
         </div>

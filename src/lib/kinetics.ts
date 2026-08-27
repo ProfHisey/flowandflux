@@ -3,7 +3,7 @@
  * diffusion coefficient. Where lib/fick.ts takes D as given, this file says
  * where it comes from: molecules in a gas fly hundreds of diameters between
  * collisions (long mean free path), molecules in a liquid never leave contact
- * with their neighbours (caged rattling), and that one difference is the four
+ * with their neighbors (caged rattling), and that one difference is the four
  * decades between D ~ 0.1 cm^2/s in air and D ~ 1e-5 cm^2/s in water.
  *
  * SI inputs (kg, m, Pa, K) because that is how the constants are tabulated;

@@ -6,7 +6,7 @@ import { rampWarm } from '../FourierLaw/FourierCanvas';
 
 /**
  * A pin fin in 3D, shaded ring by ring with its own temperature solution
- * theta(x) = cosh(m(L-x))/cosh(mL) — every colour on the rod is physical,
+ * theta(x) = cosh(m(L-x))/cosh(mL) — every color on the rod is physical,
  * computed live from h, k, and the fin geometry.
  *
  * The same fluid tracers as the 2D flow view stream past it (along z,
@@ -147,7 +147,7 @@ export function Fin3DCanvas({
     ];
     for (const [a, b] of BE) seg(B[a], B[b], edgeCol, 1);
 
-    // The fin: slices along x, each coloured by ITS OWN temperature.
+    // The fin: slices along x, each colored by ITS OWN temperature.
     const NX = 30;
     const tipCol = rampWarm(norm(finTemp(p, p.L)), dark);
     if (isRect) {

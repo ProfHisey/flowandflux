@@ -7,7 +7,7 @@ import { rampFlow } from '../NewtonViscosity/NewtonCanvas';
 /**
  * The three canonical Navier-Stokes solutions in 3D: tube, parallel
  * plates, falling film. Tracers ride the real profile SHAPE, and a dye
- * front is released periodically — a flat disc (or sheet) of dye that the
+ * front is released periodically — a flat disk (or sheet) of dye that the
  * flow immediately deforms into the classic bullet (or curtain): the
  * velocity profile made solid, the single most photographed demo in
  * viscous flow.

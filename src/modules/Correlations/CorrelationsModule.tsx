@@ -236,7 +236,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
                 label={<InlineMath math="\mathrm{Re}" />}
                 value={sci(derived.Re)}
                 unit=""
-                hint="the flow's vigour"
+                hint="the flow's vigor"
               />
               <Stat
                 label={<InlineMath math="\mathrm{Pr} \;/\; \mathrm{Sc}" />}

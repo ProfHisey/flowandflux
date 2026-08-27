@@ -79,7 +79,7 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
               <Perfusion3DCanvas params={params} dark={dark} />
             )}
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Every colour is the analytic solution; the hatched red region is where the
+              Every color is the analytic solution; the hatched red region is where the
               concentration has fallen below C_crit. Two separate drains stack against
               the far-bottom corner: the flow arrives poorer (linear in x, eased by
               pumping harder) and the depth costs its parabolic toll (h₂²-scaled, and no
@@ -302,7 +302,7 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Along the channel: convection vs total uptake"
             latex={String.raw`Q\,\frac{dC_s}{dx} = -R\,h_2\,W \;\Rightarrow\; C_s(x) = C_0 - \frac{R h_2 W}{Q}\,x`}
-            note="A running balance: the flow arrives with Q·C₀ per second and the carpet of cells drains Rh₂W per centimetre. Linear decay — and the ONE term the pump controls, scaling as 1/Q. The axial Péclet number (~10⁵ here) is the licence for ignoring axial diffusion entirely. One more quiet assumption: the channel is taken as well mixed across its own depth, so C_s is both the bulk and the interface concentration — fine while the transverse mixing time h₁²/D stays small next to the residence time L/v."
+            note="A running balance: the flow arrives with Q·C₀ per second and the carpet of cells drains Rh₂W per centimeter. Linear decay — and the ONE term the pump controls, scaling as 1/Q. The axial Péclet number (~10⁵ here) is the license for ignoring axial diffusion entirely. One more quiet assumption: the channel is taken as well mixed across its own depth, so C_s is both the bulk and the interface concentration — fine while the transverse mixing time h₁²/D stays small next to the residence time L/v."
             defaultOpen={false}
           />
         </div>

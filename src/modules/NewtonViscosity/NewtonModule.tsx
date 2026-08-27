@@ -373,7 +373,7 @@ j &= -D\,\frac{dC}{dx} &\quad&\text{mass} \\[4pt]
 q'' &= -k\,\frac{dT}{dx} &\quad&\text{heat} \\[4pt]
 \tau &= \mu\,\frac{du}{dy} &\quad&\text{momentum}
 \end{aligned}`}
-            note="One idea wearing three costumes: a flux, proportional to a gradient, through a material constant. (One asymmetry, on purpose: engineering convention drops the minus sign on τ; read as a flux of x-momentum in the y direction it is τ_yx = −μ du/dy, pointing down the velocity gradient exactly like the other two.) The diffusivities D, α = k/ρc_p, and ν = μ/ρ all carry m²/s, and their ratios (Sc = ν/D, Pr = ν/α, Le = α/D) will organise every convection correlation later. This card is the spine of the whole subject."
+            note="One idea wearing three costumes: a flux, proportional to a gradient, through a material constant. (One asymmetry, on purpose: engineering convention drops the minus sign on τ; read as a flux of x-momentum in the y direction it is τ_yx = −μ du/dy, pointing down the velocity gradient exactly like the other two.) The diffusivities D, α = k/ρc_p, and ν = μ/ρ all carry m²/s, and their ratios (Sc = ν/D, Pr = ν/α, Le = α/D) will organize every convection correlation later. This card is the spine of the whole subject."
             defaultOpen={true}
           />
 

@@ -307,7 +307,7 @@ export function StokesModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Terminal velocity, and the two knobs"
             latex={String.raw`v_\infty = \frac{2\,(\rho_p - \rho_f)\,g\,a^2}{9\,\mu}`}
-            note="a² is the tyranny: a cell does a centimetre per day, a particle a hundred times smaller would take a quarter-century. g is the liberation: it enters linearly and a centrifuge can supply a million of them. Every separation protocol — pellets, gradients, spins — is a negotiation between those two terms."
+            note="a² is the tyranny: a cell does a centimeter per day, a particle a hundred times smaller would take a quarter-century. g is the liberation: it enters linearly and a centrifuge can supply a million of them. Every separation protocol — pellets, gradients, spins — is a negotiation between those two terms."
             defaultOpen={false}
           />
 

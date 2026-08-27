@@ -188,7 +188,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                 <>
                   Every particle wanders the same way whether the divider is in or out —
                   nothing pulls them across. The crowded side empties only because more
-                  random crossings start there. Try 100 vs 100 with the two colours:
+                  random crossings start there. Try 100 vs 100 with the two colors:
                   each species spreads into the other's territory as if it were empty,
                   because each one only counts its own kind.
                 </>
@@ -196,7 +196,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                 <>
                   Watch the boundary between the halves after you pull the divider: the
                   jiggling evens out, but <em>no molecule ever crosses the middle</em>.
-                  Energy is handed from neighbour to neighbour while the matter stays
+                  Energy is handed from neighbor to neighbor while the matter stays
                   put — that is the whole difference between this box and the mass one.
                 </>
               )}
@@ -247,7 +247,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                       setNRight(v);
                       resetExperiment();
                     }}
-                    hint="Try 140 vs 10. Then try 100 vs 100 and watch the colours pass through each other."
+                    hint="Try 140 vs 10. Then try 100 vs 100 and watch the colors pass through each other."
                   />
                   <Slider
                     label="How fast cyan wanders (its D)"
@@ -266,7 +266,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                     step={0.05}
                     format={(v) => `${v.toFixed(2)}×`}
                     onChange={setDOrange}
-                    hint="D is each species' own character — a small molecule vs a lumbering protein. Give them different values and watch one colour win the race."
+                    hint="D is each species' own character — a small molecule vs a lumbering protein. Give them different values and watch one color win the race."
                   />
                   <Slider
                     label="Temperature"
@@ -276,7 +276,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                     step={0.05}
                     format={(v) => `${v.toFixed(2)}×`}
                     onChange={setTemp}
-                    hint="Heat speeds every wanderer at once — no exceptions, no favourites. These take effect live: no reset needed."
+                    hint="Heat speeds every wanderer at once — no exceptions, no favorites. These take effect live: no reset needed."
                   />
                 </>
               ) : (
@@ -326,7 +326,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
               {mode === 'mass' ? (
                 <>
                   <li>140 vs 10 — the classic. Guess the final split before you pull.</li>
-                  <li>100 vs 100 — does anything happen at all? Look per colour.</li>
+                  <li>100 vs 100 — does anything happen at all? Look per color.</li>
                   <li>250 vs 0 — how long until the right side looks like the left?</li>
                   <li>Pause mid-mixing and ask: could you un-mix it by waiting?</li>
                 </>

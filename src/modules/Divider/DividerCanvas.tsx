@@ -45,7 +45,7 @@ export function DividerCanvas({
   /** Orange particles, seeded on the right. */
   nRight: number;
   /** Relative diffusion coefficient of each species (1 = baseline). A
-   *  species' D is its own character; changing it changes only that colour. */
+   *  species' D is its own character; changing it changes only that color. */
   dCyan: number;
   dOrange: number;
   /** Relative temperature (1 = baseline): speeds up EVERY wanderer. */

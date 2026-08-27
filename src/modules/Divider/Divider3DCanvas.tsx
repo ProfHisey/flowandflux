@@ -247,7 +247,7 @@ export function Divider3DCanvas({
           for (let i = 0; i < NXE; i++) E[i] += dE[i];
         }
       }
-      // The colour range FOLLOWS the field, exactly as in the 2D view: a
+      // The color range FOLLOWS the field, exactly as in the 2D view: a
       // scale pinned to the starting temperatures collapses every molecule
       // onto one mid-orange the moment the halves start meeting. Eased, with
       // a floor so a uniform box does not amplify noise.
@@ -297,7 +297,7 @@ export function Divider3DCanvas({
       }
       // Rattle plus, for under-coordinated molecules, a swing whose radius
       // and rate both grow with the site's energy: kinetic energy stays
-      // legible as MOTION even where colour has run out of range.
+      // legible as MOTION even where color has run out of range.
       for (let n = 0; n < mols.length; n++) {
         const q = mols[n];
         const u = norm(E[q.col]);
@@ -347,7 +347,7 @@ export function Divider3DCanvas({
           }
         }
       }
-      // Colour AND size rise together, so a hot molecule stays obvious once
+      // Color AND size rise together, so a hot molecule stays obvious once
       // the temperature range itself has collapsed.
       for (const q of mols) {
         const u = norm(E[q.col]);

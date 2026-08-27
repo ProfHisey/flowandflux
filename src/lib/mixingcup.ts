@@ -16,7 +16,7 @@
  *
  *   T(ρ) = T_w + (T_c − T_w)(1 − ρⁿ),
  *
- * (T_c at the centreline, T_w at the wall; n = 2 is parabolic, large n is a
+ * (T_c at the centerline, T_w at the wall; n = 2 is parabolic, large n is a
  * flat core with a thin wall layer). Both averages are then closed-form:
  * v̄, R, the density and c all cancel, so the SHAPE alone decides the answer.
  */
@@ -24,7 +24,7 @@
 export interface MixingCupParams {
   /** Wall temperature, degC. */
   Tw: number;
-  /** Centreline temperature, degC. */
+  /** Centerline temperature, degC. */
   Tc: number;
   /** Temperature-profile fullness exponent (2 = parabolic). */
   n: number;

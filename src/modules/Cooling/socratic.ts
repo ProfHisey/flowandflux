@@ -18,10 +18,10 @@ export const COOLING_QUESTIONS: SocraticQuestion[] = [
       'Because h is not a fluid property — it is a bundle: fluid, flow speed, and geometry, compressed into one number. Conduction across a stagnant film would give h ≈ k/δ; what flow does is thin that film δ by constantly replacing the fluid at the surface (watch the tracers do it). Blowing on soup does not change the air; it changes the film. That is also all a fan, wind chill, or stirring a quench bath do.',
   },
   {
-    q: 'The whole object is drawn as one uniform colour. What is that assuming, and when is it a lie?',
+    q: 'The whole object is drawn as one uniform color. What is that assuming, and when is it a lie?',
     probe: 'Load the quenched steel ball, then the resting roast, and compare the Biot readouts.',
     resolution:
-      'It assumes the inside of the object equilibrates much faster than the surface loses heat — conduction inside easily outrunning convection outside. Bi = hL_c/k is precisely that race, and below ~0.1 the single-temperature picture is honest (steel ball: Bi ≈ 0.03). The roast fails it (Bi ≈ 0.8): its centre lags its surface by a lot, the one-colour drawing becomes a lie, and you need the spatial solutions — Heisler-chart territory, in the unsteady conduction module.',
+      'It assumes the inside of the object equilibrates much faster than the surface loses heat — conduction inside easily outrunning convection outside. Bi = hL_c/k is precisely that race, and below ~0.1 the single-temperature picture is honest (steel ball: Bi ≈ 0.03). The roast fails it (Bi ≈ 0.8): its center lags its surface by a lot, the one-color drawing becomes a lie, and you need the spatial solutions — Heisler-chart territory, in the unsteady conduction module.',
   },
   {
     q: 'Double every linear dimension of the object. What happens to τ, and what does that have to do with why mice lose heat faster than elephants?',

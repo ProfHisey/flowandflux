@@ -151,7 +151,7 @@ function AboutPage() {
           physics function is checked against hand-worked solutions by an
           automated test suite that runs before each deploy and blocks it on
           failure, and deliberate visual compromises — animation speeds,
-          schematic sizes — are labelled as such on the page where they occur.
+          schematic sizes — are labeled as such on the page where they occur.
         </p>
       </div>
 
@@ -168,7 +168,7 @@ function AboutPage() {
           >
             PolyForm Noncommercial
           </a>{' '}
-          licence and the writing, questions, and figures under{' '}
+          license and the writing, questions, and figures under{' '}
           <a
             href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
             className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:decoration-sky-700 dark:hover:text-sky-300"
@@ -178,16 +178,16 @@ function AboutPage() {
           , which together mean you may read, fork, adapt, and above all teach
           from any of this, with credit, for free.{' '}
           <strong>Classroom and institutional use is explicitly covered</strong>{' '}
-          — if you are a teacher, this licence was chosen with you in mind. What
+          — if you are a teacher, this license was chosen with you in mind. What
           is not permitted is selling it, running it with advertising, or putting
           it behind a paywall. The name FlowAndFlux and the site's identity are
-          not covered by either licence: fork it freely, but run it under your
+          not covered by either license: fork it freely, but run it under your
           own name.
         </p>
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           The physics itself belongs to nobody. Equations, derivations, and
           standard results are facts, which copyright does not reach — the
-          licences cover this particular expression of them, not the science.
+          licenses cover this particular expression of them, not the science.
         </p>
       </div>
 

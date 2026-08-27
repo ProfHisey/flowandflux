@@ -24,7 +24,7 @@ export const WALL_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'The convection films appear on the chart as temperature cliffs — a drop with no thickness. Is that physical?',
     resolution:
-      'Almost. The drop really happens across the boundary layer — a few millimetres of nearly-still air for the natural-convection films here (δ ≈ k/h), thinner for water or forced flow — which at wall scale draws as a cliff. R = 1/hA is that thin film in circuit costume — the same h from the law-of-cooling module. Series-circuit thinking does not care whether a resistance is a solid layer or a film; ΔT_i = Q·R_i either way.',
+      'Almost. The drop really happens across the boundary layer — a few millimeters of nearly-still air for the natural-convection films here (δ ≈ k/h), thinner for water or forced flow — which at wall scale draws as a cliff. R = 1/hA is that thin film in circuit costume — the same h from the law-of-cooling module. Series-circuit thinking does not care whether a resistance is a solid layer or a film; ΔT_i = Q·R_i either way.',
   },
   {
     q: 'When is this whole circuit picture allowed — and what breaks it?',

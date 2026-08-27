@@ -27,7 +27,7 @@ interface Mol3 {
 
 interface BoxSim3 {
   parts: Mol3[];
-  cx: number; // box centre x
+  cx: number; // box center x
   h: number;  // half-size
   trail: Vec3[];
 }

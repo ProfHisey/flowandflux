@@ -165,7 +165,7 @@ export function StokesCanvas({
       ctx.fill();
     };
 
-    // Weight, down from the centre; buoyancy up on the other side; drag
+    // Weight, down from the center; buoyancy up on the other side; drag
     // beside whichever of them it reinforces (always opposing the motion).
     arrow(sx - 34, sy, sy + Wg * K, dark ? '#f87171' : '#dc2626');
     arrow(sx + 34, sy, sy - B * K, dark ? '#38bdf8' : '#0284c7');

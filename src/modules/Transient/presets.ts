@@ -94,8 +94,8 @@ export const HEISLER_PRESETS: HeislerPreset[] = [
     name: 'Frozen pea, boiling water',
     source: 'Kitchen',
     blurb:
-      'A 4 mm pea from the freezer into a rolling boil (h ≈ 3000 W/m²K). The surface is at 100 °C almost instantly — the centre has other plans.',
-    check: 'Bi = hR/k = 24: surface capitulates immediately; the centre follows on the Fo clock',
+      'A 4 mm pea from the freezer into a rolling boil (h ≈ 3000 W/m²K). The surface is at 100 °C almost instantly — the center has other plans.',
+    check: 'Bi = hR/k = 24: surface capitulates immediately; the center follows on the Fo clock',
     params: {
       geometry: 'sphere', L: 0.004, k: 0.5, rho: 1000, c: 3600,
       h: 3000, Ti: -18, Tinf: 100, t: 30,
@@ -107,7 +107,7 @@ export const HEISLER_PRESETS: HeislerPreset[] = [
     source: 'Kitchen',
     blurb:
       'A 2 cm-radius egg from the fridge (4 °C) into boiling water (h ≈ 1200 W/m²K). Soft or hard is entirely a question of the Fourier number.',
-    check: 'Bi = hR/k = 48 — the surface hits 100 °C almost at once, and the centre needs ~9 minutes to reach ~71 °C. Bigger egg: time scales as R²',
+    check: 'Bi = hR/k = 48 — the surface hits 100 °C almost at once, and the center needs ~9 minutes to reach ~71 °C. Bigger egg: time scales as R²',
     params: {
       geometry: 'sphere', L: 0.02, k: 0.5, rho: 1030, c: 3400,
       h: 1200, Ti: 4, Tinf: 100, t: 560,

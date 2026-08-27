@@ -16,7 +16,7 @@ export const PRESETS: Preset[] = [
     source: 'Microscale',
     blurb:
       'A 1 µm particle, barely denser than the water around it, left to settle under gravity. How long until it reaches the bottom of a 1 cm tube?',
-    check: 'v∞ = 2Δρ·g·a²/9μ ≈ 0.11 µm/s — about a centimetre per DAY. And τ ≈ 0.2 µs: terminal velocity is not approached, it simply is',
+    check: 'v∞ = 2Δρ·g·a²/9μ ≈ 0.11 µm/s — about a centimeter per DAY. And τ ≈ 0.2 µs: terminal velocity is not approached, it simply is',
     params: { a: 1e-6, rhoP: 1050, rhoF: 1000, mu: 1e-3, gFactor: 1, Lint: 0.01 },
   },
   {

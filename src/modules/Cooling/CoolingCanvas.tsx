@@ -27,7 +27,7 @@ interface Tracer {
 
 const COUNT = 240;
 const FLOW = 70; // px/s
-/** Visual time constant, s: fast enough to watch, and labelled as such. */
+/** Visual time constant, s: fast enough to watch, and labeled as such. */
 const TAU_VIS = 14;
 
 export function CoolingCanvas({
@@ -38,7 +38,7 @@ export function CoolingCanvas({
   running,
   dark,
 }: {
-  /** Physical h, W/m^2 K — only used to size the drawn film (labelled cue). */
+  /** Physical h, W/m^2 K — only used to size the drawn film (labeled cue). */
   h: number;
   /** Characteristic length V/A, m — sizes the drawn object (log-mapped). */
   lc: number;
@@ -170,7 +170,7 @@ export function CoolingCanvas({
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // The object: ONE colour throughout — that uniformity IS the lumped
+    // The object: ONE color throughout — that uniformity IS the lumped
     // assumption, drawn.
     const u = heating ? 1 - theta : theta;
     ctx.beginPath();

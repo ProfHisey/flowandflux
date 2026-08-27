@@ -81,7 +81,7 @@ export function heatRate(p: WallParams): number {
 }
 
 /**
- * The industry number: U = 1 / (R_total A), W/(m^2 K). A window catalogue
+ * The industry number: U = 1 / (R_total A), W/(m^2 K). A window catalog
  * speaks in U-values; this is where they come from.
  */
 export function uValue(p: WallParams): number {

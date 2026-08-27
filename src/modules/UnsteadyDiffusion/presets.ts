@@ -39,7 +39,7 @@ export const PRESETS: Preset[] = [
     name: 'Sugar in unstirred tea',
     source: 'Kitchen',
     blurb:
-      'Sugar dissolves at the bottom of the cup. Wait for diffusion alone to sweeten the top — one centimetre away.',
+      'Sugar dissolves at the bottom of the cup. Wait for diffusion alone to sweeten the top — one centimeter away.',
     check: 't = L²/2D = 10⁵ s ≈ 28 hours. This is why you stir',
     params: { D: 5e-6, M: 1e-4, A: 20, t: 1e5, Lint: 1 },
   },
@@ -78,10 +78,10 @@ export const PRESETS: Preset[] = [
     name: 'A warm patch in still water',
     source: 'Everyday',
     blurb:
-      'Heat a spot in unstirred water and wait for pure conduction to carry it one centimetre. Water is a terrible conductor — that is why convection exists.',
+      'Heat a spot in unstirred water and wait for pure conduction to carry it one centimeter. Water is a terrible conductor — that is why convection exists.',
     cargo: 'heat',
     release: 'point',
-    check: 't = L²/2α ≈ 6 minutes per centimetre ALONG ONE AXIS (α ≈ 1.4×10⁻³ cm²/s); the radial readout above spreads over three. Buoyancy beats both easily — pots stir themselves',
+    check: 't = L²/2α ≈ 6 minutes per centimeter ALONG ONE AXIS (α ≈ 1.4×10⁻³ cm²/s); the radial readout above spreads over three. Buoyancy beats both easily — pots stir themselves',
     params: { D: 1.43e-3, M: 1e-8, A: 1, t: 350, Lint: 1 },
   },
   {

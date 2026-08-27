@@ -12,7 +12,7 @@ import { applyZoom, chip2d, rampColor, useWheelZoom } from '../FicksLaw/FickCanv
 /**
  * The whole design problem in one picture: flow enters rich on the left,
  * the cell layer below drains it as it goes, and the far-bottom corner is
- * the last to be fed and the first to starve. Every colour comes from the
+ * the last to be fed and the first to starve. Every color comes from the
  * analytic solution; the red hatched region is where C has fallen below
  * C_crit — the corner where a bad design quietly fails.
  */

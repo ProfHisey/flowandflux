@@ -15,14 +15,14 @@ import {
 /**
  * The burst, in the geometry it truly happens in: a POINT release in 3D.
  *
- * Mass cargo: all the walkers start at the centre and wander out into a
+ * Mass cargo: all the walkers start at the center and wander out into a
  * sphere — and the amber wireframe sphere riding with them is the
  * prediction, r = sigma = sqrt(6 D t), the three-dimensional diffusion
  * clock (2Dt per axis, three axes).
  *
  * Heat cargo: the matter is ALREADY everywhere and never moves. A fixed
  * cloud of anchored molecules fills the box; a hot spot is deposited at
- * the centre, and each molecule's colour and jiggle follow the spreading
+ * the center, and each molecule's color and jiggle follow the spreading
  * temperature field (painted from the point-release solution on the same
  * visual clock — the on-page hint says so). Same sigma sphere, same
  * theory, opposite cargo.

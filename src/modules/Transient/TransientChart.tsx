@@ -171,7 +171,7 @@ export function TouchChart({
 }
 
 /**
- * Heisler tab: the centre temperature's whole history, with "now" marked —
+ * Heisler tab: the center temperature's whole history, with "now" marked —
  * the curve a Heisler chart encodes, drawn directly.
  */
 export function HeislerChart({ params, dark }: { params: HeislerParams; dark: boolean }) {
@@ -197,7 +197,7 @@ export function HeislerChart({ params, dark }: { params: HeislerParams; dark: bo
 
   return (
     <ChartFrame
-      title="Centre and surface histories"
+      title="Center and surface histories"
       formula={`θ₀/θᵢ = C₁·exp(−ζ₁²·Fo) · Fo now = ${String(Number(foNow.toPrecision(3)))}`}
     >
       <ResponsiveContainer width="100%" height={200}>
@@ -225,7 +225,7 @@ export function HeislerChart({ params, dark }: { params: HeislerParams; dark: bo
             contentStyle={tooltipStyle(dark)}
             formatter={((v: unknown, name: unknown) => [
               `${sci(Number(v))} °C`,
-              name === 'T0' ? 'centre' : 'surface',
+              name === 'T0' ? 'center' : 'surface',
             ]) as never}
             labelFormatter={((v: unknown) => `t = ${sci(Number(v))} s`) as never}
           />

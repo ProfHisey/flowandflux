@@ -125,7 +125,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   Tracers ride the profile without diffusing, and the on-screen peak speed
                   is fixed for legibility — the shape and every readout are physical. Watch
-                  a tracer near the wall against one on the centreline: same fluid, same
+                  a tracer near the wall against one on the centerline: same fluid, same
                   driving force, and the wall one barely moves. That spread IS the profile.
                 </p>
               </>
@@ -359,7 +359,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
             latex={String.raw`v_z(r) = \frac{\Delta P}{4\mu L}\left(R^2 - r^2\right) \qquad Q = \frac{\pi\,\Delta P\,R^4}{8\,\mu\,L}`}
             terms={[
               { symbol: 'Q', meaning: 'volumetric flow rate, m³/s', maps: 'Q readout' },
-              { symbol: 'R^4', meaning: 'the headline: area (R²) × faster centreline (R²)', maps: 'R slider' },
+              { symbol: 'R^4', meaning: 'the headline: area (R²) × faster centerline (R²)', maps: 'R slider' },
             ]}
             note="Established experimentally by Poiseuille (1840s) — a physician chasing blood flow, though blood clotted in his glass capillaries and he had to use water — decades before anyone could derive it from first principles. The fourth power is the punchline: 20% narrower means 41% of the flow, which is why vessel radius — not the heart — is the body's flow-control knob, and why a stenosis is worse than it looks."
           />

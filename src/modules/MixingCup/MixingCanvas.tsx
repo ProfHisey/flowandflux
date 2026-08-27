@@ -156,7 +156,7 @@ export function MixingCanvas({
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Tracers, coloured by the temperature of their radius.
+    // Tracers, colored by the temperature of their radius.
     for (const q of list) {
       ctx.fillStyle = rampWarm(norm(tempAt(p, q.rho)), dark);
       ctx.beginPath();
@@ -191,7 +191,7 @@ export function MixingCanvas({
     ctx.lineTo(cupX + cupW / 2, cupY0);
     ctx.stroke();
     ctx.setLineDash([]);
-    // The liquid: coloured by what has actually been collected.
+    // The liquid: colored by what has actually been collected.
     if (cupNRef.current > 0) {
       ctx.fillStyle = rampWarm(norm(cupT), dark, 0.85);
       ctx.fillRect(cupX + 3, cupY0 + 8, cupW - 6, cupY1 - cupY0 - 11);
@@ -211,7 +211,7 @@ export function MixingCanvas({
     ctx.fillStyle = dark ? '#cbd5e1' : '#475569';
     ctx.textAlign = 'left';
     ctx.fillText(`wall at ${fmt(p.Tw)} °C — and v = 0 there (no-slip)`, x0 + 2, y0 - 8);
-    ctx.fillText(`centreline at ${fmt(p.Tc)} °C — moving at 2v̄`, x0 + 2, y1 + 16);
+    ctx.fillText(`centerline at ${fmt(p.Tc)} °C — moving at 2v̄`, x0 + 2, y1 + 16);
     ctx.fillStyle = dark ? '#34d399' : '#059669';
     ctx.fillText('v(r)', x0 + vScale + 6, yc + 4);
     ctx.textAlign = 'center';

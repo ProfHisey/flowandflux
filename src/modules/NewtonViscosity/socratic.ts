@@ -19,7 +19,7 @@ export const NEWTON_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'Honey has a viscosity ten thousand times water’s. What, physically, is different when a molecule hops between layers in honey?',
     resolution:
-      'In honey the molecules are large, entangled, and strongly attracted to each other, so momentum is passed not just by molecules hopping between layers but through sustained intermolecular tugging — each layer grips its neighbour. μ measures how effectively x-momentum is communicated in y. In gases, hotter means MORE viscous (faster molecules ferry momentum quicker); in liquids, hotter means less viscous (the grip loosens). That opposite temperature dependence is a fingerprint of the two mechanisms.',
+      'In honey the molecules are large, entangled, and strongly attracted to each other, so momentum is passed not just by molecules hopping between layers but through sustained intermolecular tugging — each layer grips its neighbor. μ measures how effectively x-momentum is communicated in y. In gases, hotter means MORE viscous (faster molecules ferry momentum quicker); in liquids, hotter means less viscous (the grip loosens). That opposite temperature dependence is a fingerprint of the two mechanisms.',
   },
   {
     q: 'Why must the fluid velocity be exactly zero at the bottom plate and exactly U at the top plate? Could the fluid slip a little?',
@@ -29,7 +29,7 @@ export const NEWTON_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'ν = μ/ρ for water is about 10⁻⁶ m²/s — a thousand times bigger than a small solute’s D in the same water. Stir milk into coffee and both momentum and milk spread. Which arrives first at the far side of the cup, and why?',
     resolution:
-      'The swirl (momentum) arrives long before the milk does by diffusion — which is precisely why we stir: bulk motion does the mass transport that diffusion cannot manage on human timescales. ν ≫ D in liquids because momentum can be handed between molecules without anybody travelling, exactly like heat, while a milk protein must physically walk the whole way. The ratio ν/D (the Schmidt number, ~1000 for liquids) will organise everything in convective mass transfer later.',
+      'The swirl (momentum) arrives long before the milk does by diffusion — which is precisely why we stir: bulk motion does the mass transport that diffusion cannot manage on human timescales. ν ≫ D in liquids because momentum can be handed between molecules without anybody traveling, exactly like heat, while a milk protein must physically walk the whole way. The ratio ν/D (the Schmidt number, ~1000 for liquids) will organize everything in convective mass transfer later.',
   },
   {
     q: 'The particles on screen slide in perfect layers and never wander between them. Real molecules certainly wander. What is the animation choosing to show, and what is it choosing to hide?',

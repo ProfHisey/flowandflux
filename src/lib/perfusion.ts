@@ -91,7 +91,7 @@ export function aliveFraction(p: PerfusionParams): number {
   return Math.max(0, Math.min(1, xs / p.L));
 }
 
-/** Axial Peclet number — the licence for dropping axial diffusion. */
+/** Axial Peclet number — the license for dropping axial diffusion. */
 export function axialPeclet(p: PerfusionParams): number {
   return (p.v * p.L) / p.D;
 }

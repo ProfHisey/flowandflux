@@ -406,7 +406,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The point release — one Gaussian per axis"
             latex={String.raw`C(r,t) = \frac{M}{(4\pi D t)^{3/2}}\;e^{-r^{2}/4Dt}, \qquad \sqrt{\langle r^2\rangle} = \sqrt{6Dt}`}
-            note="A depot injection, an ink drop: the same Gaussian, cubed — one factor of √(4πDt) per axis, so the peak falls as t^(−3/2) and dilution is brutally fast. The rms radius stacks 2Dt from each axis: √(6Dt). After an hour, a nanomole of drug with D = 2×10⁻⁶ cm²/s has reached about 2 mm — which is why a depot must sit next to its target, and why tissue beyond a millimetre or two of any source needs blood vessels to feed it."
+            note="A depot injection, an ink drop: the same Gaussian, cubed — one factor of √(4πDt) per axis, so the peak falls as t^(−3/2) and dilution is brutally fast. The rms radius stacks 2Dt from each axis: √(6Dt). After an hour, a nanomole of drug with D = 2×10⁻⁶ cm²/s has reached about 2 mm — which is why a depot must sit next to its target, and why tissue beyond a millimeter or two of any source needs blood vessels to feed it."
             defaultOpen={false}
           />
         </div>
@@ -415,7 +415,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The diffusion clock"
             latex={String.raw`\sigma = \sqrt{2Dt} \qquad\Longleftrightarrow\qquad t_L = \frac{L^{2}}{2D}`}
-            note="The most useful number in transport. Twice as far takes four times as long: 0.5 µs across a synapse, 50 s across 100 µm of tissue, 28 hours across a centimetre of unstirred tea, 5 days across a still room. Below ~100 µm diffusion is free and instant; beyond ~1 mm it is hopeless — which is why cells are small, tissues are threaded with capillaries, and everything else gets stirred or pumped."
+            note="The most useful number in transport. Twice as far takes four times as long: 0.5 µs across a synapse, 50 s across 100 µm of tissue, 28 hours across a centimeter of unstirred tea, 5 days across a still room. Below ~100 µm diffusion is free and instant; beyond ~1 mm it is hopeless — which is why cells are small, tissues are threaded with capillaries, and everything else gets stirred or pumped."
             defaultOpen={true}
           />
 
@@ -483,7 +483,7 @@ function SpreadReadout({
                 the lattice's own field — against{' '}
                 {mode === 'plane' ? '√(2Dt)' : '√(4Dt), the two axes you can see'} on
                 the exchange rule's own clock. No site consulted that formula; hot sites simply hand more
-                energy to their neighbours than they get back, and the Gaussian
+                energy to their neighbors than they get back, and the Gaussian
                 emerges. The matter never moves an inch.
               </>
             ) : (

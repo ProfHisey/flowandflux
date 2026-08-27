@@ -284,7 +284,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="One ratio, three costumes"
             latex={String.raw`\mathrm{Pe}_{mass} = \frac{vL}{D} \qquad \mathrm{Pe}_{heat} = \frac{vL}{\alpha} \qquad \mathrm{Re} = \frac{vL}{\nu}`}
-            note="The same question asked of mass, heat, and momentum: can molecular transport keep up with the flow? Re is literally the Péclet number of momentum. Their ratios — Sc = ν/D, Pr = ν/α, Le = α/D — compare the three diffusivities to each other, and will organise every boundary-layer correlation in the convection unit."
+            note="The same question asked of mass, heat, and momentum: can molecular transport keep up with the flow? Re is literally the Péclet number of momentum. Their ratios — Sc = ν/D, Pr = ν/α, Le = α/D — compare the three diffusivities to each other, and will organize every boundary-layer correlation in the convection unit."
             defaultOpen={true}
           />
         </div>

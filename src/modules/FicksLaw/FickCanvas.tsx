@@ -198,12 +198,12 @@ export function useWheelZoom(
     const wheel = (e: WheelEvent) => {
       e.preventDefault();
       const r = el.getBoundingClientRect();
-      const sx = e.clientX - r.left - r.width / 2; // cursor, centre-relative
+      const sx = e.clientX - r.left - r.width / 2; // cursor, center-relative
       const sy = e.clientY - r.top - r.height / 2;
       const z0 = zoomRef.current!;
       const z1 = Math.min(3, Math.max(0.5, z0 * Math.exp(-e.deltaY * 0.0012)));
       // Keep the world point under the cursor fixed while the scale changes:
-      // screen = (world − centre)·z + centre + pan.
+      // screen = (world − center)·z + center + pan.
       pan.px = sx - (sx - pan.px) * (z1 / z0);
       pan.py = sy - (sy - pan.py) * (z1 / z0);
       zoomRef.current = z1;
@@ -259,7 +259,7 @@ export function useWheelZoom(
   }, [canvasRef, zoomRef, bump]);
 }
 
-/** Camera transform for a draw frame: centre-anchored zoom plus the
+/** Camera transform for a draw frame: center-anchored zoom plus the
  *  canvas's pan offset (looked up by element, see PAN above). */
 export function applyZoom(
   ctx: CanvasRenderingContext2D,
@@ -323,7 +323,7 @@ function drawSlab(
   ctx.fillStyle = rampColor(norm(p.L), dark);
   ctx.fillRect(x1, y0, W - pad - x1, slabH);
   // Hatch the baths so they read as reservoirs rather than as more wall,
-  // without lying about their concentration by washing the colour out.
+  // without lying about their concentration by washing the color out.
   hatch(ctx, pad, y0, x0 - pad, slabH, dark);
   hatch(ctx, x1, y0, W - pad - x1, slabH, dark);
 
@@ -687,7 +687,7 @@ function drawParticles(
   }
 }
 
-/** A small labelled chip with a translucent backing, legible over any
+/** A small labeled chip with a translucent backing, legible over any
  *  shading. Shared by the 2D canvases for embedded boundary labels. */
 export function chip2d(
   ctx: CanvasRenderingContext2D,

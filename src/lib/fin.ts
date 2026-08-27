@@ -13,7 +13,7 @@
  *   Q_fin = sqrt(h P k A) * theta_0 * tanh(mL)
  *
  * The one number that matters is mL. Small mL: the fin is nearly
- * isothermal and every added centimetre helps. Large mL: the far end has
+ * isothermal and every added centimeter helps. Large mL: the far end has
  * already reached the fluid temperature and transfers nothing — the
  * frying-pan-handle regime, and the reason you can grab one.
  *

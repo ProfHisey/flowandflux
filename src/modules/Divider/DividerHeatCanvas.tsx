@@ -57,7 +57,7 @@ export function DividerHeatCanvas({
 }: {
   TLeft: number;
   TRight: number;
-  /** Relative conductivity (1 = baseline): how readily neighbours hand
+  /** Relative conductivity (1 = baseline): how readily neighbors hand
    *  energy across. Copper-like at 3, styrofoam-like at 0.2. */
   kScale: number;
   dividerIn: boolean;
@@ -90,7 +90,7 @@ export function DividerHeatCanvas({
   }, [TLeft, TRight, resetTick]);
 
   // The bond network is structure, not temperature: only a reset reshuffles
-  // it. Keyed on [TLeft, TRight, ...] it re-randomised on every slider nudge,
+  // it. Keyed on [TLeft, TRight, ...] it re-randomized on every slider nudge,
   // which is exactly the impression the "fixed at seed" comment exists to
   // prevent.
   useEffect(() => {
@@ -154,7 +154,7 @@ export function DividerHeatCanvas({
       // exchange runs on this same network (it used to ignore it and conduct
       // through every gap) an island NEVER equilibrates: a few molecules stay
       // frozen at their seeded 15 or 90 °C forever, which pins the adaptive
-      // colour range at its starting width and makes the printed "it narrows
+      // color range at its starting width and makes the printed "it narrows
       // as the halves meet" false. Sweep every lattice edge and open the ones
       // that would join two separate islands — exactly (islands − 1) extra
       // springs, a dozen or so out of ~800, invisible in the picture. It is
@@ -259,7 +259,7 @@ export function DividerHeatCanvas({
       // Fourier module's pinned baths is the lesson.
     }
 
-    // ---- the colour range FOLLOWS the field ---------------------------
+    // ---- the color range FOLLOWS the field ---------------------------
     // With the scale pinned to the starting 15-90 degC, every molecule
     // converges on the same mid-orange within seconds of pulling the
     // divider: the picture goes flat exactly when conduction becomes the
@@ -292,7 +292,7 @@ export function DividerHeatCanvas({
     const span = b.hi - b.lo || 1;
     const uAt = (n: number) => Math.min(1, Math.max(0, (E[n] - lo) / span));
 
-    // Faint cell wash — the molecules carry the colour; this only stops the
+    // Faint cell wash — the molecules carry the color; this only stops the
     // two halves reading as empty space.
     const cw = boxW / NX;
     const ch = boxH / NY;
@@ -326,7 +326,7 @@ export function DividerHeatCanvas({
     // positions. A fully bonded molecule rattles in place; an
     // under-coordinated one also swings on a small orbit — and both the
     // rattle and the swing grow with that site's own energy, so kinetic
-    // energy is legible as motion even where colour has run out of range.
+    // energy is legible as motion even where color has run out of range.
     for (let n = 0; n < list.length; n++) {
       const q = list[n];
       const u = uAt(n);
@@ -392,7 +392,7 @@ export function DividerHeatCanvas({
       ctx.stroke();
     }
 
-    // The molecules: colour, size AND a halo all rise together, so a hot
+    // The molecules: color, size AND a halo all rise together, so a hot
     // one stays obvious after the temperature range itself has collapsed.
     const edge = dark ? 'rgba(226,232,240,0.5)' : 'rgba(15,23,42,0.4)';
     for (let n = 0; n < list.length; n++) {
@@ -443,7 +443,7 @@ export function DividerHeatCanvas({
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.textAlign = 'right';
     ctx.fillText(
-      `colour scale ${(lo - K0).toFixed(0)}–${(b.hi - K0).toFixed(0)} °C · it narrows as the halves meet`,
+      `color scale ${(lo - K0).toFixed(0)}–${(b.hi - K0).toFixed(0)} °C · it narrows as the halves meet`,
       x1 - 2,
       y1 + 11,
     );

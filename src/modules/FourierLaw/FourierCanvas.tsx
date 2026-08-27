@@ -9,12 +9,12 @@ import { applyZoom, chip2d, gauss, useWheelZoom } from '../FicksLaw/FickCanvas';
  *
  * The contrast with the Fick canvas is the whole lesson. There, the dots
  * MOVE and the density varies — matter migrates. Here, every molecule is
- * bonded to its lattice site and the density is uniform; only the VIGOUR of
- * the jiggling varies. What travels is energy, handed from neighbour to
- * neighbour in collisions. Same mathematics, physically different carrier.
+ * bonded to its lattice site and the density is uniform; only the VIGOR of
+ * the jiggling varies. What travels is energy, handed from neighbor to
+ * neighbor in collisions. Same mathematics, physically different carrier.
  *
  * In the slab, that hand-off is simulated honestly: every site holds an
- * energy, and every frame each pair of neighbours exchanges energy in BOTH
+ * energy, and every frame each pair of neighbors exchanges energy in BOTH
  * directions — the amount each side gives is proportional to its own energy,
  * never to the difference. Net conduction emerges as the small imbalance
  * between two enormous one-way flows, exactly as net diffusion emerged from
@@ -24,7 +24,7 @@ import { applyZoom, chip2d, gauss, useWheelZoom } from '../FicksLaw/FickCanvas';
  * temperature range (physically, amplitude scales with sqrt of absolute
  * temperature, so 0 degC vs 100 degC would be a ~17% difference — invisible).
  * The exchange rate is a visual constant, like D_VIS. The energy ledger the
- * counter reports is in lattice units, and is labelled as such.
+ * counter reports is in lattice units, and is labeled as such.
  */
 
 export interface EnergyStats {
@@ -219,7 +219,7 @@ function drawSlab(
   if (slabW <= 0 || slabH <= 0) return;
 
   // Shaded temperature field — MUTED when the molecules are on, so the
-  // molecules themselves carry the colour story (Aug 2026 review: the
+  // molecules themselves carry the color story (Aug 2026 review: the
   // background tint alone did not read, especially next to the 3D view).
   for (let px = 0; px < slabW; px++) {
     const s = (px / slabW) * p.L;
@@ -261,7 +261,7 @@ function drawSlab(
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Heat-flow arrow, warm-coloured, pointing the way the energy goes.
+  // Heat-flow arrow, warm-colored, pointing the way the energy goes.
   const dir = p.T1 >= p.T2 ? 1 : -1;
   const ay = y1 + 16;
   const ax0 = (x0 + x1) / 2 - dir * 34;
@@ -293,7 +293,7 @@ function drawSlab(
 /**
  * The energy-exchange lattice. Each site holds an energy (seeded as absolute
  * temperature, in kelvin, so every site has plenty to give). Every frame,
- * each pair of neighbours exchanges energy in both directions; each side's
+ * each pair of neighbors exchanges energy in both directions; each side's
  * contribution is proportional to its OWN energy, with multiplicative noise.
  * Nothing consults the gradient — net flow emerges because hot sites give
  * more than they get back.
@@ -330,7 +330,7 @@ function stepLattice(
   for (let r = 0; r < NYL; r++) {
     for (let i = 0; i < NXL; i++) {
       const idx = r * NXL + i;
-      // Horizontal bond to the right neighbour.
+      // Horizontal bond to the right neighbor.
       if (i < NXL - 1) {
         const give = eps * E[idx] * (0.5 + Math.random());
         const take = eps * E[idx + 1] * (0.5 + Math.random());
@@ -341,7 +341,7 @@ function stepLattice(
           leftRef.current! += take;
         }
       }
-      // Vertical bond to the neighbour below (visual mixing).
+      // Vertical bond to the neighbor below (visual mixing).
       if (r < NYL - 1) {
         const give = eps * E[idx] * (0.5 + Math.random());
         const take = eps * E[idx + NXL] * (0.5 + Math.random());
@@ -407,7 +407,7 @@ function drawLatticeMolecules(
   }
 
   // Jiggle amplitude, normalized to the CURRENT temperature range — a
-  // labelled exaggeration, since the honest sqrt(T_abs) ratio would be
+  // labeled exaggeration, since the honest sqrt(T_abs) ratio would be
   // invisible. The energy field decides who jiggles hardest.
   const tLo = Math.min(p.T1, p.T2) + 273.15;
   const tHi = Math.max(p.T1, p.T2) + 273.15;
@@ -415,7 +415,7 @@ function drawLatticeMolecules(
 
   // Advance the jiggle first, then draw bonds between CURRENT positions so
   // the lattice reads as a bonded solid — springs stretching and snapping
-  // back as neighbours hand energy across them.
+  // back as neighbors hand energy across them.
   for (let n = 0; n < list.length; n++) {
     const q = list[n];
     const u = Math.min(1, Math.max(0, (E[n] - tLo) / span));
@@ -446,7 +446,7 @@ function drawLatticeMolecules(
   }
   ctx.stroke();
 
-  // Each molecule wears its own energy as colour — the field is on the
+  // Each molecule wears its own energy as color — the field is on the
   // matter, not the background.
   const edge = dark ? 'rgba(226,232,240,0.55)' : 'rgba(15,23,42,0.45)';
   for (let n = 0; n < list.length; n++) {
@@ -518,7 +518,7 @@ function drawCurved(
       }
       moleculesRef.current = list;
     }
-    // Molecules coloured by their own local temperature, outlined so they
+    // Molecules colored by their own local temperature, outlined so they
     // pop off the muted rings.
     const edge = dark ? 'rgba(226,232,240,0.55)' : 'rgba(15,23,42,0.45)';
     for (const q of list) {

@@ -30,6 +30,6 @@ export const PECLET_QUESTIONS: SocraticQuestion[] = [
     q: 'The bolus-dispersion module said perfume needs five days to cross a still room. You smell it in seconds. Reconcile.',
     probe: 'Load the "Perfume, revisited" preset.',
     resolution:
-      'No room is still. A 10 cm/s draft gives Pe = 30,000 over 3 m: convection hauls the scent across the room in 30 seconds, and diffusion does only the final, unavoidable millimetres — through the still air layer at your nostrils, where no draft reaches. That division of labour is universal in physiology: bulk flow (blood, breath, stirring) covers distance; diffusion covers the last 100 µm. Pe tells you where the handoff happens.',
+      'No room is still. A 10 cm/s draft gives Pe = 30,000 over 3 m: convection hauls the scent across the room in 30 seconds, and diffusion does only the final, unavoidable millimeters — through the still air layer at your nostrils, where no draft reaches. That division of labor is universal in physiology: bulk flow (blood, breath, stirring) covers distance; diffusion covers the last 100 µm. Pe tells you where the handoff happens.',
   },
 ];

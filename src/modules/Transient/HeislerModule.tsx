@@ -247,7 +247,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
                 hint="what time is it, in body units?"
               />
               <Stat
-                label={<InlineMath math="T_{centre}" />}
+                label={<InlineMath math="T_{center}" />}
                 value={sci(derived.T0)}
                 unit="°C"
                 tone="warm"
@@ -257,7 +257,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
                 label={<InlineMath math="T_{surface}" />}
                 value={sci(derived.Tsurf)}
                 unit="°C"
-                hint="always closer to the fluid than the centre"
+                hint="always closer to the fluid than the center"
               />
               <Stat
                 label={<InlineMath math="\zeta_1" />}

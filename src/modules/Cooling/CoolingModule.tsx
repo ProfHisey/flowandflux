@@ -128,7 +128,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   Tracers bend around the object on real streamlines, creep through the
                   film at its surface, and carry its warmth off as a wake — which starves
                   as the object spends its temperature gap. That is the exponential,
-                  watched. The object is drawn in one uniform colour on purpose: a single
+                  watched. The object is drawn in one uniform color on purpose: a single
                   temperature everywhere is the lumped assumption, and the Biot readout
                   below says when it is earned.
                 </p>
@@ -163,10 +163,10 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                       A pin fin (4 mm radius, 8 cm long — fixed for this view) grown from a
                       base at T₀, shaded by its own solution θ = cosh(m(L−x))/cosh(mL) with
                       m = √(hP/kA) = √(2h/kR) (the insulated-tip solution — a convecting
-                      tip is absorbed by adding R/2 to L). Every colour is physical and answers to the
-                      sliders: raise h and the colour dies faster along the rod — the fluid
+                      tip is absorbed by adding R/2 to L). Every color is physical and answers to the
+                      sliders: raise h and the color dies faster along the rod — the fluid
                       drains the fin before heat gets far; raise k (copper) and the whole rod
-                      holds the base colour. When the far end reaches the fluid temperature,
+                      holds the base color. When the far end reaches the fluid temperature,
                       extra length adds nothing: the frying-pan-handle regime, and why you
                       can grab one.
                     </>
@@ -239,7 +239,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
               <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                 <span className="font-semibold">Biot warning: </span>
                 Bi = {sci(derived.Bi)} exceeds 0.1, so the object's interior cannot keep
-                up with its surface — the real centre lags the curve shown here. The
+                up with its surface — the real center lags the curve shown here. The
                 spatial story (Heisler charts, semi-infinite solids) belongs to the
                 unsteady conduction module.
               </p>
@@ -443,7 +443,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The Biot number — when is one temperature honest?"
             latex={String.raw`\mathrm{Bi} = \frac{h\,L_c}{k}, \qquad L_c = \frac{V}{A}, \qquad \mathrm{Bi} \lesssim 0.1\ \text{lumped OK}`}
-            note="A race: convection stripping heat from the surface vs conduction resupplying it from inside. Bi small — the inside keeps up, the object really is one temperature (quenched steel: 0.03). Bi large — the centre lags the surface (the roast: 0.8) and you need the spatial solutions. Every lumped answer should arrive with its Bi attached. (Convention alert: this Bi uses L_c = V/A; the Heisler charts use the half-thickness or radius — for a sphere those differ by 3×, so compare Bi values across the two pages with care.)"
+            note="A race: convection stripping heat from the surface vs conduction resupplying it from inside. Bi small — the inside keeps up, the object really is one temperature (quenched steel: 0.03). Bi large — the center lags the surface (the roast: 0.8) and you need the spatial solutions. Every lumped answer should arrive with its Bi attached. (Convention alert: this Bi uses L_c = V/A; the Heisler charts use the half-thickness or radius — for a sphere those differ by 3×, so compare Bi values across the two pages with care.)"
             defaultOpen={false}
           />
 

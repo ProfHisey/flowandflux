@@ -44,7 +44,7 @@ export const PRESETS: Preset[] = [
     source: 'Callback',
     blurb:
       'The bolus-dispersion module found that 3 m of still air takes ~5 days by diffusion. Now add the gentlest draft — 10 cm/s. That is why you smell it in seconds.',
-    check: 'Pe = vL/D = 30,000, and t_conv = L/v = 30 s against t_diff ≈ 5 days. Real rooms are never still; convection does the delivery, diffusion does the last millimetre',
+    check: 'Pe = vL/D = 30,000, and t_conv = L/v = 30 s against t_diff ≈ 5 days. Real rooms are never still; convection does the delivery, diffusion does the last millimeter',
     params: { D: 0.1, v: 10, L: 300, C0: mMToMolPerCm3(0.001), CL: 0 },
   },
 ];

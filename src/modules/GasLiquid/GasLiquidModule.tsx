@@ -100,9 +100,9 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
               hits another one, and the two pictures fall out of the crowding alone.
               The gas molecule's path is long straight flights, redirected now and
               then. The liquid molecule moves <em>just as fast</em>, but it cannot
-              finish a single body length before a neighbour turns it around: it
+              finish a single body length before a neighbor turns it around: it
               rattles in a cage, and only escapes when the cage happens to open. That
-              one difference is why a smell diffuses across a centimetre of still air
+              one difference is why a smell diffuses across a centimeter of still air
               in seconds while sugar takes a day to cross an unstirred teacup — same
               distance-squared clock, four decades apart in D. (Crossing a whole room
               is a different story: that is air currents, as the Péclet module shows.)
@@ -147,7 +147,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 label="Liquid: collisions"
                 value={stats ? stats.liqColRate.toFixed(0) : '—'}
                 unit="/s"
-                hint="constant contact with the neighbours"
+                hint="constant contact with the neighbors"
               />
               <Stat
                 label="Liquid: net wander"
@@ -236,7 +236,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Where liquid D comes from — Stokes–Einstein"
             latex={String.raw`D = \frac{k_B T}{6 \pi \mu a}`}
-            note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbours, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than a gas's ~T^(3/2) at fixed pressure.`}
+            note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbors, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than a gas's ~T^(3/2) at fixed pressure.`}
           />
           <EquationCard
             title="The four decades"

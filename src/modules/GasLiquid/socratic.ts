@@ -9,7 +9,7 @@ export const GASLIQUID_QUESTIONS: SocraticQuestion[] = [
     q: 'Both boxes sit at the same temperature, so the tagged molecule moves just as fast in the liquid as in the gas. Yet the "net wander" readout says it gets almost nowhere. Where does all that speed go?',
     probe: 'Watch the orange trail in the liquid for ten seconds. How far apart are its farthest two points, in molecule widths?',
     resolution:
-      'Into reversals. The liquid molecule covers just as much PATH as the gas one, but every fraction of a diameter it hits a neighbour and its direction is randomized, so the path folds back on itself almost perfectly. Displacement grows as √(number of flights) × flight length — that is, √(path × step length) — so at equal path and equal time, the box with the longer step wins. In a liquid the step is a fraction of a diameter. Fast motion, tiny steps, slow diffusion.',
+      'Into reversals. The liquid molecule covers just as much PATH as the gas one, but every fraction of a diameter it hits a neighbor and its direction is randomized, so the path folds back on itself almost perfectly. Displacement grows as √(number of flights) × flight length — that is, √(path × step length) — so at equal path and equal time, the box with the longer step wins. In a liquid the step is a fraction of a diameter. Fast motion, tiny steps, slow diffusion.',
   },
   {
     q: 'Turn the temperature up. Both boxes speed up by the same factor — but which box\'s diffusion benefits more, and why does heating a liquid do more than this simulation shows?',
@@ -24,7 +24,7 @@ export const GASLIQUID_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'The gas box on screen gives the tagged molecule a free flight of ten-or-so diameters. The card next to it says a real air molecule flies about 180 diameters. Why did we not just draw it to scale?',
     resolution:
-      'A gas drawn to scale is overwhelmingly empty space — at atmospheric density the molecules would be a few pixels in an essentially blank box, and you would wait a long time to see a single collision. The site\'s standing rule: clarity beats scale, and every such compromise is labelled on the canvas. The RATIO the picture teaches — long flights vs sub-diameter rattling — survives the compression honestly.',
+      'A gas drawn to scale is overwhelmingly empty space — at atmospheric density the molecules would be a few pixels in an essentially blank box, and you would wait a long time to see a single collision. The site\'s standing rule: clarity beats scale, and every such compromise is labeled on the canvas. The RATIO the picture teaches — long flights vs sub-diameter rattling — survives the compression honestly.',
   },
   {
     q: 'The course tells you D ~ 0.1 cm^2/s for gases and ~1e-5 cm^2/s for small solutes in water, four decades apart. Point at the one visual difference between the two boxes that carries all four decades.',

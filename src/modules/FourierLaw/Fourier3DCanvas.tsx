@@ -123,7 +123,7 @@ export function Fourier3DCanvas({
         },
       });
     };
-    // Molecules wear their own temperature as colour (Aug 2026 review: the
+    // Molecules wear their own temperature as color (Aug 2026 review: the
     // face-shading alone did not carry the field in 3D).
     const dot = (v: Vec3, R: number, u = -1) => {
       const vv = view(v);

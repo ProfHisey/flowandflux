@@ -15,7 +15,7 @@ invented, course-neutral examples throughout.
 >
 > Developed with AI assistance. Every physics function is checked against
 > hand-worked solutions by `npm run verify`, which runs in CI and blocks
-> deployment on failure; deliberate visual compromises are labelled on the page
+> deployment on failure; deliberate visual compromises are labeled on the page
 > where they occur.
 
 ---
@@ -79,17 +79,17 @@ live profiles, KaTeX for equations. No backend; the whole thing is static.
 - **Units are never optional.** Every readout carries them.
 - **Physics before pixels.** The math lives in `src/lib/*.ts` as pure functions,
   verified in `scripts/verify.ts` before any UI is built on top.
-- **Honest animations.** Cosmetic speeds are labelled as cosmetic; measured
+- **Honest animations.** Cosmetic speeds are labeled as cosmetic; measured
   quantities are actually measured from the simulation, never assumed.
 - **Emergence over assertion.** Walkers never consult the gradient; net transport
   emerges from counting. Ratios that matter (like Pe) are kept physical even when
   speeds are not.
 
-## Licence
+## License
 
 The source is public so it can be checked, not so it can be resold.
 
-| Part | Licence |
+| Part | License |
 | --- | --- |
 | Source code | [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) — see [LICENSE](LICENSE) |
 | Prose, question sets, worked-example blurbs, figures | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — see [LICENSE-CONTENT](LICENSE-CONTENT) |
@@ -98,14 +98,14 @@ The source is public so it can be checked, not so it can be resold.
 You may read, fork, adapt, and above all teach from any of this, with credit,
 for free. **Classroom and institutional use is explicitly covered** — PolyForm
 Noncommercial names educational institutions as a permitted use outright, which
-is why it was chosen over a plain CC-NC licence. What is not permitted is
+is why it was chosen over a plain CC-NC license. What is not permitted is
 selling it, bundling it into a paid product, running it with advertising, or
 putting it behind a paywall.
 
-Fork it freely, but run it under your own name: neither licence grants rights to
+Fork it freely, but run it under your own name: neither license grants rights to
 the name *FlowAndFlux*, the domain, or the site's identity.
 
 Third-party dependencies (React, Recharts, KaTeX, lucide-react) keep their own
-permissive licences and are unaffected by any of the above. The underlying
+permissive licenses and are unaffected by any of the above. The underlying
 physics is not owned by anyone — equations and standard results are facts, and
-the licences cover only this expression of them.
+the licenses cover only this expression of them.

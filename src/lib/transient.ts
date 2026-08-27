@@ -183,7 +183,7 @@ export function transientRegime(Bi: number, Fo: number): TransientRegime {
   return 'oneterm';
 }
 
-/** Centre temperature at time t, degC (one-term; honest for Fo > 0.2). */
+/** Center temperature at time t, degC (one-term; honest for Fo > 0.2). */
 export function centerTemp(p: HeislerParams): number {
   const Bi = biotOf(p);
   const Fo = fourierOf(p);
