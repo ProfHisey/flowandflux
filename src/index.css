@@ -55,3 +55,14 @@
     @apply outline-none ring-2 ring-sky-400 ring-offset-2 dark:ring-offset-slate-900;
   }
 }
+
+@layer base {
+  /* The UA focus ring is nearly invisible against slate-900, and the site
+     defaults to night mode. One explicit ring for every focusable control. */
+  button:focus-visible,
+  select:focus-visible,
+  a:focus-visible,
+  [role='radio']:focus-visible {
+    @apply outline-none ring-2 ring-sky-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+  }
+}

@@ -151,6 +151,7 @@ export function Peclet3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="A 3D channel of walkers that both diffuse and ride a flow between two maintained baths"

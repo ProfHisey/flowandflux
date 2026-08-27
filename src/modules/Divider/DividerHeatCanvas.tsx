@@ -87,8 +87,15 @@ export function DividerHeatCanvas({
   useEffect(() => {
     energyRef.current = null;
     moleculesRef.current = [];
-    bondsRef.current = null;
   }, [TLeft, TRight, resetTick]);
+
+  // The bond network is structure, not temperature: only a reset reshuffles
+  // it. Keyed on [TLeft, TRight, ...] it re-randomised on every slider nudge,
+  // which is exactly the impression the "fixed at seed" comment exists to
+  // prevent.
+  useEffect(() => {
+    bondsRef.current = null;
+  }, [resetTick]);
 
   const canvasRef = useCanvas((ctx, frame) => {
     const { width: W, height: H } = frame;
@@ -116,6 +123,84 @@ export function DividerHeatCanvas({
       boundsRef.current = { lo: bLo, hi: bHi, span0: Math.max(1, bHi - bLo) };
     }
 
+    // Which bonds exist at all — fixed at seed, so the network keeps its
+    // shape while the energy moves through it. coord counts each molecule's
+    // surviving bonds: the low-coordination ones are the terminal atoms.
+    let bonds = bondsRef.current;
+    if (!bonds) {
+      const h = new Float32Array((NX - 1) * NY);
+      const v = new Float32Array(NX * (NY - 1));
+      for (let i = 0; i < h.length; i++) h[i] = Math.random();
+      for (let i = 0; i < v.length; i++) v[i] = Math.random();
+      const coord = new Uint8Array(NX * NY);
+      for (let r = 0; r < NY; r++) {
+        for (let i = 0; i < NX - 1; i++) {
+          if (h[r * (NX - 1) + i] < BOND_KEEP) {
+            coord[r * NX + i]++;
+            coord[r * NX + i + 1]++;
+          }
+        }
+      }
+      for (let r = 0; r < NY - 1; r++) {
+        for (let i = 0; i < NX; i++) {
+          if (v[r * NX + i] < BOND_KEEP) {
+            coord[r * NX + i]++;
+            coord[(r + 1) * NX + i]++;
+          }
+        }
+      }
+      // The network must be CONNECTED. At BOND_KEEP = 0.66 the random draw
+      // leaves isolated sites and small islands, and now that the energy
+      // exchange runs on this same network (it used to ignore it and conduct
+      // through every gap) an island NEVER equilibrates: a few molecules stay
+      // frozen at their seeded 15 or 90 °C forever, which pins the adaptive
+      // colour range at its starting width and makes the printed "it narrows
+      // as the halves meet" false. Sweep every lattice edge and open the ones
+      // that would join two separate islands — exactly (islands − 1) extra
+      // springs, a dozen or so out of ~800, invisible in the picture. It is
+      // also the honest solid: no free-floating atoms.
+      const parent = new Int32Array(NX * NY);
+      for (let i = 0; i < parent.length; i++) parent[i] = i;
+      const find = (x: number): number => {
+        while (parent[x] !== x) {
+          parent[x] = parent[parent[x]];
+          x = parent[x];
+        }
+        return x;
+      };
+      const union = (p1: number, p2: number): boolean => {
+        const ra = find(p1);
+        const rb = find(p2);
+        if (ra === rb) return false;
+        parent[rb] = ra;
+        return true;
+      };
+      for (let r = 0; r < NY; r++) {
+        for (let i = 0; i < NX; i++) {
+          const n = r * NX + i;
+          if (i < NX - 1 && h[r * (NX - 1) + i] < BOND_KEEP) union(n, n + 1);
+          if (r < NY - 1 && v[r * NX + i] < BOND_KEEP) union(n, n + NX);
+        }
+      }
+      for (let r = 0; r < NY; r++) {
+        for (let i = 0; i < NX; i++) {
+          const n = r * NX + i;
+          if (i < NX - 1 && union(n, n + 1)) {
+            h[r * (NX - 1) + i] = 0;
+            coord[n]++;
+            coord[n + 1]++;
+          }
+          if (r < NY - 1 && union(n, n + NX)) {
+            v[r * NX + i] = 0;
+            coord[n]++;
+            coord[n + NX]++;
+          }
+        }
+      }
+      bonds = { h, v, coord };
+      bondsRef.current = bonds;
+    }
+
     const dt = running ? frame.dt : 0;
     if (dt > 0) {
       // kScale raises the exchange rate; sub-stepping keeps the explicit
@@ -129,19 +214,39 @@ export function DividerHeatCanvas({
         for (let r = 0; r < NY; r++) {
           for (let i = 0; i < NX; i++) {
             const idx = r * NX + i;
+            // Energy only crosses where a spring is actually DRAWN. The
+            // picture's grammar is "no spring, no path" — the divider bond is
+            // severed and so are the ~34% of springs BOND_KEEP leaves out, and
+            // it would teach the wrong thing to conduct through gaps the
+            // caption calls insulation.
+            //
+            // ONE random rate per bond, shared by the two directions. Drawing
+            // give and take independently leaves a net random transfer even
+            // when the two sites hold identical energy: with the module
+            // defaults that jitter is ~9 K per bond per substep, which
+            // accumulated to a per-site spread LARGER than the hot/cold
+            // difference the module exists to show (sites reached −90 °C in a
+            // box set to 15 and 90). Sharing the rate keeps the two-way
+            // hand-off — each side still gives in proportion to its OWN
+            // energy — while making the exchange vanish at uniform E.
             if (i < NX - 1) {
               // The divider is an insulator while it is in: the bond between
               // the two middle columns simply does not exist.
-              if (!(blocked && i === NX / 2 - 1)) {
-                const give = eps * E[idx] * (0.5 + Math.random());
-                const take = eps * E[idx + 1] * (0.5 + Math.random());
+              if (
+                bonds.h[r * (NX - 1) + i] < BOND_KEEP &&
+                !(blocked && i === NX / 2 - 1)
+              ) {
+                const w = eps * (0.5 + Math.random());
+                const give = w * E[idx];
+                const take = w * E[idx + 1];
                 dE[idx] += take - give;
                 dE[idx + 1] += give - take;
               }
             }
-            if (r < NY - 1) {
-              const give = eps * E[idx] * (0.5 + Math.random());
-              const take = eps * E[idx + NX] * (0.5 + Math.random());
+            if (r < NY - 1 && bonds.v[r * NX + i] < BOND_KEEP) {
+              const w = eps * (0.5 + Math.random());
+              const give = w * E[idx];
+              const take = w * E[idx + NX];
               dE[idx] += take - give;
               dE[idx + NX] += give - take;
             }
@@ -217,36 +322,6 @@ export function DividerHeatCanvas({
       }
       moleculesRef.current = list;
     }
-    // Which bonds exist at all — fixed at seed, so the network keeps its
-    // shape while the energy moves through it. coord counts each molecule's
-    // surviving bonds: the low-coordination ones are the terminal atoms.
-    let bonds = bondsRef.current;
-    if (!bonds) {
-      const h = new Float32Array((NX - 1) * NY);
-      const v = new Float32Array(NX * (NY - 1));
-      for (let i = 0; i < h.length; i++) h[i] = Math.random();
-      for (let i = 0; i < v.length; i++) v[i] = Math.random();
-      const coord = new Uint8Array(NX * NY);
-      for (let r = 0; r < NY; r++) {
-        for (let i = 0; i < NX - 1; i++) {
-          if (h[r * (NX - 1) + i] < BOND_KEEP) {
-            coord[r * NX + i]++;
-            coord[r * NX + i + 1]++;
-          }
-        }
-      }
-      for (let r = 0; r < NY - 1; r++) {
-        for (let i = 0; i < NX; i++) {
-          if (v[r * NX + i] < BOND_KEEP) {
-            coord[r * NX + i]++;
-            coord[(r + 1) * NX + i]++;
-          }
-        }
-      }
-      bonds = { h, v, coord };
-      bondsRef.current = bonds;
-    }
-
     // Advance the motion first, then draw everything from the same drawn
     // positions. A fully bonded molecule rattles in place; an
     // under-coordinated one also swings on a small orbit — and both the
@@ -265,6 +340,16 @@ export function DividerHeatCanvas({
       const orbit = free * (0.7 + 3.2 * u);
       q.dx = q.ax + q.ox + orbit * Math.cos(q.ph);
       q.dy = q.ay + q.oy + orbit * Math.sin(q.ph);
+      // "No molecule ever crosses the middle" is the whole point of the heat
+      // tab, and on a narrow canvas the rattle amplitude exceeds the half-cell
+      // gap to the midline — boundary molecules were visibly hopping the
+      // divider several times a second. Clamp the DRAWN position to the
+      // molecule's own half. (Anchors never moved; only the excursion did.)
+      const keepOut = 4.4 + 2.2 * u;
+      q.dx =
+        n % NX < NX / 2
+          ? Math.min(q.dx, xc - keepOut)
+          : Math.max(q.dx, xc + keepOut);
     }
 
     // Bonds, bucketed by temperature so each bucket strokes in one path.
@@ -383,6 +468,7 @@ export function DividerHeatCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="A hot half and a cold half of a solid separated by a removable insulating divider"

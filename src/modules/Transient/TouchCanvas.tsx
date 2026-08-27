@@ -161,6 +161,7 @@ export function TouchCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Two bodies at different temperatures touching: thermal fronts spread from an interface pinned at the contact temperature"

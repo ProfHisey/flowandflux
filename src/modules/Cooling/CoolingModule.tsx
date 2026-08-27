@@ -64,9 +64,10 @@ export function CoolingModule({ dark }: { dark: boolean }) {
             title="An object in a stream"
             subtitle="The flow keeps replacing the fluid at the surface. That replacement is what h measures."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-32">
                   <Segmented<'flow' | 'fin'>
+                    ariaLabel="Scene"
                     value={view}
                     options={[
                       { value: 'flow', label: 'Flow', title: 'A lumped object in a stream' },
@@ -79,6 +80,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   <>
                     <div className="w-28">
                       <Segmented<'pin' | 'rect'>
+                        ariaLabel="Fin cross-section"
                         value={finShape}
                         options={[
                           { value: 'pin', label: 'Pin', title: 'A cylindrical rod: P = 2πR, A = πR²' },
@@ -89,6 +91,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                     </div>
                     <div className="w-28">
                       <Segmented<'2d' | '3d'>
+                        ariaLabel="View dimension"
                         value={finDim}
                         options={[
                           { value: '2d', label: '2D', title: 'Side-on with the T(x) profile — drag to pan, scroll to zoom' },
@@ -364,6 +367,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -380,7 +384,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -466,7 +470,7 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-          Module 2 · Convection
+          Module 4 · Convection
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
           Newton's law of cooling · h and h_m
@@ -506,15 +510,15 @@ function HScale({ h }: { h: number }) {
           className="absolute top-0 h-2 w-0.5 bg-amber-500"
           style={{ left: `${Math.min(100, Math.max(0, pos(h)))}%` }}
         />
-        <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           still air
         </span>
-        <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute right-0 top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           boiling
         </span>
       </div>
-      <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
-        Ticks mark typical regimes — five decades, none of them a material property.
+      <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+        Ticks mark typical regimes — four decades on this slider, none of them a material property.
       </p>
     </div>
   );
@@ -537,6 +541,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

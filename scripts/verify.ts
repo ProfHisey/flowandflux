@@ -1063,6 +1063,31 @@ check('closed forms equal their defining integrals',
     close(mixingCupT(odd), mixingCupTNumeric(odd), 1e-5) &&
       close(areaAvgT(odd), areaAvgTNumeric(odd), 1e-5));
 }
+// The gap between the two averages is exactly 2n(Tw - Tc)/((n+2)(n+4)); its
+// derivative goes as (8 - n^2), so it PEAKS at n = sqrt(8) = 2.8284. Both the
+// peak and the "still 8 degC of the parabolic 10 at n = 8" line are quoted on
+// the page and in the socratic set, so pin them here.
+{
+  const gap = (n: number) => areaAvgT({ Tw: 80, Tc: 20, n }) - mixingCupT({ Tw: 80, Tc: 20, n });
+  const peak = gap(Math.sqrt(8));
+  let sampledMax = -Infinity;
+  for (let n = 1; n <= 40; n += 0.001) sampledMax = Math.max(sampledMax, gap(n));
+  check('mixing-cup gap peaks at n = sqrt(8) = 2.828', close(peak, sampledMax, 1e-6), String(peak));
+  check('mixing-cup gap: 10 degC at n = 2 and n = 4, 8 degC at n = 8',
+    close(gap(2), 10, 1e-9) && close(gap(4), 10, 1e-9) && close(gap(8), 8, 1e-9),
+    `${gap(2)} / ${gap(4)} / ${gap(8)}`);
+  check('closed-form gap equals 2n dT/((n+2)(n+4))',
+    close(gap(3.7), (2 * 3.7 * 60) / ((3.7 + 2) * (3.7 + 4)), 1e-9));
+}
+
+// The three bolus heat presets quote alpha values that are only tied to
+// k/(rho c) in a comment. Bind them.
+check('bolus heat presets: alpha = k/(rho c) for steel, copper, water',
+  close(thermalDiffusivity(45, 7800, 490) * 1e4, 0.118, 2e-2) &&
+    close(thermalDiffusivity(401, 8933, 385) * 1e4, 1.16, 1e-2) &&
+    close(thermalDiffusivity(0.598, 998, 4182) * 1e4, 1.43e-3, 1e-2),
+  `${thermalDiffusivity(45, 7800, 490) * 1e4} / ${thermalDiffusivity(401, 8933, 385) * 1e4}`);
+
 check('uniform temperature: both averages are that temperature',
   close(mixingCupT({ Tw: 37, Tc: 37, n: 2 }), 37, 1e-12) &&
     close(areaAvgT({ Tw: 37, Tc: 37, n: 2 }), 37, 1e-12));

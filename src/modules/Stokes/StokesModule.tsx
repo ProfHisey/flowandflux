@@ -58,12 +58,13 @@ export function StokesModule({ dark }: { dark: boolean }) {
             title="The settling column"
             subtitle="Weight down, buoyancy and drag up — and the arrows balance, because τ expired microseconds ago."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
-                      { value: '2d', label: '2D', title: 'The free-body diagram with true-scale arrows — drag to pan' },
+                      { value: '2d', label: '2D', title: 'The free-body diagram with true-scale arrows — drag to pan, scroll to zoom' },
                       { value: '3d', label: '3D', title: 'The suspension as a volume — drag to orbit' },
                     ]}
                     onChange={setDim}
@@ -145,7 +146,7 @@ export function StokesModule({ dark }: { dark: boolean }) {
                 this particle has left the creeping-flow regime, and Stokes drag
                 underestimates the real drag badly — every number on this page is now
                 an overestimate of the speed. The formula did not break; its
-                assumptions did. (A real drop this size falls ~6 m/s, not 120.)
+                assumptions did. (For the raindrop preset: a real 2 mm drop falls ~6 m/s, not the 121 m/s Stokes predicts here.)
               </p>
             )}
 
@@ -239,6 +240,7 @@ export function StokesModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -255,7 +257,7 @@ export function StokesModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -378,6 +380,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

@@ -149,7 +149,7 @@ export function PecletChart({ params, dark }: { params: PecletParams; dark: bool
             />
           </LineChart>
         </ResponsiveContainer>
-        <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+        <p className="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           Flat floor at small Pe: diffusion sets the rate, flow is decoration. Slope-1
           climb at large Pe: N = vC₀, diffusion is decoration. The knee is Pe ≈ 1.
         </p>
@@ -179,7 +179,7 @@ function ChartFrame({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {title}
         </h3>
-        <span className="font-mono text-xs text-slate-400 dark:text-slate-500">{formula}</span>
+        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{formula}</span>
       </div>
       {children}
     </div>

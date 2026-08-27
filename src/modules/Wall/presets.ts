@@ -59,7 +59,7 @@ export const PRESETS: Preset[] = [
     name: 'Insulated house wall',
     source: 'Building code',
     blurb:
-      'Brick, 10 cm of foam, drywall. The reason building codes obsess over one layer and ignore the others.',
+      'Brick, 10 cm of foam, an inner board. The reason building codes obsess over one layer and ignore the others.',
     check: 'the foam takes ~90% of the ΔT; U ≈ 0.27 W/m²K',
     params: {
       layers: [

@@ -167,6 +167,7 @@ export function PerfusionCanvas({ params, dark }: { params: PerfusionParams; dar
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="A perfused channel over a cell layer: concentration field with the starved corner hatched in red"

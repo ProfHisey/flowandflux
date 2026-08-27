@@ -135,6 +135,7 @@ export function Perfusion3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="The perfused channel as a rotatable 3D device, with the starved tissue region as a red wedge at the far-bottom corner"

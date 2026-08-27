@@ -91,7 +91,7 @@ export function PerfusionChart({ params, dark }: { params: PerfusionParams; dark
             <Line type="monotone" dataKey="Cmin" stroke={dark ? '#818cf8' : '#4f46e5'} strokeWidth={2.25} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
-        <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+        <p className="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           Red dashes: C_crit. The floor line crossing it is the moment the corner
           starts to starve.
         </p>
@@ -131,7 +131,7 @@ export function PerfusionChart({ params, dark }: { params: PerfusionParams; dark
             <Line type="monotone" dataKey="Cout" stroke={dark ? '#818cf8' : '#4f46e5'} strokeWidth={2.25} dot={false} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
-        <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+        <p className="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           Same parabolic sag at both stations — the outlet just starts from a poorer
           supply. The corner is where both effects stack.
         </p>
@@ -155,7 +155,7 @@ function ChartFrame({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {title}
         </h3>
-        <span className="font-mono text-xs text-slate-400 dark:text-slate-500">{formula}</span>
+        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{formula}</span>
       </div>
       {children}
     </div>

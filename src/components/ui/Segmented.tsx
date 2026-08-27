@@ -1,5 +1,7 @@
 interface SegmentedProps<T extends string> {
   label?: string;
+  /** Accessible name for toolbar groups that carry no visible label. */
+  ariaLabel?: string;
   value: T;
   options: { value: T; label: string; title?: string }[];
   onChange: (v: T) => void;
@@ -7,6 +9,7 @@ interface SegmentedProps<T extends string> {
 
 export function Segmented<T extends string>({
   label,
+  ariaLabel,
   value,
   options,
   onChange,
@@ -20,7 +23,7 @@ export function Segmented<T extends string>({
       )}
       <div
         role="radiogroup"
-        aria-label={label}
+        aria-label={label ?? ariaLabel}
         className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-800"
       >
         {options.map((opt) => {

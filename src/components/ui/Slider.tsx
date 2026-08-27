@@ -58,6 +58,7 @@ export function Slider({
         max={sMax}
         step={sStep}
         value={toSlider(value)}
+        aria-valuetext={unit ? `${display} ${unit}` : display}
         onChange={(e) => onChange(fromSlider(Number(e.target.value)))}
         className="ff-range"
       />

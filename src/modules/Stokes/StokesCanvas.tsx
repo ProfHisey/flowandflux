@@ -185,9 +185,9 @@ export function StokesCanvas({
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = dark ? '#f87171' : '#dc2626';
-    ctx.fillText('W = ρₚVg', x0 + 8, y0 + boxH - 34);
+    ctx.fillText('W = ρ_p·V·g', x0 + 8, y0 + boxH - 34);
     ctx.fillStyle = dark ? '#38bdf8' : '#0284c7';
-    ctx.fillText('B = ρ_f Vg', x0 + 8, y0 + boxH - 20);
+    ctx.fillText('B = ρ_f·V·g', x0 + 8, y0 + boxH - 20);
     ctx.fillStyle = dark ? '#34d399' : '#047857';
     ctx.fillText('F_D = 6πμav', x0 + 8, y0 + boxH - 6);
 
@@ -218,6 +218,7 @@ export function StokesCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Particles settling at terminal velocity, with a free-body diagram of weight, buoyancy, and Stokes drag"

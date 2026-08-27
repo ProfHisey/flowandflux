@@ -482,6 +482,7 @@ export function Newton3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Rotatable 3D view of Couette flow: sheets of fluid sliding between two textured plates"

@@ -153,6 +153,7 @@ export function Corr3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="An object in a stream with its thermal and concentration boundary layers drawn as translucent 3D shells"

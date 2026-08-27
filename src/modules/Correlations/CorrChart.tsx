@@ -48,7 +48,7 @@ export function CorrChart({ params, dark }: { params: CorrParams; dark: boolean 
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           The correlation, drawn live
         </h3>
-        <span className="font-mono text-xs text-slate-400 dark:text-slate-500">
+        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
           Nu(Re, Pr) and Sh(Re, Sc), log–log
         </span>
       </div>
@@ -90,7 +90,7 @@ export function CorrChart({ params, dark }: { params: CorrParams; dark: boolean 
           <Line type="monotone" dataKey="Sh" stroke="#22d3ee" strokeWidth={2.25} dot={false} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+      <p className="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
         Amber: Nu (heat). Cyan: Sh (mass). The vertical gap between them is
         (Sc/Pr)<sup>1/3</sup> — a constant factor at every Re for the ⅓-power family.
       </p>

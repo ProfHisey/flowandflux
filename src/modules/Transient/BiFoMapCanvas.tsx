@@ -133,6 +133,7 @@ export function BiFoMapCanvas({ params, dark }: { params: HeislerParams; dark: b
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[260px] w-full rounded-lg bg-slate-50 dark:bg-slate-950"
       aria-label="A log-log map of Biot vs Fourier number, showing the lumped, semi-infinite and one-term regimes with the current setup marked"

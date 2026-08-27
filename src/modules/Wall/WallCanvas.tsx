@@ -225,6 +225,7 @@ export function WallCanvas({ params, dark }: { params: WallParams; dark: boolean
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="A composite wall shaded by temperature, with its equivalent series resistor circuit drawn beneath it"

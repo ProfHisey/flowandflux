@@ -162,6 +162,7 @@ export function FickCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={`Concentration field in a ${params.geometry}, with diffusing particles`}

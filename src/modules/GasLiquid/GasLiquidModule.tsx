@@ -48,9 +48,10 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
             title="Two ways to wander"
             subtitle="Same kind of molecule, same temperature. Only the crowding differs — watch the orange one."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -235,12 +236,12 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="Where liquid D comes from — Stokes–Einstein"
             latex={String.raw`D = \frac{k_B T}{6 \pi \mu a}`}
-            note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbours, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than a gas's ~T^{3/2} at fixed pressure.`}
+            note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbours, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than a gas's ~T^(3/2) at fixed pressure.`}
           />
           <EquationCard
             title="The four decades"
             latex={String.raw`\frac{D_{gas}}{D_{liquid}} \approx \frac{0.1\ \mathrm{cm^2/s}}{10^{-5}\ \mathrm{cm^2/s}} = 10^{4}`}
-            note="Comparable speeds, so the entire gap is step length: ~200 diameters of free flight versus a fraction of one. This is why the mass-transfer tables you will use all course split cleanly into a gas column and a liquid column with nothing in between — and why 'which phase am I in?' is the first question every diffusion estimate should ask."
+            note="Comparable speeds, so the entire gap is step length: ~180 diameters of free flight versus a fraction of one. This is why the mass-transfer tables split cleanly into a gas column and a liquid column with nothing in between — and why 'which phase am I in?' is the first question every diffusion estimate should ask."
             defaultOpen={false}
           />
         </div>

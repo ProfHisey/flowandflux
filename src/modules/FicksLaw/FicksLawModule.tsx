@@ -74,9 +74,10 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
             title="Steady-state concentration field"
             subtitle="Particles take unbiased random steps. The net drift you see is emergent."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={view}
                     options={[
                       { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -122,7 +123,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
             {view === '3d' && (
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 The same unbiased random walk, in three dimensions — drag to rotate,
-                double-click to lie it flat again. The rotation is only a camera move;
+                double-click to reset the view. The rotation is only a camera move;
                 the walk itself never changes. The crossing counter and all
                 measurements live on the 2D tab.
               </p>
@@ -320,6 +321,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -336,7 +338,7 @@ export function FicksLawModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -458,7 +460,7 @@ function TrafficReadout({ stats }: { stats: CrossingStats }) {
           Fick predicts {stats.predicted >= 0 ? '+' : ''}
           {stats.predicted.toFixed(1)}/s
         </span>
-        <span className="ml-auto text-[11px] font-normal text-slate-400 dark:text-slate-500">
+        <span className="ml-auto text-[11px] font-normal text-slate-500 dark:text-slate-400">
           {settled ? 'averaged over' : 'settling ·'} {stats.elapsed.toFixed(0)}s
         </span>
       </div>
@@ -518,14 +520,14 @@ function DScale({ D }: { D: number }) {
           className="absolute top-0 h-2 w-0.5 bg-sky-500"
           style={{ left: `${Math.min(100, Math.max(0, pos(D)))}%` }}
         />
-        <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           solids
         </span>
-        <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute right-0 top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           gases
         </span>
       </div>
-      <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+      <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
         Ticks mark typical real-world values, from solids to gases — ten decades.
       </p>
     </div>
@@ -549,6 +551,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

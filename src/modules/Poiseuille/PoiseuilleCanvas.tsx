@@ -254,6 +254,7 @@ export function PoiseuilleCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={`Laminar ${params.geometry} flow with tracers riding the velocity profile`}

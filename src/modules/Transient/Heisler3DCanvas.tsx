@@ -141,6 +141,7 @@ export function Heisler3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={`A ${params.geometry} in 3D, shaded by the one-term transient temperature solution`}

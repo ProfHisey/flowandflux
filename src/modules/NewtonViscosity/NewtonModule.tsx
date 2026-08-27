@@ -59,9 +59,10 @@ export function NewtonModule({ dark }: { dark: boolean }) {
             title="Couette flow between plates"
             subtitle="Layers of fluid slide over one another; each layer drags the next."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -72,6 +73,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 </div>
                 <div className="w-36">
                   <Segmented<NewtonView>
+                    ariaLabel="Diagram mode"
                     value={view}
                     options={[
                       { value: 'links', label: 'Grip', title: 'Sliding layers with grip links — the force picture' },
@@ -119,7 +121,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                 {view === 'links' ? (
                   <>
-                    Drag to rotate, double-click to lie it flat again. The 2D lanes
+                    Drag to rotate, double-click to reset the view. The 2D lanes
                     become what they always secretly were: sheets. Note the two
                     boundary sheets — the top one is glued to the marching plate and
                     the bottom one to the still plate. That is the no-slip condition,
@@ -128,7 +130,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                   </>
                 ) : (
                   <>
-                    Drag to rotate, double-click to lie it flat again. A vertical
+                    Drag to rotate, double-click to reset the view. A vertical
                     curtain of dye tilts into the velocity profile — every height
                     carries its dye at its own speed — and the marked cube shears into
                     a parallelepiped beside its resting ghost, at the rate dγ/dt = du/dy.
@@ -244,7 +246,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 onChange={(v) => set('U', v)}
                 hint={
                   params.U === 0
-                    ? 'Nothing moves, nothing shears: τ = 0. The wandering continues regardless.'
+                    ? 'Nothing moves, nothing shears: τ = 0. The layers are still there — they just are not sliding past one another.'
                     : undefined
                 }
               />
@@ -291,6 +293,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -307,7 +310,7 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -436,14 +439,14 @@ function MuScale({ mu }: { mu: number }) {
           className="absolute top-0 h-2 w-0.5 bg-emerald-500"
           style={{ left: `${Math.min(100, Math.max(0, pos(mu)))}%` }}
         />
-        <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           gases
         </span>
-        <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute right-0 top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           syrups
         </span>
       </div>
-      <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+      <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
         Ticks mark typical real-world values — air to honey spans nearly six decades.
       </p>
     </div>
@@ -467,6 +470,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

@@ -62,9 +62,10 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
             right={
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
+                  ariaLabel="View dimension"
                   value={dim}
                   options={[
-                    { value: '2d', label: '2D', title: 'The cross-section painted from the solution — drag to pan' },
+                    { value: '2d', label: '2D', title: 'The cross-section painted from the solution — drag to pan, scroll to zoom' },
                     { value: '3d', label: '3D', title: 'The device itself — drag to orbit, look underneath' },
                   ]}
                   onChange={setDim}
@@ -149,7 +150,7 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
                 onChange={(v) => set('R', mMToMolPerCm3(v))}
               />
               <Slider
-                label="Diffusivity, D"
+                label="Diffusion coefficient, D"
                 unit="cm²/s"
                 value={params.D}
                 min={1e-6}
@@ -181,6 +182,7 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -197,7 +199,7 @@ export function PerfusionModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>

@@ -71,9 +71,10 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                 : 'Pushed from one end, held back by the walls — the profile is the truce.'
             }
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -308,6 +309,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -324,7 +326,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -454,12 +456,12 @@ function NSAnatomy() {
               className="h-3.5 w-3.5 accent-emerald-600"
             />
             {a.label}
-            <span className="hidden text-xs text-slate-400 dark:text-slate-500 sm:inline">
+            <span className="hidden text-xs text-slate-500 dark:text-slate-400 sm:inline">
               — {a.why}
             </span>
           </label>
         ))}
-        <span className="ml-auto self-center font-mono text-xs text-slate-400 dark:text-slate-500">
+        <span className="ml-auto self-center font-mono text-xs text-slate-500 dark:text-slate-400">
           {9 - (on.steady ? 1 : 0) - (on.noradial ? 1 : 0) - (on.developed ? 2 : 0) - (on.axisym ? 2 : 0) - (on.horizontal ? 1 : 0)} of 9 terms standing
         </span>
       </div>
@@ -542,14 +544,14 @@ function MuScale({ mu }: { mu: number }) {
           className="absolute top-0 h-2 w-0.5 bg-emerald-500"
           style={{ left: `${Math.min(100, Math.max(0, pos(mu)))}%` }}
         />
-        <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           gases
         </span>
-        <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute right-0 top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           syrups
         </span>
       </div>
-      <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+      <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
         Ticks mark typical real-world values — air to honey spans nearly six decades.
       </p>
     </div>
@@ -573,6 +575,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

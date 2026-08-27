@@ -88,7 +88,7 @@ export function StokesChart({ params, dark }: { params: StokesParams; dark: bool
             />
           </LineChart>
         </ResponsiveContainer>
-        <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+        <p className="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           τ = {timeS(tau)} for this particle. The entire drama is over before anything
           could be seen — which is why the canvas shows only the aftermath.
         </p>
@@ -134,7 +134,7 @@ export function StokesChart({ params, dark }: { params: StokesParams; dark: bool
             />
           </LineChart>
         </ResponsiveContainer>
-        <p className="mt-1 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+        <p className="mt-1 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
           Ten times smaller means a hundred times slower. Halving isn't the half of it.
         </p>
       </ChartFrame>
@@ -157,7 +157,7 @@ function ChartFrame({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {title}
         </h3>
-        <span className="font-mono text-xs text-slate-400 dark:text-slate-500">{formula}</span>
+        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{formula}</span>
       </div>
       {children}
     </div>

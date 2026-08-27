@@ -24,7 +24,7 @@ export const MIXINGCUP_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'Push the fullness slider from 2 to 8, so the temperature is flat almost everywhere with a thin hot skin at the wall. The gap readout barely moves — it even grows at first. Yet turbulent pipe flow rarely needs this module\'s distinction. What does turbulence flatten that this slider cannot?',
     resolution:
-      'The velocity profile. The slider flattens only T, and with v still parabolic the fast core keeps out-voting the wall skin, so the gap dies slowly (~2ΔT/n — still 8 °C of the parabolic 10 at n = 8, after peaking near n ≈ 2.8). Turbulence flattens BOTH profiles into fat plugs, and with uniform v the two averages coincide identically, whatever T(r) does. The mixing-cup distinction matters precisely when the velocity profile is round and laminar, which is why it is taught next to Poiseuille flow and not next to the Moody chart.',
+      'The velocity profile. The slider flattens only T, and with v still parabolic the fast core keeps out-voting the wall skin, so the gap dies slowly — exactly 2nΔT/((n+2)(n+4)), which is only ~2ΔT/n once n ≫ 4, and still 8 °C of the parabolic 10 at n = 8, after peaking near n ≈ 2.8. Turbulence flattens BOTH profiles into fat plugs, and with uniform v the two averages coincide identically, whatever T(r) does. The mixing-cup distinction matters precisely when the velocity profile is round and laminar, which is why it is taught next to Poiseuille flow and not next to the Moody chart.',
   },
   {
     q: 'The speed slider changes nothing in any readout. The tube radius does not even appear on the page. Why do the two quantities that describe "how much pipe and how much flow" both cancel?',

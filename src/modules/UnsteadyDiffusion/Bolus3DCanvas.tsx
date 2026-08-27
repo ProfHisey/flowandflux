@@ -166,7 +166,7 @@ export function Bolus3DCanvas({
     wireBox(pt, -B, -B, -B, B, B, B, faint);
     pt.flush();
 
-    pt.chip([0, sigma + 16, 0], `amber sphere: σ = √(6Dt) — the 3-D diffusion clock`, dark);
+    pt.chip([0, sigma + 16, 0], `amber sphere: σ = √(6Dt) — the 3D diffusion clock`, dark);
     pt.hint(
       dark,
       cargo === 'heat'
@@ -181,6 +181,7 @@ export function Bolus3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={

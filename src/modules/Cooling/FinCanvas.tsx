@@ -127,6 +127,7 @@ export function FinCanvas({ params, dark }: { params: FinParams; dark: boolean }
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={

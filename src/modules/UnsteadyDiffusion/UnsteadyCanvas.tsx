@@ -58,9 +58,10 @@ interface LatticeMol {
   ox: number;
   oy: number;
 }
-// Exchange rate, 1/s — visual, like D_VIS. D_lat = EXH·cell² ≈ 750 px²/s
-// at the default cell size: comparable to the mass walkers' pace, so the
-// pulse takes ~20 s to feel the walls instead of flattening in four.
+// Exchange rate, 1/s — visual, like D_VIS. D_lat = EXH·cell² ≈ 750 px²/s at
+// the default cell size, about 2.5x the mass walkers' D_VIS = 300. The pulse
+// then takes ~30 s to feel the walls in plane mode on a desktop-width canvas,
+// and ~4 s in point mode, where the height is the tight dimension.
 const EXH = 1.5;
 const E0 = 1; // baseline site energy ("room temperature")
 const SPIKE = 9; // excess energy per spiked site at t = 0
@@ -303,7 +304,13 @@ export function UnsteadyCanvas({
       );
       ctx.textAlign = 'left';
       ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
-      ctx.fillText('the molecules never move — the energy hops the bonds', x0, y1 + 20);
+      ctx.fillText(
+        mode === 'plane'
+          ? 'the molecules never move — the energy hops the bonds'
+          : 'the molecules never move — amber ring: rms radius √(4Dt), two axes on screen',
+        x0,
+        y1 + 20,
+      );
       ctx.textAlign = 'right';
       ctx.fillText(`t = ${t.toFixed(1)} s (visual clock)`, x1, y1 + 20);
 
@@ -314,7 +321,7 @@ export function UnsteadyCanvas({
         let m1 = 0;
         for (let r = 0; r < ny; r++) {
           for (let i = 0; i < nx; i++) {
-            const w = Math.max(0, E[r * nx + i] - E0);
+            const w = E[r * nx + i] - E0;
             const x = gx0 + (i + 0.5) * cell;
             const y = y0 + (r + 0.5) * cell;
             wSum += w;
@@ -510,6 +517,7 @@ export function UnsteadyCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={

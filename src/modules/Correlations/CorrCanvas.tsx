@@ -174,6 +174,7 @@ export function CorrCanvas({ params, dark }: { params: CorrParams; dark: boolean
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="An object in a flow with its thermal and concentration boundary layers drawn at their relative thicknesses"

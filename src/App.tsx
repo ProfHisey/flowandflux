@@ -227,7 +227,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
           <button
             type="button"
             onClick={() => select('divider')}
@@ -262,7 +262,7 @@ export default function App() {
             type="button"
             onClick={() => setDark((d) => !d)}
             aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-            className="ml-auto rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="shrink-0 rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           >
             {dark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
@@ -290,7 +290,7 @@ export default function App() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4">
-        <p className="text-xs leading-relaxed text-slate-400 dark:text-slate-500">
+        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           FlowAndFlux · an independent personal project, not affiliated with or
           endorsed by any institution · built for anyone learning transport.
           Physics is real; animation speed is not.
@@ -315,6 +315,8 @@ function ModulePicker({
 }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  /** The group button that opened the current menu, so Escape can return focus. */
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (openIdx === null) return;
@@ -324,7 +326,12 @@ function ModulePicker({
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenIdx(null);
+      if (e.key === 'Escape') {
+        setOpenIdx(null);
+        // ...and put focus back on the trigger, or the keyboard user is
+        // dumped at the top of the document.
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener('pointerdown', onDown);
     document.addEventListener('keydown', onKey);
@@ -342,7 +349,7 @@ function ModulePicker({
       // positioned, and an overflow-x-auto ancestor CLIPS them (they open
       // invisibly and only a stray scrollbar shows). On narrow screens the
       // buttons wrap to a second row instead.
-      className="ml-2 flex min-w-0 flex-wrap items-center gap-1"
+      className="relative order-last flex w-full min-w-0 flex-wrap items-center gap-1 sm:order-none sm:ml-2 sm:w-auto"
     >
       {GROUPS.map((g, i) => {
         const inGroup = g.items.some((m) => m.id === current);
@@ -369,9 +376,12 @@ function ModulePicker({
           );
         }
         return (
-          <div key={g.title} className="relative shrink-0">
+          <div key={g.title} className="static shrink-0 sm:relative">
             <button
               type="button"
+              ref={(el) => {
+                if (open) triggerRef.current = el;
+              }}
               onClick={() => setOpenIdx(open ? null : i)}
               aria-expanded={open}
               aria-haspopup="menu"
@@ -386,9 +396,9 @@ function ModulePicker({
             {open && (
               <div
                 role="menu"
-                className="absolute left-0 top-full z-30 mt-2 w-[290px] rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                className="absolute inset-x-0 top-full z-30 mt-2 rounded-xl border border-slate-200 bg-white p-2 shadow-lg sm:inset-x-auto sm:left-0 sm:w-[290px] dark:border-slate-700 dark:bg-slate-900"
               >
-                <p className="px-2 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <p className="px-2 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {g.title}
                 </p>
                 {g.items.map((m) => {
@@ -419,7 +429,7 @@ function ModulePicker({
                       >
                         {m.name}
                       </span>
-                      <span className="block text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+                      <span className="block text-[11px] leading-snug text-slate-500 dark:text-slate-400">
                         {m.tag}
                       </span>
                     </button>

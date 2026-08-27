@@ -392,6 +392,7 @@ export function Poiseuille3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={`Rotatable 3D ${params.geometry} flow with tracers and a dye front deforming into the velocity profile`}

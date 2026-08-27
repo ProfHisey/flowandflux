@@ -43,6 +43,8 @@ interface M3 {
 }
 
 const NXE = 20; // heat-mode energy columns
+const NY = 6; // lattice rows (heat mode)
+const NZ = 6; // lattice depth (heat mode)
 /** Fraction of lattice bonds that exist — see DividerHeatCanvas. */
 const BOND_KEEP = 0.66;
 
@@ -82,7 +84,12 @@ export function Divider3DCanvas({
   const massRef = useRef<P3[]>([]);
   const molsRef = useRef<M3[]>([]);
   const energyRef = useRef<Float64Array | null>(null);
-  const bondsRef = useRef<{ keep: Float32Array; coord: Uint8Array } | null>(null);
+  const bondsRef = useRef<{
+    keep: Float32Array;
+    coord: Uint8Array;
+    /** Fraction of x-bonds that survive between column i and i+1. */
+    xFrac: Float32Array;
+  } | null>(null);
   const boundsRef = useRef({ lo: 0, hi: 1, span0: 1 });
   const liveRef = useRef({ dividerIn, dCyan, dOrange, temp, kScale });
   liveRef.current = { dividerIn, dCyan, dOrange, temp, kScale };
@@ -95,8 +102,12 @@ export function Divider3DCanvas({
     massRef.current = [];
     molsRef.current = [];
     energyRef.current = null;
-    bondsRef.current = null;
   }, [mode, nLeft, nRight, TLeft, TRight, resetTick]);
+
+  // Structure, not temperature — only a reset reshuffles the network.
+  useEffect(() => {
+    bondsRef.current = null;
+  }, [resetTick]);
 
   const canvasRef = useCanvas((ctx, frame) => {
     const { width: W, height: H } = frame;
@@ -154,6 +165,66 @@ export function Divider3DCanvas({
         const bHi = Math.max(TLeft, TRight) + 273.15;
         boundsRef.current = { lo: bLo, hi: bHi, span0: Math.max(1, bHi - bLo) };
       }
+      // Which bonds exist: fixed at seed, so the network keeps its shape
+      // while energy moves through it. Broken bonds leave terminal atoms
+      // free to swing, which is the point — a molecular solid, not a
+      // crystal lattice. coord counts each molecule's surviving bonds.
+      let bonds = bondsRef.current;
+      if (!bonds) {
+        const nMol = NXE * NY * NZ;
+        const keep = new Float32Array(nMol * 3); // +z, +y, +x per molecule
+        for (let i = 0; i < keep.length; i++) keep[i] = Math.random();
+        const coord = new Uint8Array(nMol);
+        const bump = (a: number, c: number) => {
+          coord[a]++;
+          coord[c]++;
+        };
+        for (let i = 0; i < NXE; i++) {
+          for (let j = 0; j < NY; j++) {
+            for (let k = 0; k < NZ; k++) {
+              const n = (i * NY + j) * NZ + k;
+              if (k < NZ - 1 && keep[n * 3] < BOND_KEEP) bump(n, n + 1);
+              if (j < NY - 1 && keep[n * 3 + 1] < BOND_KEEP) bump(n, n + NZ);
+              if (i < NXE - 1 && keep[n * 3 + 2] < BOND_KEEP) bump(n, n + NY * NZ);
+            }
+          }
+        }
+        // Every molecule keeps at least one spring — see DividerHeatCanvas for
+        // why a fully isolated site is both wrong to draw and, once the
+        // exchange runs on this network, wrong physically.
+        for (let i = 0; i < NXE; i++) {
+          for (let j = 0; j < NY; j++) {
+            for (let k = 0; k < NZ; k++) {
+              const n = (i * NY + j) * NZ + k;
+              if (coord[n] > 0) continue;
+              const opts: (() => void)[] = [];
+              if (k > 0) opts.push(() => { keep[(n - 1) * 3] = 0; bump(n, n - 1); });
+              if (k < NZ - 1) opts.push(() => { keep[n * 3] = 0; bump(n, n + 1); });
+              if (j > 0) opts.push(() => { keep[(n - NZ) * 3 + 1] = 0; bump(n, n - NZ); });
+              if (j < NY - 1) opts.push(() => { keep[n * 3 + 1] = 0; bump(n, n + NZ); });
+              opts[Math.floor(Math.random() * opts.length)]();
+            }
+          }
+        }
+
+        // The energy field is one value per COLUMN, but the springs the eye
+        // follows are per molecule. Record how many x-bonds actually survive
+        // between each pair of columns, and conduct in that proportion — so
+        // the coarse model carries the same insulation the picture draws.
+        const xFrac = new Float32Array(Math.max(1, NXE - 1));
+        for (let i = 0; i < NXE - 1; i++) {
+          let live = 0;
+          for (let j = 0; j < NY; j++) {
+            for (let k = 0; k < NZ; k++) {
+              if (keep[(((i * NY + j) * NZ + k) * 3) + 2] < BOND_KEEP) live++;
+            }
+          }
+          xFrac[i] = live / (NY * NZ);
+        }
+        bonds = { keep, coord, xFrac };
+        bondsRef.current = bonds;
+      }
+
       if (dt > 0) {
         const total = Math.min(0.5, 7 * live.kScale * dt);
         const nSub = Math.max(1, Math.ceil(total / 0.1));
@@ -162,8 +233,14 @@ export function Divider3DCanvas({
           const dE = new Float64Array(NXE);
           for (let i = 0; i < NXE - 1; i++) {
             if (live.dividerIn && i === NXE / 2 - 1) continue;
-            const give = eps * E[i] * (0.5 + Math.random());
-            const take = eps * E[i + 1] * (0.5 + Math.random());
+            // ONE random rate, shared by both directions and weighted by the
+            // springs that actually exist. Independent give/take draws left a
+            // net random transfer even between sites at identical energy —
+            // enough noise to bury the hot/cold split entirely. See the note
+            // in DividerHeatCanvas.
+            const w = eps * bonds.xFrac[i] * (0.5 + Math.random());
+            const give = w * E[i];
+            const take = w * E[i + 1];
             dE[i] += take - give;
             dE[i + 1] += give - take;
           }
@@ -198,8 +275,6 @@ export function Divider3DCanvas({
       const span = bnd.hi - bnd.lo || 1;
       const norm = (e: number) => Math.min(1, Math.max(0, (e - lo) / span));
 
-      const NY = 6;
-      const NZ = 6;
       let mols = molsRef.current;
       if (mols.length === 0) {
         mols = [];
@@ -220,34 +295,6 @@ export function Divider3DCanvas({
         }
         molsRef.current = mols;
       }
-      // Which bonds exist: fixed at seed, so the network keeps its shape
-      // while energy moves through it. Broken bonds leave terminal atoms
-      // free to swing, which is the point — a molecular solid, not a
-      // crystal lattice. coord counts each molecule's surviving bonds.
-      let bonds = bondsRef.current;
-      if (!bonds) {
-        const nMol = NXE * NY * NZ;
-        const keep = new Float32Array(nMol * 3); // +z, +y, +x per molecule
-        for (let i = 0; i < keep.length; i++) keep[i] = Math.random();
-        const coord = new Uint8Array(nMol);
-        const bump = (a: number, c: number) => {
-          coord[a]++;
-          coord[c]++;
-        };
-        for (let i = 0; i < NXE; i++) {
-          for (let j = 0; j < NY; j++) {
-            for (let k = 0; k < NZ; k++) {
-              const n = (i * NY + j) * NZ + k;
-              if (k < NZ - 1 && keep[n * 3] < BOND_KEEP) bump(n, n + 1);
-              if (j < NY - 1 && keep[n * 3 + 1] < BOND_KEEP) bump(n, n + NZ);
-              if (i < NXE - 1 && keep[n * 3 + 2] < BOND_KEEP) bump(n, n + NY * NZ);
-            }
-          }
-        }
-        bonds = { keep, coord };
-        bondsRef.current = bonds;
-      }
-
       // Rattle plus, for under-coordinated molecules, a swing whose radius
       // and rate both grow with the site's energy: kinetic energy stays
       // legible as MOTION even where colour has run out of range.
@@ -266,6 +313,12 @@ export function Divider3DCanvas({
         q.dx = q.x + q.ox + orbit * Math.cos(q.ph);
         q.dy = q.y + q.oy + orbit * Math.sin(q.ph);
         q.dz = q.z + q.oz;
+        // No molecule ever crosses the middle — that is the claim the heat tab
+        // is built on. The rattle amplitude is comparable to the half-cell gap
+        // to the divider plane, so boundary molecules were drifting visibly
+        // through it. Clamp the DRAWN position; the anchor never moved.
+        const keepOut = 1.6 + 1.4 * u;
+        q.dx = q.x < 0 ? Math.min(q.dx, -keepOut) : Math.max(q.dx, keepOut);
       }
       const at = (n: number): Vec3 => {
         const q = mols[n];
@@ -330,6 +383,7 @@ export function Divider3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={

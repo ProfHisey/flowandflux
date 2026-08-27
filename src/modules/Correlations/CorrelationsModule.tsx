@@ -73,6 +73,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
             right={
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
+                  ariaLabel="View dimension"
                   value={dim}
                   options={[
                     { value: '2d', label: '2D', title: 'The films in cross-section — drag to pan, scroll to zoom' },
@@ -117,6 +118,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
                   Fluid
                 </span>
                 <select
+                  aria-label="Fluid"
                   value={fluidName}
                   onChange={(e) => {
                     const f = FLUIDS.find((ff) => ff.name === e.target.value);
@@ -155,7 +157,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
                 onChange={touch(setL)}
               />
               <Slider
-                label="Solute diffusivity, D"
+                label="Diffusion coefficient, D"
                 unit="m²/s"
                 value={D}
                 min={1e-11}
@@ -178,6 +180,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setGeometry(pr.geometry);
@@ -198,7 +201,7 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>

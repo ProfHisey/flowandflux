@@ -62,9 +62,10 @@ export function TransientModule({ dark }: { dark: boolean }) {
             title="The moment of touch"
             subtitle="The interface jumps to the contact temperature instantly — and stays there."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -135,6 +136,7 @@ export function TransientModule({ dark }: { dark: boolean }) {
                   Touched material
                 </span>
                 <select
+                  aria-label="Touched material"
                   value={matName}
                   onChange={(e) => {
                     setMatName(e.target.value);
@@ -183,6 +185,7 @@ export function TransientModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setMatName(pr.material);
@@ -202,7 +205,7 @@ export function TransientModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -342,6 +345,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

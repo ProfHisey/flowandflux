@@ -254,7 +254,7 @@ function ChartFrame({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {title}
         </h3>
-        <span className="font-mono text-xs text-slate-400 dark:text-slate-500">{formula}</span>
+        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{formula}</span>
       </div>
       {children}
     </div>

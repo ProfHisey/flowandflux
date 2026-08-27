@@ -217,6 +217,7 @@ export function GasLiquid3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Two 3D boxes of colliding molecules: a dilute gas with long straight flight paths and a dense liquid whose tagged molecule stays knotted in place"

@@ -50,7 +50,7 @@ export const PRESETS: Preset[] = [
     blurb:
       'One nanomole injected at a point in tissue — a depot, not a plane. After an hour, how big is the treated region, and how dilute has the dose become?',
     release: 'point',
-    check: 'σᵣ = √(6Dt) ≈ 2.1 mm, and C(0) = M/(4πDt)^{3/2} ≈ 3.7 × 10⁻⁸ mol/cm³',
+    check: 'σᵣ = √(6Dt) ≈ 2.1 mm, and C(0) = M/(4πDt)^(3/2) ≈ 3.7 × 10⁻⁸ mol/cm³',
     params: { D: 2e-6, M: 1e-9, A: 1, t: 3600, Lint: 0.2 },
   },
   {
@@ -81,7 +81,7 @@ export const PRESETS: Preset[] = [
       'Heat a spot in unstirred water and wait for pure conduction to carry it one centimetre. Water is a terrible conductor — that is why convection exists.',
     cargo: 'heat',
     release: 'point',
-    check: 't = L²/2α ≈ 6 minutes per centimetre (α ≈ 1.4×10⁻³ cm²/s). Buoyancy beats that easily — pots stir themselves',
+    check: 't = L²/2α ≈ 6 minutes per centimetre ALONG ONE AXIS (α ≈ 1.4×10⁻³ cm²/s); the radial readout above spreads over three. Buoyancy beats both easily — pots stir themselves',
     params: { D: 1.43e-3, M: 1e-8, A: 1, t: 350, Lint: 1 },
   },
   {

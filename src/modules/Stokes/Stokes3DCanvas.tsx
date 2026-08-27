@@ -146,13 +146,14 @@ export function Stokes3DCanvas({
         : dir > 0 ? 'settling at terminal velocity' : 'floating upward (ρp < ρf)',
       dark,
     );
-    pt.hint(dark, 'W = ρₚVg · B = ρ_f Vg · F_D = 6πμav — arrows at true relative magnitude');
+    pt.hint(dark, 'W = ρ_p·V·g · B = ρ_f·V·g · F_D = 6πμav — arrows at true relative magnitude');
   }, { running, redrawKey });
 
   useOrbitControls(canvasRef, cam, running);
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="A 3D suspension of particles settling at terminal velocity around a specimen sphere"

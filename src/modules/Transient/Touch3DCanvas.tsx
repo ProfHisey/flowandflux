@@ -126,6 +126,7 @@ export function Touch3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Two solid blocks touching in 3D, with thermal fronts marching from an interface pinned at the contact temperature"

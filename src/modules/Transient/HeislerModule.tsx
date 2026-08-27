@@ -60,6 +60,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
             right={
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
+                  ariaLabel="View dimension"
                   value={dim}
                   options={[
                     { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -128,7 +129,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
                 onChange={(v) => setH('rho', v)}
               />
               <Slider
-                label="Specific heat, c"
+                label="Specific heat, cₚ"
                 unit="J/kg·K"
                 value={hp.c}
                 min={100}
@@ -187,6 +188,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setHp(pr.params);
@@ -203,7 +205,7 @@ export function HeislerModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>

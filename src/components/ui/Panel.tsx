@@ -74,7 +74,7 @@ export function Stat({
           </span>
         )}
       </div>
-      {hint && <div className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">{hint}</div>}
+      {hint && <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{hint}</div>}
     </div>
   );
 }

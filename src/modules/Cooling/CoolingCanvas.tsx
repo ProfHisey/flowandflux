@@ -211,6 +211,7 @@ export function CoolingCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="A lumped object cooling in a stream: tracers brush the surface film and carry its heat downstream as a fading wake"

@@ -78,6 +78,7 @@ export function WallModule({ dark }: { dark: boolean }) {
             right={
               <div className="w-28 shrink-0">
                 <Segmented<'2d' | '3d'>
+                  ariaLabel="View dimension"
                   value={dim}
                   options={[
                     { value: '2d', label: '2D', title: 'The wall with its circuit diagram — drag to pan, scroll to zoom' },
@@ -111,7 +112,16 @@ export function WallModule({ dark }: { dark: boolean }) {
                     ΔT<sub>i</sub> = Q·R<sub>i</sub> — resistance is a claim on the budget
                   </span>
                 </div>
-                <div className="flex h-7 w-full overflow-hidden rounded-md">
+                <div
+                  role="img"
+                  aria-label={
+                    'Temperature-drop budget: ' +
+                    derived.els
+                      .map((e, i) => `${e.label} ${(derived.shares[i] * 100).toFixed(0)} percent`)
+                      .join(', ')
+                  }
+                  className="flex h-7 w-full overflow-hidden rounded-md"
+                >
                   {derived.els.map((e, i) => {
                     const isDom = i === derived.dom!.index;
                     const pct = derived.shares[i] * 100;
@@ -215,6 +225,7 @@ export function WallModule({ dark }: { dark: boolean }) {
                 >
                   <div className="flex items-center gap-2">
                     <select
+                      aria-label={`Layer ${i + 1} material`}
                       value={l.name}
                       onChange={(e) => {
                         const m = MATERIALS.find((mm) => mm.name === e.target.value);
@@ -346,6 +357,7 @@ export function WallModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -362,7 +374,7 @@ export function WallModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>

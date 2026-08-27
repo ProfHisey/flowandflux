@@ -121,6 +121,7 @@ export function Wall3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="The composite wall as a rotatable 3D stack of layers, each shaded by its temperature drop"

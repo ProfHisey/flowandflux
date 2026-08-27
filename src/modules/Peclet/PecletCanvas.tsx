@@ -191,6 +191,7 @@ export function PecletCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Walkers that both diffuse and ride a flow, between two baths, compared against the analytic convection-diffusion profile"

@@ -78,9 +78,10 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                   : 'All the particles start at one point. The cloud is a sphere from the first instant.'
             }
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'The burst against its analytic prediction — drag to pan, scroll to zoom' },
@@ -169,7 +170,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
               ) : (
                 <Stat
                   label={<InlineMath math="\theta(0,t)" />}
-                  value={release === 'plane' ? '∝ 1/√t' : '∝ t^{-3/2}'}
+                  value={release === 'plane' ? '∝ 1/√t' : '∝ t^(−3/2)'}
                   unit=""
                   hint="the hot spot dilutes as it spreads — same law, thermal cargo"
                 />
@@ -327,6 +328,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -345,7 +347,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -459,7 +461,7 @@ function SpreadReadout({
         <span className="text-amber-700 dark:text-amber-300">
           {mode === 'plane' ? '√(2Dt)' : '√(4Dt), two axes'} predicts {stats.sigmaPredicted.toFixed(1)} px
         </span>
-        <span className="ml-auto text-[11px] font-normal text-slate-400 dark:text-slate-500">
+        <span className="ml-auto text-[11px] font-normal text-slate-500 dark:text-slate-400">
           t = {stats.t.toFixed(1)} s · visual clock
         </span>
       </div>
@@ -478,8 +480,9 @@ function SpreadReadout({
             {cargo === 'heat' ? (
               <>
                 The spread of the ENERGY — measured as the energy-weighted width of
-                the lattice's own field — against √(2Dt) on the exchange rule's own
-                clock. No site consulted that formula; hot sites simply hand more
+                the lattice's own field — against{' '}
+                {mode === 'plane' ? '√(2Dt)' : '√(4Dt), the two axes you can see'} on
+                the exchange rule's own clock. No site consulted that formula; hot sites simply hand more
                 energy to their neighbours than they get back, and the Gaussian
                 emerges. The matter never moves an inch.
               </>
@@ -555,14 +558,14 @@ function DScale({ D, cargo }: { D: number; cargo: BolusCargo }) {
           className="absolute top-0 h-2 w-0.5 bg-sky-500"
           style={{ left: `${Math.min(100, Math.max(0, pos(D)))}%` }}
         />
-        <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           {heat ? 'water' : 'solids'}
         </span>
-        <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute right-0 top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           {heat ? 'metals' : 'gases'}
         </span>
       </div>
-      <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+      <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
         {heat
           ? 'Ticks mark real α values — water to copper spans three decades, which is why metal "feels" fast.'
           : 'Ticks mark typical real-world values, from solids to gases — ten decades.'}
@@ -588,6 +591,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

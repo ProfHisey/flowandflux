@@ -440,6 +440,7 @@ export function Fourier3DCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label={`Rotatable 3D view of the temperature field in a ${params.geometry}, with molecules vibrating in place`}

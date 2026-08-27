@@ -61,9 +61,10 @@ export function PecletModule({ dark }: { dark: boolean }) {
             title="Wander plus drift"
             subtitle="The same unbiased walkers as the diffusion modules — now riding a flow."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Walkers vs the analytic profile — drag to pan, scroll to zoom' },
@@ -125,7 +126,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
                 label={<InlineMath math="t_{conv} = L/v" />}
                 value={timeS(derived.tConv)}
                 unit=""
-                hint="the flow's clock — Pe is the ratio of these two"
+                hint="the flow's clock — Pe is twice the ratio of these two"
               />
               <Stat
                 label="Exit layer"
@@ -225,6 +226,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
                 return (
                   <button
                     key={pr.id}
+                    aria-pressed={active}
                     type="button"
                     onClick={() => {
                       setParams(pr.params);
@@ -241,7 +243,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
                       <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {pr.name}
                       </span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {pr.source}
                       </span>
                     </div>
@@ -290,8 +292,8 @@ export function PecletModule({ dark }: { dark: boolean }) {
         <div className="space-y-4">
           <EquationCard
             title="Pe as a race between clocks"
-            latex={String.raw`\mathrm{Pe} = \frac{vL}{D} \sim \frac{t_{diff}}{t_{conv}} = \frac{L^2/D}{L/v}`}
-            note="Diffusion's clock grows as L² (the diffusion clock from the bolus-dispersion module); the flow's clock grows only as L. So distance always eventually hands the race to convection — which is why organisms are diffusion-powered below ~100 µm and plumbing-powered above it, and why 'what is L?' is the first question. L is the scale over which the quantity changes, and it depends on what you are asking."
+            latex={String.raw`\mathrm{Pe} = \frac{vL}{D} = 2\,\frac{t_{diff}}{t_{conv}}, \qquad t_{diff} = \frac{L^2}{2D}, \quad t_{conv} = \frac{L}{v}`}
+            note="The factor of 2 is bookkeeping, not physics: it is there because t_diff is defined as L²/2D, the same diffusion clock the bolus-dispersion module uses. What matters is the scaling — diffusion's clock grows as L², the flow's clock grows only as L. So distance always eventually hands the race to convection — which is why organisms are diffusion-powered below ~100 µm and plumbing-powered above it, and why 'what is L?' is the first question. L is the scale over which the quantity changes, and it depends on what you are asking."
             defaultOpen={false}
           />
 
@@ -358,14 +360,14 @@ function DScale({ D }: { D: number }) {
           className="absolute top-0 h-2 w-0.5 bg-sky-500"
           style={{ left: `${Math.min(100, Math.max(0, pos(D)))}%` }}
         />
-        <span className="absolute top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           solids
         </span>
-        <span className="absolute right-0 top-2.5 text-[10px] text-slate-400 dark:text-slate-500">
+        <span className="absolute right-0 top-2.5 text-[10px] text-slate-500 dark:text-slate-400">
           gases
         </span>
       </div>
-      <p className="text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+      <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
         Ticks mark typical real-world values, from solids to gases — ten decades.
       </p>
     </div>
@@ -389,6 +391,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

@@ -58,9 +58,10 @@ export function DividerModule({ dark }: { dark: boolean }) {
                 : 'A hot half, a cold half, one insulating wall. The molecules never move — watch what does.'
             }
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-32">
                   <Segmented<'mass' | 'heat'>
+                    ariaLabel="Transport mode"
                     value={mode}
                     options={[
                       { value: 'mass', label: 'Mass', title: 'Two particle species mixing' },
@@ -71,6 +72,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                 </div>
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
@@ -160,7 +162,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                   <span className="text-orange-700 dark:text-orange-300">
                     ● {mixStats.orangeLeft} | {mixStats.orangeRight}
                   </span>
-                  <span className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">
+                  <span className="ml-2 text-[11px] text-slate-500 dark:text-slate-400">
                     left | right of the line
                   </span>
                 </span>
@@ -174,7 +176,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
                   <span className="text-sky-700 dark:text-sky-300">
                     right {heatStats.TRight.toFixed(1)} °C
                   </span>
-                  <span className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">
+                  <span className="ml-2 text-[11px] text-slate-500 dark:text-slate-400">
                     mean of each half
                   </span>
                 </span>
@@ -213,7 +215,7 @@ export function DividerModule({ dark }: { dark: boolean }) {
               do: <strong>Fick</strong> puts a number on the mass version of this box,{' '}
               <strong>Fourier</strong> on the heat version, and <strong>Newton</strong>{' '}
               on the same story for momentum. The <strong>bolus dispersion</strong> module returns
-              to this unsteady world with the mathematics to match, later in the course.
+              to this unsteady world with the mathematics to match.
             </p>
           </Panel>
         </div>
@@ -390,6 +392,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       className={
         'rounded-lg border p-1.5 transition-colors ' +
         (active

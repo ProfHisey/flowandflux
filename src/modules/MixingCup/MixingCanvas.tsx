@@ -239,6 +239,7 @@ export function MixingCanvas({
 
   return (
     <canvas
+      role="img"
       ref={canvasRef}
       className="block h-[300px] w-full rounded-lg bg-slate-50 dark:bg-slate-950 sm:h-[340px]"
       aria-label="Tracers riding a parabolic velocity profile through a heated tube and collecting in a cup, whose temperature converges to the mixing-cup average"

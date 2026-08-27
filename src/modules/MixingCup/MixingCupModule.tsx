@@ -47,9 +47,10 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
             title="The cup does the integral"
             subtitle="Fast lanes deliver more tracers per second — the weighting happens, it isn't programmed."
             right={
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
                     value={dim}
                     options={[
                       { value: '2d', label: '2D', title: 'Side view with the collecting cup — drag to pan, scroll to zoom' },
@@ -100,7 +101,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                   <span className="text-amber-700 dark:text-amber-300">
                     T_mc predicts {derived.Tmc.toFixed(1)} °C
                   </span>
-                  <span className="text-slate-400 dark:text-slate-500">
+                  <span className="text-slate-500 dark:text-slate-400">
                     plain area average: {derived.Tavg.toFixed(1)} °C
                   </span>
                 </div>
@@ -150,7 +151,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
           <Panel title="Setup" subtitle="Changing a temperature or the shape empties the cup.">
             <div className="space-y-5">
               <Slider
-                label="Wall temperature, T𝓌"
+                label="Wall temperature, T_w"
                 unit="°C"
                 value={params.Tw}
                 min={0}
@@ -159,7 +160,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                 onChange={(v) => set('Tw', v)}
               />
               <Slider
-                label="Centreline temperature, T𝒸"
+                label="Centreline temperature, T_c"
                 unit="°C"
                 value={params.Tc}
                 min={0}
@@ -176,7 +177,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
                 step={0.1}
                 format={(v) => v.toFixed(1)}
                 onChange={(v) => set('n', v)}
-                hint="T(r) = T𝓌 + (T𝒸 − T𝓌)(1 − (r/R)ⁿ). n = 2 is parabolic; large n is a flat core with a thin wall layer — the turbulent look."
+                hint="T(r) = T_w + (T_c − T_w)(1 − (r/R)ⁿ). n = 2 is parabolic; large n is a flat core with a thin wall layer — the turbulent look."
               />
               <Slider
                 label="Tracer pace (visual)"
@@ -196,7 +197,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
               <li>Watch a wall tracer for ten seconds. How many times has the cup sampled the core meanwhile?</li>
               <li>80 °C wall, 20 °C core, n = 2 — predict both averages before looking. (They are round numbers.)</li>
               <li>Swap the temperatures. Which side of the area average does the cup land on now?</li>
-              <li>Slide n from 2 to 8 and watch the gap readout. Both averages drift toward T𝒸 — but the gap between them barely closes (it even peaks near n ≈ 2.8). Why does flattening the temperature alone not kill it — and what ELSE has to flatten before it dies?</li>
+              <li>Slide n from 2 to 8 and watch the gap readout. Both averages drift toward T_c — but the gap between them barely closes (it even peaks near n ≈ 2.8). Why does flattening the temperature alone not kill it — and what ELSE has to flatten before it dies?</li>
             </ul>
           </Panel>
         </div>
@@ -232,7 +233,7 @@ export function MixingCupModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="When the distinction dies"
             latex={String.raw`n \to \infty:\ \ \bar T_{area} \to T_c, \quad T_{mc} \to T_c`}
-            note="Flatten the profile and every average of it is the same number — which is roughly what turbulence does to both velocity and temperature. Note the sliders here flatten only T while v stays parabolic, so the gap dies slowly (~2ΔT/n); the real collapse needs the velocity plug too — with uniform v, the two averages are identical for ANY temperature profile. The mixing-cup correction is a laminar, round-profile phenomenon: exactly the flows of the Poiseuille page, which is why the two modules are neighbours."
+            note="Flatten the profile and every average of it is the same number — which is roughly what turbulence does to both velocity and temperature. Note the sliders here flatten only T while v stays parabolic, so the gap dies slowly — exactly 2nΔT/((n+2)(n+4)), which only becomes ~2ΔT/n once n ≫ 4; the real collapse needs the velocity plug too — with uniform v, the two averages are identical for ANY temperature profile. The mixing-cup correction is a laminar, round-profile phenomenon: exactly the flows of the Poiseuille page, which is why the two modules are neighbours."
             defaultOpen={false}
           />
         </div>
