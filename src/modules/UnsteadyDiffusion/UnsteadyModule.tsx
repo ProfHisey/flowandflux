@@ -68,7 +68,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
             title={
               cargo === 'heat'
                 ? 'The heat pulse'
-                : release === 'plane' ? 'The capsule burst' : 'The depot burst'
+                : release === 'plane' ? 'The capsule release' : 'The depot release'
             }
             subtitle={
               cargo === 'heat'
@@ -84,14 +84,14 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                     ariaLabel="View dimension"
                     value={dim}
                     options={[
-                      { value: '2d', label: '2D', title: 'The burst against its analytic prediction — drag to pan, scroll to zoom' },
-                      { value: '3d', label: '3D', title: 'Point burst: σ = √(6Dt) — drag to orbit' },
+                      { value: '2d', label: '2D', title: 'The release against its analytic prediction — drag to pan, scroll to zoom' },
+                      { value: '3d', label: '3D', title: 'Point release: σ = √(6Dt) — drag to orbit' },
                     ]}
                     onChange={setDim}
                   />
                 </div>
                 <IconButton
-                  label="Burst it again"
+                  label="Release it again"
                   onClick={() => setReleaseTick((t) => t + 1)}
                 >
                   <Zap size={15} />
@@ -126,9 +126,9 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
             </div>
             {dim === '3d' && (
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                The point-release version: a burst spreads as a SPHERE, and the amber
+                The point-release version: a release spreads as a SPHERE, and the amber
                 wireframe is the prediction σ = √(6Dt) — 2Dt per axis, three axes.
-                The 2D tab's planar burst uses √(2Dt); geometry decides the factor.
+                The 2D tab's planar release uses √(2Dt); geometry decides the factor.
               </p>
             )}
             {dim === '2d' && stats && (
@@ -233,7 +233,7 @@ export function UnsteadyModule({ dark }: { dark: boolean }) {
                 label="Cargo"
                 value={cargo}
                 options={[
-                  { value: 'mass', label: 'Mass', title: 'A burst of molecules spreading with D' },
+                  { value: 'mass', label: 'Mass', title: 'A dose of molecules spreading with D' },
                   { value: 'heat', label: 'Heat', title: 'A pulse of thermal energy spreading with α = k/ρc — same Gaussian, different cargo' },
                 ]}
                 onChange={(c) => {
@@ -472,7 +472,7 @@ function SpreadReadout({
               The cloud is feeling the walls.
             </strong>{' '}
             The amber curve assumes an open medium, so from here on the two part ways —
-            the walls reflect, the formula does not know that. Burst it again (⚡) to
+            the walls reflect, the formula does not know that. Release it again (⚡) to
             rewind. Knowing when a formula stops applying is half of owning it.
           </>
         ) : (
@@ -517,9 +517,9 @@ function ModuleHeader() {
         Bolus Dispersion
       </h1>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-        A capsule bursts and the molecules wander outward — concentration changing in
-        time, which is what diffusion looks like before any boundary conditions pin it
-        down. Watch the width grow as √t and the peak fall to match, then take the
+        A dose arrives all at once — a capsule, a patch, a depot under the skin — and
+        the molecules wander outward from it: concentration changing in time, which is
+        what diffusion looks like before any boundary conditions pin it down. Watch the width grow as √t and the peak fall to match, then take the
         diffusion clock t = L²/2D out into the world: it explains why cells are small,
         why you stir your tea, and why perfume needs a draft.
       </p>

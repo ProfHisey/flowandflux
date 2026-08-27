@@ -4,7 +4,7 @@ import { applyZoom, D_VIS, gauss, rampColor, useWheelZoom } from '../FicksLaw/Fi
 import { rampWarm } from '../FourierLaw/FourierCanvas';
 
 /**
- * The capsule burst. At t = 0 every walker sits at the release site; press
+ * The capsule release. At t = 0 every walker sits at the release site; press
  * play and the cloud spreads. Nothing else happens — and that is the
  * module: concentration changing in time, before any talk of steady state.
  *
@@ -14,7 +14,7 @@ import { rampWarm } from '../FourierLaw/FourierCanvas';
  *   - 'point': everything starts at the center and spreads radially,
  *     against the rms-radius prediction (amber ring). The screen has two
  *     axes, so the ring grows as sqrt(4Dt) and the caption says so — a
- *     real 3D burst adds the third axis: sqrt(6Dt), which the 3D tab and
+ *     real 3D release adds the third axis: sqrt(6Dt), which the 3D tab and
  *     the readouts carry.
  *
  * The walls reflect; the analytic overlay assumes an open medium. They
@@ -31,7 +31,7 @@ export interface PulseStats {
   sigmaMeasured: number;
   /** Plane: sqrt(2 D t). Point: sqrt(4 D t). Px, on the relevant visual D. */
   sigmaPredicted: number;
-  /** Visual seconds since the burst. */
+  /** Visual seconds since the release. */
   t: number;
   /** True once the cloud is wide enough to feel the reflecting walls. */
   touchingWalls: boolean;
@@ -78,7 +78,7 @@ export function UnsteadyCanvas({
   /** Mass (walkers are molecules) or heat (walkers are energy packets —
    *  same random walk, different cargo and color family). */
   cargo?: BolusCargo;
-  /** Increment to re-burst the capsule. */
+  /** Increment to release again. */
   releaseTick: number;
   running: boolean;
   dark: boolean;
@@ -346,7 +346,7 @@ export function UnsteadyCanvas({
     const dt = running ? frame.dt : 0;
     const list = particlesRef.current;
 
-    // The burst: a thin band (plane) or a pinpoint (point) at the center.
+    // The release: a thin band (plane) or a pinpoint (point) at the center.
     if (list.length === 0) {
       for (let i = 0; i < COUNT; i++) {
         list.push(
@@ -468,7 +468,7 @@ export function UnsteadyCanvas({
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(
-      mode === 'plane' ? 'capsule bursts here at t = 0' : 'depot releases here at t = 0',
+      mode === 'plane' ? 'capsule releases here at t = 0' : 'depot releases here at t = 0',
       xc,
       y0 - 10,
     );
@@ -524,8 +524,8 @@ export function UnsteadyCanvas({
         cargo === 'heat'
           ? 'An anchored lattice of molecules with an energy pulse spreading through the bonds, compared against the analytic prediction'
           : mode === 'plane'
-            ? 'A burst capsule of particles spreading by random walk, compared against the analytic Gaussian'
-            : 'A point burst of particles spreading radially by random walk, compared against the predicted rms radius'
+            ? 'A capsule releasing particles that spread by random walk, compared against the analytic Gaussian'
+            : 'A point release of particles spreading radially by random walk, compared against the predicted rms radius'
       }
     />
   );

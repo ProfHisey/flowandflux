@@ -1,6 +1,6 @@
 /**
  * Unsteady diffusion from an instantaneous release — the "time-release
- * capsule" that bursts at t = 0. This is the module students meet BEFORE
+ * capsule" that delivers its dose at t = 0. This is the module students meet BEFORE
  * steady state: concentration visibly changing in time is immediate, while
  * matched sources and sinks are an abstraction.
  *

@@ -57,7 +57,7 @@ const GROUPS: ModuleGroup[] = [
     title: 'Unsteady transport',
     short: 'Unsteady',
     items: [
-      { id: 'bolus', name: 'Bolus dispersion', tag: 'a burst spreading as √t' },
+      { id: 'bolus', name: 'Bolus dispersion', tag: 'a release spreading as √t' },
       { id: 'touch', name: 'Sudden contact', tag: 'erf fronts and the 44 °C line' },
       { id: 'heisler', name: 'Heisler charts', tag: 'the finite body — Bi and Fo decide' },
     ],

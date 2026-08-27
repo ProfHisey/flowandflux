@@ -18,10 +18,10 @@ export interface Preset {
 export const PRESETS: Preset[] = [
   {
     id: 'capsule',
-    name: 'Drug burst from a capsule',
+    name: 'Drug released from a capsule',
     source: 'Pharma',
     blurb:
-      'A capsule coating fails all at once, releasing 10 nmol of drug across a 1 cm² tissue plane. Watch the cloud at t = 100 s. How far will it usefully reach?',
+      'A capsule gives up its whole dose at once: 10 nmol of drug, delivered across a 1 cm² tissue plane at t = 0. Watch the cloud at t = 100 s. How far will it usefully reach?',
     check: 'σ(100 s) = 141 µm, and the 100 µm mark takes t = L²/2D = 50 s',
     params: { D: 1e-6, M: 1e-8, A: 1, t: 100, Lint: 0.01 },
   },

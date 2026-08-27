@@ -13,7 +13,7 @@ import {
 } from '../shared/paint3d';
 
 /**
- * The burst, in the geometry it truly happens in: a POINT release in 3D.
+ * The release, in the geometry it truly happens in: a POINT release in 3D.
  *
  * Mass cargo: all the walkers start at the center and wander out into a
  * sphere — and the amber wireframe sphere riding with them is the
@@ -173,7 +173,7 @@ export function Bolus3DCanvas({
         ? `t = ${t.toFixed(1)} s · the molecules never move — glow painted from the point solution`
         : Math.sqrt(6 * D_VIS * t) > 1.1 * B
           ? `t = ${t.toFixed(1)} s · the cloud is feeling the walls — the open-medium σ no longer applies`
-          : `t = ${t.toFixed(1)} s (visual clock) · a point burst spreads as a sphere`,
+          : `t = ${t.toFixed(1)} s (visual clock) · a point release spreads as a sphere`,
     );
   }, { running, redrawKey });
 
@@ -187,7 +187,7 @@ export function Bolus3DCanvas({
       aria-label={
         cargo === 'heat'
           ? 'A fixed 3D cloud of molecules with a hot spot of energy spreading through it, tracked by the predicted sigma sphere'
-          : 'A point burst of particles spreading spherically in 3D, tracked by the predicted sigma sphere'
+          : 'A point release of particles spreading spherically in 3D, tracked by the predicted sigma sphere'
       }
     />
   );

@@ -7,7 +7,7 @@ import type { SocraticQuestion } from '../../components/ui/SocraticPanel';
 export const UNSTEADY_QUESTIONS: SocraticQuestion[] = [
   {
     q: 'The cloud spreads as √t, not t. A walker takes just as many steps in the second minute as in the first — so where does the slowdown come from?',
-    probe: 'Burst the capsule and watch the σ readout. Compare the first few seconds with the next thirty.',
+    probe: 'Release the capsule and watch the σ readout. Compare the first few seconds with the next thirty.',
     resolution:
       'Each step forgets the last, so steps cancel as often as they add. After N steps the typical displacement is not N step-lengths but √N — progress made by random motion, not by intent. Run it backwards and you get the diffusion clock t = L²/2D: to get twice as far takes four times as long. Everything slow about diffusion is in that square.',
   },
