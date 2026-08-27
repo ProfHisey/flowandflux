@@ -1,0 +1,47 @@
+# NOTICE
+
+FlowAndFlux — interactive transport-phenomena simulations
+Copyright (c) 2026 Colin Hisey · https://flowandflux.org
+
+An independent personal project. Not affiliated with, endorsed by, or a
+production of any university, department, or employer.
+
+## Licensing summary
+
+| Part | License |
+| --- | --- |
+| Source code | PolyForm Noncommercial 1.0.0 (see LICENSE) |
+| Prose, questions, figures | CC BY-NC-SA 4.0 (see LICENSE-CONTENT) |
+| Name and branding | Not licensed — see below |
+| Third-party dependencies | Their own licenses — see below |
+
+## Name and branding
+
+Neither license grants any right to the name **FlowAndFlux**, the
+flowandflux.org domain, or the site's visual identity. You may fork,
+adapt, and republish the work under the terms above, but please run it
+under your own name, and do not imply that your version is this project
+or endorsed by it.
+
+## Third-party dependencies
+
+This project builds on open-source software that is **not** covered by
+the licenses above and remains under its own terms. At the time of
+writing the runtime dependencies are:
+
+- React and React DOM — MIT
+- Recharts — MIT
+- KaTeX and react-katex — MIT
+- lucide-react — ISC
+
+Their licenses are permissive and are reproduced in `node_modules` after
+an install. Nothing in this project's licensing restricts your rights to
+those packages, and nothing here extends this project's restrictions to
+them.
+
+## Physics
+
+The physical laws, derivations, and standard results implemented here are
+facts and ideas, which copyright does not protect. The examples used
+throughout are invented and course-neutral; no textbook problems, problem
+sets, or exam material are reproduced.

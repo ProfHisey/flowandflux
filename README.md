@@ -84,4 +84,25 @@ live profiles, KaTeX for equations. No backend; the whole thing is static.
 
 ## Licence
 
-MIT for the code.
+The source is public so it can be checked, not so it can be resold.
+
+| Part | Licence |
+| --- | --- |
+| Source code | [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) — see [LICENSE](LICENSE) |
+| Prose, question sets, figures | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — see [LICENSE-CONTENT](LICENSE-CONTENT) |
+| Name and branding | Not licensed — see [NOTICE](NOTICE) |
+
+You may read, fork, adapt, and above all teach from any of this, with credit,
+for free. **Classroom and institutional use is explicitly covered** — PolyForm
+Noncommercial names educational institutions as a permitted use outright, which
+is why it was chosen over a plain CC-NC licence. What is not permitted is
+selling it, bundling it into a paid product, running it with advertising, or
+putting it behind a paywall.
+
+Fork it freely, but run it under your own name: neither licence grants rights to
+the name *FlowAndFlux*, the domain, or the site's identity.
+
+Third-party dependencies (React, Recharts, KaTeX, lucide-react) keep their own
+permissive licences and are unaffected by any of the above. The underlying
+physics is not owned by anyone — equations and standard results are facts, and
+the licences cover only this expression of them.

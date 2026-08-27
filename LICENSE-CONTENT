@@ -1,0 +1,48 @@
+# Content License — Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)
+
+Copyright (c) 2026 Colin Hisey
+
+## What this covers
+
+Everything on FlowAndFlux that is writing or picture rather than program:
+
+- the explanatory prose, equation-card notes, slider hints, captions, and
+  readout labels;
+- the Socratic question sets in each module's `socratic.ts`;
+- the worked example setups and their blurbs (`presets.ts`);
+- the visual design of the simulations and figures as rendered.
+
+The SOURCE CODE is licensed separately, under the PolyForm Noncommercial
+License 1.0.0 — see LICENSE.
+
+## The terms
+
+This content is licensed under CC BY-NC-SA 4.0. The human-readable
+summary and the full legal code are at:
+
+- Summary: <https://creativecommons.org/licenses/by-nc-sa/4.0/>
+- Legal code: <https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode>
+
+In short, you are free to **share** and **adapt** this material, including
+for teaching, provided you:
+
+- **Attribution** — give appropriate credit to FlowAndFlux
+  (https://flowandflux.org), link to the license, and indicate if you made
+  changes;
+- **NonCommercial** — do not use the material for commercial purposes;
+- **ShareAlike** — if you remix or build upon it, distribute your
+  contributions under this same license.
+
+## Notes
+
+Teaching, coursework, lecture slides, and institutional use are the
+intended uses and are permitted. Selling the material, bundling it into a
+paid product, running it with advertising, or placing it behind a paywall
+are not.
+
+The underlying physics is not owned by anyone: equations, derivations,
+physical constants, and standard results are facts and ideas, which
+copyright does not cover. This license applies to the particular
+expression here — the wording, the questions, the figures — not to the
+science itself. Work the same problems and write them up yourself and you
+owe nothing to this project.

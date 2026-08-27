@@ -34,5 +34,6 @@
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
   },
-  "description": "Interactive transport-phenomena simulations — flux laws, unsteady transport, momentum, and convection, made visible."
+  "description": "Interactive transport-phenomena simulations — flux laws, unsteady transport, momentum, and convection, made visible.",
+  "license": "LicenseRef-PolyForm-Noncommercial-1.0.0"
 }
