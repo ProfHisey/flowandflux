@@ -21,7 +21,10 @@ export function Panel({
       }
     >
       {(title || right) && (
-        <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+        // flex-wrap so a module with three toolbar controls (Cooling, Newton)
+        // drops them onto their own line on a phone instead of widening the
+        // panel past the viewport.
+        <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <div className="min-w-0">
             {title && (
               <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">

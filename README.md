@@ -24,20 +24,23 @@ invented, course-neutral examples throughout.
 
 Fifteen interactive modules, grouped by physics:
 
-- **Start** — a PhET-style mixing box (mass and heat), zero equations by design.
+- **Start** — a PhET-style mixing box (mass and heat), zero equations by design;
+  and gases vs. liquids, where hard-sphere molecules show why D spans four
+  decades between the two.
 - **The flux laws** — Fick's law (random walkers vs. `j = −D ∂C/∂x`, measured two
   independent ways), Fourier's law (an energy-exchange lattice), Newton's law of
   viscosity (sliding layers, grip links, dye kinematics), and composite-wall
   resistance networks with a live ΔT budget.
 - **Unsteady** — bolus dispersion (a spreading Gaussian the walkers keep landing
-  on), sudden contact (erf fronts, effusivity, why metal feels cold), and
-  interactive Heisler charts (Bi and Fo decide).
+  on, for a burst of mass or of heat), sudden contact (erf fronts, effusivity,
+  why metal feels cold), and interactive Heisler charts (Bi and Fo decide).
 - **Momentum** — Stokes drag and settling (true-magnitude force arrows, the a²
   law, the centrifuge), and Poiseuille flow with parallel plates and the falling
   film, derived on-page by cancelling Navier–Stokes terms.
 - **Convection** — the Péclet number (walkers that wander *and* drift), Newton's
-  law of cooling (the film-and-wake mechanism of h, plus a fin), Nu & Sh
-  correlations computed live, and a perfused channel feeding a layer of cells.
+  law of cooling (the film-and-wake mechanism of h, plus a fin), the mixing cup
+  (what "the" temperature of a flowing stream even means), and Nu & Sh
+  correlations computed live.
 
 Every module: real units on every number, symbolic before numeric, measured
 quantities checked against analytic predictions on screen, and a rotatable 3D
@@ -89,7 +92,7 @@ The source is public so it can be checked, not so it can be resold.
 | Part | Licence |
 | --- | --- |
 | Source code | [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0) — see [LICENSE](LICENSE) |
-| Prose, question sets, figures | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — see [LICENSE-CONTENT](LICENSE-CONTENT) |
+| Prose, question sets, worked-example blurbs, figures | [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — see [LICENSE-CONTENT](LICENSE-CONTENT) |
 | Name and branding | Not licensed — see [NOTICE](NOTICE) |
 
 You may read, fork, adapt, and above all teach from any of this, with credit,

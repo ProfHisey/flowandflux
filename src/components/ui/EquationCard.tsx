@@ -32,7 +32,11 @@ export function EquationCard({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    // min-w-0 is load-bearing: as a grid/flex child this card defaults to
+    // min-width:auto, so it refuses to shrink below its widest content and
+    // the KaTeX block below pushes the whole PAGE sideways on a phone. With
+    // it, the overflow-x-auto wrapper below finally does its job.
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

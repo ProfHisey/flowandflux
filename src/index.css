@@ -15,6 +15,22 @@
     color: inherit;
     font-size: 1.05em;
   }
+  /* Grid and flex children default to min-width:auto, so they refuse to
+     shrink below their widest content. A single wide KaTeX block then
+     pushes the whole PAGE sideways on a phone (measured: up to 239 px of
+     horizontal scroll before this rule). Letting them shrink lets the
+     equation wrappers' own overflow-x-auto do its job instead. */
+  main .grid > *,
+  main .grid > * > * {
+    min-width: 0;
+  }
+  /* KaTeX will not wrap, so it must scroll inside its own box, never widen
+     its parent. */
+  main .katex-display,
+  main .katex-display > .katex {
+    max-width: 100%;
+  }
+
   /* Canvas cursor with dual-contrast rings (white halo + dark core) so it
      never vanishes against white objects in light mode or dark fields in
      night mode. 3D canvases override to grab/grabbing via inline style. */

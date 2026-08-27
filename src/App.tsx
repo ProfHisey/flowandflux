@@ -90,6 +90,10 @@ type ModuleId = string;
 function initialModule(): ModuleId {
   const h = window.location.hash.replace('#', '');
   if (h === 'about') return 'about';
+  // 'perfusion' is deliberately out of the nav, and therefore out of ALL —
+  // so it needs its own case or #perfusion silently lands on the divider and
+  // the render branch for it below is unreachable.
+  if (h === 'perfusion') return 'perfusion';
   return ALL.find((m) => m.id === h)?.id ?? 'divider';
 }
 
