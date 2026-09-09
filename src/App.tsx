@@ -87,7 +87,7 @@ const GROUPS: ModuleGroup[] = [
     // Detours that reuse the machinery above for something outside the
     // core syllabus. Kept in their own group so the main menu stays general.
     title: 'Special topics',
-    short: 'Special',
+    short: 'Special topics',
     items: [
       { id: 'walker', name: 'The lone walker', tag: 'one path vs the cloud — and Bachelier\'s stock chart' },
     ],
