@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Pause, Play, RotateCcw, Sparkles } from 'lucide-react';
-import { BlockMath, InlineMath } from 'react-katex';
+import { InlineMath } from 'react-katex';
 
 import { Panel, Stat } from '../../components/ui/Panel';
 import { Slider } from '../../components/ui/Slider';
@@ -22,6 +22,7 @@ import { MU_LANDMARKS } from '../NewtonViscosity/presets';
 import { PoiseuilleCanvas } from './PoiseuilleCanvas';
 import { Poiseuille3DCanvas } from './Poiseuille3DCanvas';
 import { PoiseuilleChart } from './PoiseuilleChart';
+import { NSAnatomy } from './NSAnatomy';
 import { DEFAULT_PARAMS, PRESETS } from './presets';
 
 export function PoiseuilleModule({ dark }: { dark: boolean }) {
@@ -59,7 +60,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
 
       {/* The derivation comes first, as it does on the board: disarm
           Navier-Stokes, THEN meet the flow that falls out of it. */}
-      <NSAnatomy />
+      <NSAnatomy geometry={params.geometry} />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="order-1 space-y-5 lg:col-start-1 lg:row-start-1">
@@ -402,102 +403,6 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
 }
 
 // ---------------------------------------------------------------- pieces
-
-const NS_ASSUMPTIONS = [
-  { id: 'steady', label: 'Steady', why: 'nothing changes in time' },
-  { id: 'developed', label: 'Fully developed', why: '∂v_z/∂z = 0 past the entrance' },
-  { id: 'noradial', label: 'No radial flow', why: 'v_r = 0: fluid moves only axially' },
-  { id: 'axisym', label: 'No swirl, axisymmetric', why: 'v_θ = 0 and ∂/∂θ = 0' },
-  { id: 'horizontal', label: 'Horizontal', why: 'gravity has no axial component' },
-] as const;
-
-type AssumptionId = (typeof NS_ASSUMPTIONS)[number]['id'];
-
-/**
- * The Navier–Stokes term killer. The z-momentum equation in cylindrical
- * coordinates, with each assumption crossing out the terms it is
- * responsible for. Nine terms in; two walk out; the survivors are the
- * Poiseuille ODE. This is what "solving Navier–Stokes" means at this
- * level: not solving it — disarming it.
- */
-function NSAnatomy() {
-  const [on, setOn] = useState<Record<AssumptionId, boolean>>({
-    steady: false, developed: false, noradial: false, axisym: false, horizontal: false,
-  });
-  const toggle = (id: AssumptionId) => setOn((o) => ({ ...o, [id]: !o[id] }));
-  const allOn = NS_ASSUMPTIONS.every((a) => on[a.id]);
-
-  const c = (killed: boolean, s: string) => (killed ? String.raw`\cancel{${s}}` : s);
-  const latex = String.raw`\rho\!\left(${c(on.steady, String.raw`\frac{\partial v_z}{\partial t}`)} + ${c(on.noradial, String.raw`v_r\frac{\partial v_z}{\partial r}`)} + ${c(on.axisym, String.raw`\frac{v_\theta}{r}\frac{\partial v_z}{\partial \theta}`)} + ${c(on.developed, String.raw`v_z\frac{\partial v_z}{\partial z}`)}\right) = -\frac{\partial P}{\partial z} + \mu\!\left[\frac{1}{r}\frac{\partial}{\partial r}\!\left(r\frac{\partial v_z}{\partial r}\right) + ${c(on.axisym, String.raw`\frac{1}{r^2}\frac{\partial^2 v_z}{\partial \theta^2}`)} + ${c(on.developed, String.raw`\frac{\partial^2 v_z}{\partial z^2}`)}\right] + ${c(on.horizontal, String.raw`\rho g_z`)}`;
-
-  const killedCount = Object.values(on).filter(Boolean).length;
-
-  return (
-    <Panel
-      title="Navier–Stokes, disarmed term by term"
-      subtitle="Nine terms walk in. Check the assumptions of pipe flow and watch which two are left standing."
-    >
-      <div className="mb-3 flex flex-wrap gap-2">
-        {NS_ASSUMPTIONS.map((a) => (
-          <label
-            key={a.id}
-            title={a.why}
-            className={
-              'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors ' +
-              (on[a.id]
-                ? 'border-emerald-400 bg-emerald-50 text-emerald-900 dark:border-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-200'
-                : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-300')
-            }
-          >
-            <input
-              type="checkbox"
-              checked={on[a.id]}
-              onChange={() => toggle(a.id)}
-              className="h-3.5 w-3.5 accent-emerald-600"
-            />
-            {a.label}
-            <span className="hidden text-xs text-slate-500 dark:text-slate-400 sm:inline">
-              — {a.why}
-            </span>
-          </label>
-        ))}
-        <span className="ml-auto self-center font-mono text-xs text-slate-500 dark:text-slate-400">
-          {9 - (on.steady ? 1 : 0) - (on.noradial ? 1 : 0) - (on.developed ? 2 : 0) - (on.axisym ? 2 : 0) - (on.horizontal ? 1 : 0)} of 9 terms standing
-        </span>
-      </div>
-
-      <div className="overflow-x-auto py-1 text-slate-900 dark:text-slate-100">
-        <BlockMath math={latex} />
-      </div>
-
-      {allOn ? (
-        <div className="mt-3 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide">
-            The survivors, and their surrender
-          </p>
-          <div className="overflow-x-auto">
-            <BlockMath
-              math={String.raw`0 = -\frac{dP}{dz} + \frac{\mu}{r}\frac{d}{dr}\!\left(r\frac{dv_z}{dr}\right)\;\;\xrightarrow[\;v_z(R)=0,\ v_z(0)\ \text{finite}\;]{\;dP/dz = -\Delta P/L\;}\;\;\boxed{v_z = \frac{\Delta P}{4\mu L}\left(R^2 - r^2\right)}`}
-            />
-          </div>
-          <p className="mt-1 text-xs leading-relaxed">
-            Pressure pushing, viscosity resisting, nothing else left. Two boundary
-            conditions — no slip at the wall, and "finite at the axis" (which quietly
-            executes a ln(r) term) — and out falls the parabola. Integrate it over the
-            cross-section and Q = πΔPR⁴/8μL appears. That is the whole game with
-            Navier–Stokes at this level: it is rarely solved, it is <em>disarmed</em>.
-          </p>
-        </div>
-      ) : (
-        <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-          {killedCount === 0
-            ? 'This is the full z-momentum equation in cylindrical coordinates — every fluid flow in this geometry, all at once. Nobody solves this directly. Start checking assumptions.'
-            : 'Keep going — every checked assumption is a physical claim about pipe flow, and each one takes its terms with it.'}
-        </p>
-      )}
-    </Panel>
-  );
-}
 
 function ModuleHeader() {
   return (

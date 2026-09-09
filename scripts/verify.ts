@@ -734,6 +734,63 @@ console.log('\nWall shear force balances');
   check('drivingGradient: film uses rho g', close(drivingGradient(f), f.rho * 9.81, 1e-12));
 }
 
+// --- 38b. The Navier-Stokes term-killer's three surviving ODEs ------------------
+// The Poiseuille page now disarms N-S in the coordinate system each geometry
+// actually lives in, and prints a different surviving equation for each. Those
+// three ODEs are claims on screen, so pin them against lib/poiseuille by
+// differentiating its OWN profile numerically. Note the film's contrast: its
+// pressure term is zero and gravity is the driver, the exact inverse of the
+// other two.
+console.log('\nNavier-Stokes survivors (term-killer panel)');
+{
+  const d2 = (f: (x: number) => number, x: number, hh: number) =>
+    (f(x + hh) - 2 * f(x) + f(x - hh)) / (hh * hh);
+
+  const t: PoiseuilleParams = { ...cap };
+  // Tube: 0 = -dP/dz + (mu/r) d/dr(r dv/dr), with -dP/dz = +dP/L.
+  {
+    const r = 0.37 * t.R;
+    const hh = t.R * 1e-4;
+    const rdv = (x: number) => x * ((pvel(t, x + hh) - pvel(t, x - hh)) / (2 * hh));
+    const visc = (t.mu / r) * ((rdv(r + hh) - rdv(r - hh)) / (2 * hh));
+    check('tube: (mu/r) d/dr(r dv/dr) = -dP/L balances the pressure term',
+      close(visc, -t.dP / t.L, 1e-5), `${visc} vs ${-t.dP / t.L}`);
+  }
+
+  // Plates: 0 = -dP/dx + mu d^2v/dy^2 -- a plain second derivative, no 1/r.
+  {
+    const pl: PoiseuilleParams = { ...cap, geometry: 'plates' };
+    const y = 0.31 * pl.h;
+    const visc = pl.mu * d2((x) => pvel(pl, x), y, pl.h * 1e-4);
+    check('plates: mu d2v/dy2 = -dP/L balances the pressure term',
+      close(visc, -pl.dP / pl.L, 1e-5), `${visc} vs ${-pl.dP / pl.L}`);
+  }
+
+  // Film: 0 = rho g + mu d^2v/dx^2. No pressure gradient anywhere -- the
+  // free surface is at atmospheric pressure. Gravity is the whole driver.
+  {
+    const f: PoiseuilleParams = { ...cap, geometry: 'film' };
+    const x = 0.44 * f.h;
+    const visc = f.mu * d2((q) => pvel(f, q), x, f.h * 1e-4);
+    check('film: mu d2v/dx2 = -rho g (gravity drives, no pressure term)',
+      close(visc, -f.rho * 9.81, 1e-5), `${visc} vs ${-f.rho * 9.81}`);
+    check('film free surface: dv/dx = 0 at x = h (no shear, not no slip)',
+      Math.abs((pvel(f, f.h) - pvel(f, f.h - f.h * 1e-5)) / (f.h * 1e-5)) < 1e-3 * vMax(f) / f.h);
+    check('film pressure gradient plays no part: v depends on rho g only',
+      close(drivingGradient(f), f.rho * 9.81, 1e-12) &&
+        close(pvel({ ...f, dP: f.dP * 7 }, x), pvel(f, x), 1e-12));
+  }
+
+  // And the inverse for the two pressure-driven geometries: change rho and
+  // nothing about the profile moves, because gravity was cancelled.
+  {
+    const pl: PoiseuilleParams = { ...cap, geometry: 'plates' };
+    check('tube and plates: profile is independent of rho (gravity cancelled)',
+      close(pvel({ ...t, rho: t.rho * 3 }, 0.4 * t.R), pvel(t, 0.4 * t.R), 1e-12) &&
+        close(pvel({ ...pl, rho: pl.rho * 3 }, 0.4 * pl.h), pvel(pl, 0.4 * pl.h), 1e-12));
+  }
+}
+
 // ==========================================================================
 // Stokes drag and settling
 // ==========================================================================
