@@ -16,6 +16,7 @@ import { HeislerModule } from './modules/Transient/HeislerModule';
 import { CorrelationsModule } from './modules/Correlations/CorrelationsModule';
 import { MixingCupModule } from './modules/MixingCup/MixingCupModule';
 import { PerfusionModule } from './modules/Perfusion/PerfusionModule';
+import { WalkerModule } from './modules/Walker/WalkerModule';
 
 /**
  * Modules are grouped by the PHYSICS, not by any one course's lesson plan —
@@ -80,6 +81,15 @@ const GROUPS: ModuleGroup[] = [
       { id: 'correlations', name: 'Nu & Sh correlations', tag: 'the lookup chart, computed live' },
       // Hidden from the nav for now (module code intact — restore by
       // uncommenting): { id: 'perfusion', name: 'The perfused channel', tag: 'can the flow feed every cell?' },
+    ],
+  },
+  {
+    // Detours that reuse the machinery above for something outside the
+    // core syllabus. Kept in their own group so the main menu stays general.
+    title: 'Special topics',
+    short: 'Special',
+    items: [
+      { id: 'walker', name: 'The lone walker', tag: 'one path vs the cloud — and Bachelier\'s stock chart' },
     ],
   },
 ];
@@ -286,6 +296,7 @@ export default function App() {
         {moduleId === 'mixingcup' && <MixingCupModule dark={dark} />}
         {moduleId === 'correlations' && <CorrelationsModule dark={dark} />}
         {moduleId === 'perfusion' && <PerfusionModule dark={dark} />}
+        {moduleId === 'walker' && <WalkerModule dark={dark} />}
         {moduleId === 'about' && <AboutPage />}
       </main>
 

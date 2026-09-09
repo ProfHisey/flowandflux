@@ -22,7 +22,7 @@ invented, course-neutral examples throughout.
 
 ## What's here
 
-Fifteen interactive modules, grouped by physics:
+Sixteen interactive modules, grouped by physics:
 
 - **Start** — a PhET-style mixing box (mass and heat), zero equations by design;
   and gases vs. liquids, where hard-sphere molecules show why D spans four
@@ -41,6 +41,10 @@ Fifteen interactive modules, grouped by physics:
   law of cooling (the film-and-wake mechanism of h, plus a fin), the mixing cup
   (what "the" temperature of a flowing stream even means), and Nu & Sh
   correlations computed live.
+- **Special topics** — detours that reuse the machinery: the lone walker (one
+  drift-plus-wander path followed instead of averaged, the Péclet number as a
+  crossover time, and the same equation relabeled as Bachelier's 1900 stock
+  chart).
 
 Every module: real units on every number, symbolic before numeric, measured
 quantities checked against analytic predictions on screen, and a rotatable 3D

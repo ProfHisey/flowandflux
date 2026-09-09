@@ -46,6 +46,10 @@ import {
   peclet, theta, totalFlux, type PecletParams,
 } from '../src/lib/peclet';
 import {
+  crossoverTime, density, driftToSpread, meanPosition, normalCdf,
+  priceToWalk, probabilityAhead, sharpeAtHorizon, spread, stepWalker, walkToPrice,
+} from '../src/lib/walker';
+import {
   bareHeat, finEffectiveness, finHeat, finML, finTemp, type FinParams,
 } from '../src/lib/fin';
 import {
@@ -1154,6 +1158,52 @@ check('flat-core limit (n large): both averages approach the core temperature',
 check('profile endpoints: T(0) = Tc, T(1) = Tw; v(0) = 2v̄, v(1) = 0 (no-slip)',
   close(mcTempAt(cup, 0), 20, 1e-12) && close(mcTempAt(cup, 1), 80, 1e-12) &&
     close(mcVelocityAt(0), 2, 1e-12) && close(mcVelocityAt(1), 0, 1e-12));
+
+// ---------------------------------------------------------------- walker
+{
+  console.log('\nThe lone walker');
+  // The contested-walk preset: v = 1e-3 cm/s, D = 1e-5 cm²/s.
+  check('crossover T* = 2D/v² = 20 s', close(crossoverTime(1e-3, 1e-5), 20, 1e-9));
+  check('at T*, drift equals spread: Pe(T*) = 1',
+    close(driftToSpread(1e-3, 1e-5, 20), 1, 1e-9) &&
+      close(meanPosition(1e-3, 20), spread(1e-5, 20), 1e-9));
+  check('Pe(T) = sqrt(T/T*): the drift-wins preset reads Pe = 10',
+    close(driftToSpread(1e-3, 1e-5, 2000), 10, 1e-9));
+  check('no drift: Pe = 0 and P(ahead) = 1/2',
+    driftToSpread(0, 1e-5, 100) === 0 && close(probabilityAhead(0, 1e-5, 100), 0.5, 1e-6));
+  check('P(ahead) at T* = Φ(1) ≈ 0.8413', close(probabilityAhead(1e-3, 1e-5, 20), 0.841345, 1e-5),
+    String(probabilityAhead(1e-3, 1e-5, 20)));
+  check('Φ(0) = 1/2, Φ(1.96) ≈ 0.975', close(normalCdf(0), 0.5, 1e-6) && close(normalCdf(1.96), 0.975, 1e-3));
+  check('one step with Z = 0 is pure drift; with Z = 1 adds sqrt(2 D dt)',
+    close(stepWalker(0, 2, 0.5, 4, 0), 8, 1e-12) && close(stepWalker(0, 2, 0.5, 4, 1), 10, 1e-12));
+  // The Gaussian solution: unit mass, mean vt, variance 2Dt (trapezoid rule).
+  {
+    const v = 0.3, D = 0.7, t = 5;
+    const m = v * t, s = Math.sqrt(2 * D * t);
+    let mass = 0, mean = 0, varr = 0;
+    const n = 4000, lo = m - 8 * s, hi = m + 8 * s, h = (hi - lo) / n;
+    for (let i = 0; i <= n; i++) {
+      const x = lo + i * h;
+      const w = (i === 0 || i === n ? 0.5 : 1) * h;
+      const c = density(x, v, D, t);
+      mass += w * c; mean += w * c * x; varr += w * c * (x - m) * (x - m);
+    }
+    check('Gaussian solution integrates to 1', close(mass, 1, 1e-6), String(mass));
+    check('its mean is vt and its variance 2Dt', close(mean, m, 1e-6) && close(varr, 2 * D * t, 1e-5),
+      `${mean} / ${varr}`);
+  }
+  // Bachelier's dictionary, both directions, and the Sharpe reading of Pe.
+  const w = priceToWalk(0.07, 0.16);
+  check('μ = 7%, σ = 16% → v = 0.0572, D = 0.0128', close(w.v, 0.0572, 1e-12) && close(w.D, 0.0128, 1e-12));
+  const back = walkToPrice(w.v, w.D);
+  check('walkToPrice(priceToWalk(μ, σ)) round-trips', close(back.mu, 0.07, 1e-12) && close(back.sigma, 0.16, 1e-12));
+  check('single-company preset: σ = 40% makes the log drift negative', priceToWalk(0.07, 0.4).v < 0);
+  check('index crossover ≈ 7.8 years', close(crossoverTime(w.v, w.D), 7.82, 2e-2), String(crossoverTime(w.v, w.D)));
+  check('Sharpe × √T is Pe for the price walker (up to the Itô term)',
+    close(sharpeAtHorizon(w.v, Math.sqrt(2 * w.D), 10), driftToSpread(w.v, w.D, 10), 1e-12));
+  check('ten-year index: P(ahead) ≈ 87%', close(probabilityAhead(w.v, w.D, 10), 0.871, 5e-3),
+    String(probabilityAhead(w.v, w.D, 10)));
+}
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);
