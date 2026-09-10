@@ -67,6 +67,11 @@ import {
   areaAvgT, areaAvgTNumeric, mixingCupT, mixingCupTNumeric, tempAt as mcTempAt,
   velocityAt as mcVelocityAt, type MixingCupParams,
 } from '../src/lib/mixingcup';
+import {
+  dollarWeightedRate, fluxWeightedY, inBox, ouStep, profileVelocity, reynoldsCovariance,
+  steadyOutlet, stepParcels, timeWeightedRate, type Box as RttBox, type Parcel as RttParcel,
+  type Source as RttSource,
+} from '../src/lib/rtt';
 
 let failures = 0;
 /** Relative comparison. For a target of exactly zero the tolerance is
@@ -1203,6 +1208,132 @@ check('profile endpoints: T(0) = Tc, T(1) = Tw; v(0) = 2v̄, v(1) = 0 (no-slip)'
     close(sharpeAtHorizon(w.v, Math.sqrt(2 * w.D), 10), driftToSpread(w.v, w.D, 10), 1e-12));
   check('ten-year index: P(ahead) ≈ 87%', close(probabilityAhead(w.v, w.D, 10), 0.871, 5e-3),
     String(probabilityAhead(w.v, w.D, 10)));
+}
+
+// ------------------------------------------- Reynolds transport theorem
+{
+  console.log('\nWhere you draw the box (Reynolds transport theorem)');
+  // A deterministic generator so the closure checks are reproducible.
+  let seedv = 12345;
+  const rnd = () => { seedv = (seedv * 1664525 + 1013904223) >>> 0; return seedv / 4294967296; };
+  const gaussD = () => {
+    const u1 = Math.max(1e-12, rnd()), u2 = rnd();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  };
+  const cloud = (n: number, L: number): RttParcel[] => {
+    const out: RttParcel[] = [];
+    for (let i = 0; i < n; i++) out.push({
+      x: -0.1 * L + 1.2 * L * rnd(), y: rnd(), u: 0.5 + rnd(), b: 10 + 5 * rnd(), m: 0.5 + rnd(), tagged: false,
+    });
+    return out;
+  };
+  const box: RttBox = { x0: 0.3, x1: 0.7 };
+  const sources: [string, RttSource, boolean][] = [
+    ['no source (mass)', { kind: 'none' }, false],
+    ['a device in the box (heater / push)', { kind: 'inBox', total: 3.7 }, false],
+    ['a device in the box, b is the velocity (momentum)', { kind: 'inBox', total: 0.9 }, true],
+    ['a multiplicative source everywhere (the market)', { kind: 'everywhere', factor: 1.013 }, false],
+  ];
+  for (const [name, src, couple] of sources) {
+    const ps = cloud(160, 1);
+    let worst = 0;
+    let scale = 0;
+    for (let k = 0; k < 40; k++) {
+      const r = stepParcels(ps, 0.03, box, src, couple);
+      worst = Math.max(worst, Math.abs(r.residual));
+      scale = Math.max(scale, Math.abs(r.source), Math.abs(r.storage), Math.abs(r.outflux), Math.abs(r.influx), 1e-9);
+      for (const q of ps) if (q.x > 1.1) { q.x -= 1.2; q.b = 10 + 5 * rnd(); if (couple) q.u = q.b; }
+    }
+    check(`closure is exact: ${name}`, worst <= 1e-11 * scale, `worst residual ${worst} on scale ${scale}`);
+  }
+  {
+    const r = stepParcels(cloud(50, 1), 0.02, box, { kind: 'none' }, false);
+    check('mass face: source term is exactly zero', r.source === 0);
+  }
+  {
+    const ps = cloud(120, 1);
+    let got = 0;
+    for (let k = 0; k < 25; k++) got += stepParcels(ps, 0.01, box, { kind: 'inBox', total: 500 }, false).source;
+    check('an in-box source delivers total × dt, shared among the contents', close(got, 500 * 0.25, 1e-9), String(got));
+  }
+  {
+    const ps: RttParcel[] = [{ x: 0.2, y: 0.5, u: 10, b: 3, m: 2, tagged: false }];
+    const r = stepParcels(ps, 0.05, { x0: 0.3, x1: 0.4 }, { kind: 'none' }, false);
+    check('a parcel jumping across a narrow box: in = out = m·b, storage 0, residual 0',
+      close(r.influx, 6, 1e-12) && close(r.outflux, 6, 1e-12) && r.storage === 0 && r.residual === 0);
+    check('inBox is half-open: x0 is in, x1 is out', inBox(0.3, box) && !inBox(0.7, box));
+  }
+  check('inline heater: T_out = 20 + 500/(0.1 × 4186) = 21.19 °C',
+    close(steadyOutlet(20, 0.1, 500 / 4186), 21.1945, 1e-4), String(steadyOutlet(20, 0.1, 500 / 4186)));
+  check('a push: u_out = 0.2 + 0.1/0.2 = 0.70 m/s', close(steadyOutlet(0.2, 0.2, 0.1), 0.7, 1e-12));
+  // The discrete parcel machine reproduces the steady balance: march a
+  // steady stream through a heated box until it settles, read the outlet.
+  {
+    const dt = 0.01, u = 1, L = 1, dm = 0.002; // ṁ = dm/dt = 0.2 kg/s
+    const Q = 0.4; // b-mass units per second (Q/c_p for a heater)
+    const ps: RttParcel[] = [];
+    const bx: RttBox = { x0: 0.3, x1: 0.7 };
+    let outSum = 0, outMass = 0;
+    for (let k = 0; k < 3000; k++) {
+      ps.push({ x: 0, y: 0.5, u, b: 20, m: dm, tagged: false });
+      const r = stepParcels(ps, dt, bx, { kind: 'inBox', total: Q }, false);
+      if (k > 2000) {
+        outSum += r.outflux;
+        outMass += ps.filter((q) => q.x >= bx.x1 && q.x - q.u * dt < bx.x1).reduce((s, q) => s + q.m, 0);
+      }
+      for (let i = ps.length - 1; i >= 0; i--) if (ps[i].x > L) ps.splice(i, 1);
+    }
+    const bOut = outSum / outMass;
+    check('the parcel machine reaches the steady balance: b_out = b_in + total/ṁ = 22.0',
+      close(bOut, steadyOutlet(20, dm / dt, Q), 1e-9), String(bOut));
+  }
+  {
+    let mean = 0;
+    for (let i = 0; i < 2000; i++) mean += profileVelocity((i + 0.5) / 2000, 0.4, true) / 2000;
+    check('parabolic profile: ∫u dy = ū and u_max = 1.5 ū',
+      close(mean, 0.4, 1e-6) && close(profileVelocity(0.5, 0.4, true), 0.6, 1e-12) && profileVelocity(0.31, 0.4, false) === 0.4);
+    let worstInv = 0;
+    for (const p of [0.05, 0.2, 0.5, 0.8, 0.95]) {
+      const y = fluxWeightedY(p, true);
+      worstInv = Math.max(worstInv, Math.abs(3 * y * y - 2 * y * y * y - p));
+    }
+    check('fluxWeightedY inverts the parabola CDF 3y² − 2y³', worstInv < 1e-9 && fluxWeightedY(0.37, false) === 0.37, String(worstInv));
+  }
+  {
+    const r = reynoldsCovariance([1, 2, 3], [2, 4, 6]);
+    check('⟨nb⟩ − ⟨n⟩⟨b⟩ for n = 1,2,3 and b = 2n is 4/3', close(r.cov, 4 / 3, 1e-12) && close(r.meanNB, 28 / 3, 1e-12));
+    const n: number[] = [], b: number[] = [];
+    for (let i = 0; i < 4000; i++) { const e = gaussD(); n.push(1 + 0.5 * e); b.push(5 + 2 * (0.8 * e + 0.6 * gaussD())); }
+    const s = reynoldsCovariance(n, b);
+    check('correlated surges carry extra: cov ≈ ρ σ_n σ_b = 0.8 × 0.5 × 2 = 0.8', close(s.cov, 0.8, 0.12), String(s.cov));
+    const z = reynoldsCovariance([1, 2, 3, 4], [7, 7, 7, 7]);
+    check('a constant b has no correlation term (the mass face)', z.cov === 0);
+  }
+  {
+    let eta = 0, s2 = 0, lag = 0, prev = 0;
+    const N = 60000;
+    for (let i = 0; i < N; i++) { prev = eta; eta = ouStep(eta, 0.02, 1, gaussD()); if (i > 500) { s2 += eta * eta; lag += eta * prev; } }
+    const varr = s2 / (N - 500), ac = lag / s2;
+    check('OU step: stationary variance ≈ 1', close(varr, 1, 0.1), String(varr));
+    check('OU step: one-step autocorrelation ≈ e^(−dt/τ)', close(ac, Math.exp(-0.02), 5e-3), String(ac));
+  }
+  check('time-weighted: a doubling over 10 yr is ln 2 / 10 = 6.93%/yr', close(timeWeightedRate(100, 200, 10), Math.log(2) / 10, 1e-12));
+  check('no flows ⟹ dollar-weighted = time-weighted, exactly',
+    close(dollarWeightedRate(1000, [], 1000 * Math.exp(0.0693 * 7), 7), 0.0693, 1e-9));
+  {
+    const VT = 1000 * Math.exp(0.1) + 1000 * Math.exp(0.05);
+    const R = dollarWeightedRate(1000, [{ t: 1, f: 1000 }], VT, 2);
+    check('dollar-weighted (hand): $1000, +$1000 at t = 1, V(2) = $2156.44 ⟹ 5.00%/yr', close(R, 0.05, 1e-6), String(R));
+  }
+  // The sign of the gap with no randomness: a round trip (fund return exactly
+  // zero) and one deposit made at the top or at the bottom.
+  {
+    const high = dollarWeightedRate(10000, [{ t: 1, f: 12000 }], 20000, 2); // 100 sh at $120
+    const low = dollarWeightedRate(10000, [{ t: 1, f: 8000 }], 20000, 2);   // 100 sh at $80
+    check('round trip, one deposit at the top: dollar-weighted < 0 = time-weighted',
+      high < -1e-6 && close(timeWeightedRate(100, 100, 2), 0, 1e-12), String(high));
+    check('round trip, one deposit at the bottom: dollar-weighted > 0', low > 1e-6, String(low));
+  }
 }
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);

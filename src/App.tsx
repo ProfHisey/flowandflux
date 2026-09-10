@@ -17,6 +17,7 @@ import { CorrelationsModule } from './modules/Correlations/CorrelationsModule';
 import { MixingCupModule } from './modules/MixingCup/MixingCupModule';
 import { PerfusionModule } from './modules/Perfusion/PerfusionModule';
 import { WalkerModule } from './modules/Walker/WalkerModule';
+import { RttModule } from './modules/Rtt/RttModule';
 
 /**
  * Modules are grouped by the PHYSICS, not by any one course's lesson plan —
@@ -67,6 +68,7 @@ const GROUPS: ModuleGroup[] = [
     title: 'Momentum & flow',
     short: 'Momentum',
     items: [
+      { id: 'rtt', name: 'Where you draw the box', tag: 'one theorem, four properties — and whose return is it' },
       { id: 'stokes', name: 'Stokes drag', tag: 'settling & centrifuges' },
       { id: 'poiseuille', name: 'Poiseuille & friends', tag: 'tube · parallel plates · falling film' },
     ],
@@ -297,6 +299,7 @@ export default function App() {
         {moduleId === 'correlations' && <CorrelationsModule dark={dark} />}
         {moduleId === 'perfusion' && <PerfusionModule dark={dark} />}
         {moduleId === 'walker' && <WalkerModule dark={dark} />}
+        {moduleId === 'rtt' && <RttModule dark={dark} />}
         {moduleId === 'about' && <AboutPage />}
       </main>
 
