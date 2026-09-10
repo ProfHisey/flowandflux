@@ -18,6 +18,7 @@ import { MixingCupModule } from './modules/MixingCup/MixingCupModule';
 import { PerfusionModule } from './modules/Perfusion/PerfusionModule';
 import { WalkerModule } from './modules/Walker/WalkerModule';
 import { RttModule } from './modules/Rtt/RttModule';
+import { RttLiteModule } from './modules/Rtt/RttLiteModule';
 
 /**
  * Modules are grouped by the PHYSICS, not by any one course's lesson plan —
@@ -42,6 +43,7 @@ const GROUPS: ModuleGroup[] = [
     short: 'Start',
     items: [
       { id: 'divider', name: 'The divider', tag: 'no equations — pull the wall, watch' },
+      { id: 'box', name: 'The box', tag: 'in, out, and what is left — the first balance' },
       { id: 'gasliquid', name: 'Gases & liquids', tag: 'why D is what it is — flights vs rattling' },
     ],
   },
@@ -300,6 +302,7 @@ export default function App() {
         {moduleId === 'perfusion' && <PerfusionModule dark={dark} />}
         {moduleId === 'walker' && <WalkerModule dark={dark} />}
         {moduleId === 'rtt' && <RttModule dark={dark} />}
+        {moduleId === 'box' && <RttLiteModule dark={dark} />}
         {moduleId === 'about' && <AboutPage />}
       </main>
 

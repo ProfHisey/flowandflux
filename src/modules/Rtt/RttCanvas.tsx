@@ -249,10 +249,13 @@ export function RttCanvas({
   resetTick,
   onStats,
   onBoxChange,
+  lite = false,
 }: {
   params: RttParams;
   running: boolean;
   dark: boolean;
+  /** First-day wording on the chips: no symbols yet. */
+  lite?: boolean;
   /** Bump to reseed and restart the accounting. */
   resetTick: number;
   onStats?: (s: RttStats) => void;
@@ -620,7 +623,7 @@ export function RttCanvas({
     chip2d(ctx, bx1 + arrowLen(e.outflux) / 2 + 2, ay - 16, `out ${fmt(e.outflux)}`, dark);
     chip2d(ctx, (bx0 + bx1) / 2, yTop - 24, `storage ${fmt(e.storage)}`, dark);
     const srcLabel =
-      p.face === 'mass' ? 'no source — b is conserved'
+      p.face === 'mass' ? (lite ? 'nothing is made or lost inside the box' : 'no source — b is conserved')
         : p.face === 'momentum' ? `push ${fmt(e.source)}`
           : p.face === 'energy' ? `heater ${fmt(e.source)}`
             : `market ${fmt(e.source)}`;
@@ -808,7 +811,7 @@ function rateFormatter(p: RttParams): (v: number) => string {
 
 function inletLabel(p: RttParams, sim: Sim, bIn: number): string {
   switch (p.face) {
-    case 'mass': return 'inlet: b = 1 for every parcel';
+    case 'mass': return 'inlet: water arrives';
     case 'momentum': return `inlet u = ${bIn.toFixed(3)} m/s`;
     case 'energy': return `inlet T = ${bIn.toFixed(2)} °C`;
     case 'wealth': return `price now $${sim.P.toFixed(2)} · trend $${priceTrend(p.bIn, p.source, sim.tPhys).toFixed(2)}`;

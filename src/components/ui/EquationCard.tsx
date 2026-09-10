@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { BlockMath, InlineMath } from 'react-katex';
+import { InlineMath } from 'react-katex';
 import { ChevronDown } from 'lucide-react';
+import { FitMath } from './FitMath';
 
 export interface TermGloss {
   /** LaTeX for the symbol itself, e.g. "D". */
@@ -56,18 +57,23 @@ export function EquationCard({
 
       {open && (
         <div className="space-y-3 border-t border-slate-200 px-4 py-4 dark:border-slate-800">
-          <div className="overflow-x-auto py-1 text-slate-900 dark:text-slate-100">
-            <BlockMath math={latex} />
+          {/* Shrinks to the card's width rather than scrolling — the
+              scrollbar under every long equation was the first thing a
+              reviewer noticed. */}
+          <div className="text-slate-900 dark:text-slate-100">
+            <FitMath math={latex} />
           </div>
 
           {terms && terms.length > 0 && (
             <dl className="space-y-1.5">
               {terms.map((t) => (
                 <div key={t.symbol} className="flex gap-3 text-sm">
-                  <dt className="w-10 shrink-0 pt-0.5 text-slate-900 dark:text-slate-100">
+                  {/* No fixed width: a symbol like √(2DΔt)·Z was being folded
+                      onto two lines inside a 2.5rem column. */}
+                  <dt className="min-w-10 shrink-0 whitespace-nowrap pt-0.5 text-slate-900 dark:text-slate-100">
                     <InlineMath math={t.symbol} />
                   </dt>
-                  <dd className="text-slate-600 dark:text-slate-400">
+                  <dd className="min-w-0 text-slate-600 dark:text-slate-400">
                     {t.meaning}
                     {t.maps && (
                       <span className="ml-1.5 rounded bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300">

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { BlockMath } from 'react-katex';
+import { FitMath } from '../../components/ui/FitMath';
 
 import { Panel } from '../../components/ui/Panel';
 import type { FlowGeometry } from '../../lib/poiseuille';
@@ -179,8 +179,8 @@ export function NSAnatomy({ geometry }: { geometry: FlowGeometry }) {
         </span>
       </div>
 
-      <div className="overflow-x-auto py-1 text-slate-900 dark:text-slate-100">
-        <BlockMath math={spec.latex(c)} />
+      <div className="text-slate-900 dark:text-slate-100">
+        <FitMath math={spec.latex(c)} />
       </div>
 
       {allOn ? (
@@ -188,9 +188,7 @@ export function NSAnatomy({ geometry }: { geometry: FlowGeometry }) {
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide">
             The survivors, and their surrender
           </p>
-          <div className="overflow-x-auto">
-            <BlockMath math={spec.survivors} />
-          </div>
+          <FitMath math={spec.survivors} />
           <p className="mt-1 text-xs leading-relaxed">{spec.survivorProse}</p>
         </div>
       ) : (
