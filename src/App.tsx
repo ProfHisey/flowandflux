@@ -171,6 +171,33 @@ function AboutPage() {
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Inspiration
+        </h2>
+        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          The clarity bar for this site was set by{' '}
+          <a
+            href="https://phet.colorado.edu"
+            className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:decoration-sky-700 dark:hover:text-sky-300"
+          >
+            PhET Interactive Simulations
+          </a>{' '}
+          at the University of Colorado Boulder. The Divider — set up two
+          sides, remove the divider, watch — is a direct homage to their{' '}
+          <a
+            href="https://phet.colorado.edu/en/simulations/diffusion"
+            className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:decoration-sky-700 dark:hover:text-sky-300"
+          >
+            Diffusion
+          </a>{' '}
+          simulation, and their insistence that a particle picture be legible
+          before it is literal shaped every canvas here. FlowAndFlux shares no
+          code or assets with PhET and is not affiliated with or endorsed by
+          them — the debt is one of inspiration, gratefully acknowledged.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           How it's licensed
         </h2>
         <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">

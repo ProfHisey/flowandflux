@@ -24,7 +24,8 @@ invented, course-neutral examples throughout.
 
 Sixteen interactive modules, grouped by physics:
 
-- **Start** — a PhET-style mixing box (mass and heat), zero equations by design;
+- **Start** — a [PhET](https://phet.colorado.edu)-style mixing box (mass and
+  heat), zero equations by design;
   and gases vs. liquids, where hard-sphere molecules show why D spans four
   decades between the two.
 - **The flux laws** — Fick's law (random walkers vs. `j = −D ∂C/∂x`, measured two
@@ -88,6 +89,15 @@ live profiles, KaTeX for equations. No backend; the whole thing is static.
 - **Emergence over assertion.** Walkers never consult the gradient; net transport
   emerges from counting. Ratios that matter (like Pe) are kept physical even when
   speeds are not.
+
+## Acknowledgments
+
+The clarity bar for this site was set by [PhET Interactive
+Simulations](https://phet.colorado.edu) at the University of Colorado Boulder.
+The Divider module is a direct homage to their
+[Diffusion](https://phet.colorado.edu/en/simulations/diffusion) simulation.
+FlowAndFlux shares no code or assets with PhET and is not affiliated with or
+endorsed by them.
 
 ## License
 

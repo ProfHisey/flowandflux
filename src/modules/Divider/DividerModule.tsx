@@ -217,6 +217,18 @@ export function DividerModule({ dark }: { dark: boolean }) {
               on the same story for momentum. The <strong>bolus dispersion</strong> module returns
               to this unsteady world with the mathematics to match.
             </p>
+            <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              This experiment is a homage to the{' '}
+              <a
+                href="https://phet.colorado.edu/en/simulations/diffusion"
+                className="font-medium text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:decoration-sky-700 dark:hover:text-sky-300"
+              >
+                Diffusion
+              </a>{' '}
+              simulation by PhET Interactive Simulations (University of Colorado
+              Boulder), whose work sets the bar for how legible a particle box
+              can be. No PhET code or assets are used here.
+            </p>
           </Panel>
         </div>
 
