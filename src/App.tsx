@@ -12,7 +12,10 @@ import { PecletModule } from './modules/Peclet/PecletModule';
 import { CoolingModule } from './modules/Cooling/CoolingModule';
 import { WallModule } from './modules/Wall/WallModule';
 import { TransientModule } from './modules/Transient/TransientModule';
-import { HeislerModule } from './modules/Transient/HeislerModule';
+// Heisler charts are UNPUBLISHED for now (Sept 2026) — module code intact in
+// modules/Transient/HeislerModule.tsx; restore by uncommenting this import, the
+// nav entry, and the render branch below.
+// import { HeislerModule } from './modules/Transient/HeislerModule';
 import { CorrelationsModule } from './modules/Correlations/CorrelationsModule';
 import { MixingCupModule } from './modules/MixingCup/MixingCupModule';
 import { PerfusionModule } from './modules/Perfusion/PerfusionModule';
@@ -63,7 +66,8 @@ const GROUPS: ModuleGroup[] = [
     items: [
       { id: 'bolus', name: 'Bolus dispersion', tag: 'a release spreading as √t' },
       { id: 'touch', name: 'Sudden contact', tag: 'erf fronts and the 44 °C line' },
-      { id: 'heisler', name: 'Heisler charts', tag: 'the finite body — Bi and Fo decide' },
+      // Unpublished for now (see the HeislerModule import note):
+      // { id: 'heisler', name: 'Heisler charts', tag: 'the finite body — Bi and Fo decide' },
     ],
   },
   {
@@ -318,7 +322,7 @@ export default function App() {
         {moduleId === 'wall' && <WallModule dark={dark} />}
         {moduleId === 'bolus' && <UnsteadyModule dark={dark} />}
         {moduleId === 'touch' && <TransientModule dark={dark} />}
-        {moduleId === 'heisler' && <HeislerModule dark={dark} />}
+        {/* Unpublished for now: {moduleId === 'heisler' && <HeislerModule dark={dark} />} */}
         {moduleId === 'newton' && <NewtonModule dark={dark} />}
         {moduleId === 'stokes' && <StokesModule dark={dark} />}
         {moduleId === 'poiseuille' && <PoiseuilleModule dark={dark} />}

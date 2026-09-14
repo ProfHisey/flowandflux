@@ -22,7 +22,7 @@ invented, course-neutral examples throughout.
 
 ## What's here
 
-Sixteen interactive modules, grouped by physics:
+Seventeen interactive modules, grouped by physics:
 
 - **Start** — a [PhET](https://phet.colorado.edu)-style mixing box (mass and
   heat), zero equations by design;
@@ -33,8 +33,8 @@ Sixteen interactive modules, grouped by physics:
   viscosity (sliding layers, grip links, dye kinematics), and composite-wall
   resistance networks with a live ΔT budget.
 - **Unsteady** — bolus dispersion (a spreading Gaussian the walkers keep landing
-  on, for a release of mass or of heat), sudden contact (erf fronts, effusivity,
-  why metal feels cold), and interactive Heisler charts (Bi and Fo decide).
+  on, for a release of mass or of heat) and sudden contact (erf fronts,
+  effusivity, why metal feels cold).
 - **Momentum** — Stokes drag and settling (true-magnitude force arrows, the a²
   law, the centrifuge), and Poiseuille flow with parallel plates and the falling
   film, derived on-page by cancelling Navier–Stokes terms.

@@ -288,7 +288,7 @@ export function TransientModule({ dark }: { dark: boolean }) {
             { symbol: '\\alpha', meaning: 'thermal diffusivity k/ρc, m²/s — the pace-setter', maps: 'material pickers' },
             { symbol: '\\operatorname{erf}', meaning: 'the error function — the shape every sudden change relaxes into' },
           ]}
-          note="Any body is semi-infinite until the thermal front reaches its far side — a brick wall is semi-infinite for an hour or two, a pea for a few seconds. The front sits at x ≈ 3.6√(αt): the diffusion clock again, wearing thermal units. When the body runs out of thickness, the story continues in the Heisler-charts module."
+          note="Any body is semi-infinite until the thermal front reaches its far side — a brick wall is semi-infinite for an hour or two, a pea for a few seconds. The front sits at x ≈ 3.6√(αt): the diffusion clock again, wearing thermal units. When the body runs out of thickness, the story continues with the finite-body (Heisler chart) solutions."
         />
         <EquationCard
           title="The contact temperature"
@@ -322,7 +322,7 @@ function ModuleHeader() {
         Touch something and two thermal fronts start marching, one into each body,
         while the interface locks instantly onto the effusivity-weighted contact
         temperature — the number your nerves actually report. When a body runs out of
-        thickness and stops looking infinite, the Heisler-charts module takes over.
+        thickness and stops looking infinite, the finite-body (Heisler chart) solutions take over.
       </p>
     </header>
   );

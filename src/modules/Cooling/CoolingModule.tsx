@@ -240,8 +240,8 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                 <span className="font-semibold">Biot warning: </span>
                 Bi = {sci(derived.Bi)} exceeds 0.1, so the object's interior cannot keep
                 up with its surface — the real center lags the curve shown here. The
-                spatial story (Heisler charts, semi-infinite solids) belongs to the
-                unsteady conduction module.
+                spatial story (semi-infinite solids, Heisler charts) belongs to
+                unsteady conduction.
               </p>
             )}
 
@@ -443,7 +443,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
           <EquationCard
             title="The Biot number — when is one temperature honest?"
             latex={String.raw`\mathrm{Bi} = \frac{h\,L_c}{k}, \qquad L_c = \frac{V}{A}, \qquad \mathrm{Bi} \lesssim 0.1\ \text{lumped OK}`}
-            note="A race: convection stripping heat from the surface vs conduction resupplying it from inside. Bi small — the inside keeps up, the object really is one temperature (quenched steel: 0.03). Bi large — the center lags the surface (the roast: 0.8) and you need the spatial solutions. Every lumped answer should arrive with its Bi attached. (Convention alert: this Bi uses L_c = V/A; the Heisler charts use the half-thickness or radius — for a sphere those differ by 3×, so compare Bi values across the two pages with care.)"
+            note="A race: convection stripping heat from the surface vs conduction resupplying it from inside. Bi small — the inside keeps up, the object really is one temperature (quenched steel: 0.03). Bi large — the center lags the surface (the roast: 0.8) and you need the spatial solutions. Every lumped answer should arrive with its Bi attached. (Convention alert: this Bi uses L_c = V/A; the Heisler charts use the half-thickness or radius — for a sphere those differ by 3×, so compare Bi values across the two conventions with care.)"
             defaultOpen={false}
           />
 
