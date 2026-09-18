@@ -19,10 +19,16 @@ dist-ssr
 # local screenshot scratch
 shot*.mjs
 
-# Course-specific planning documents (reference homework/exam content and
-# the reserved in-class demo list — never publish):
+# Private maintainer notes, kept in a separate private repo cloned to this
+# path. Nothing under notes/ is ever published: it holds the authoritative
+# working-notes document, the course-specific planning map (which references
+# homework/exam content and reserved in-class demos), and scratch scripts.
+# Setup instructions are in CLAUDE.md.
+/notes/
+
+# Belt and braces: the course map must never be committed here even if it is
+# moved or copied back out of notes/.
 *course-map.md
-CLAUDE.md
 
 # Local Claude Code tooling config
 .claude/

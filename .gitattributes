@@ -1,0 +1,3 @@
+# Normalize to LF in the repo so the two machines never produce
+# whole-file diffs from a differing core.autocrlf setting.
+* text=auto
