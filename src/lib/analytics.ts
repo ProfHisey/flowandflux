@@ -40,17 +40,26 @@
  *  together; nothing here runs, and no request is made, when it is false. */
 export const ANALYTICS_ENABLED = true;
 
-const PLAUSIBLE_SRC = 'https://plausible.io/js/script.manual.js';
-const PLAUSIBLE_DOMAIN = 'flowandflux.org';
+/**
+ * Plausible's current script format: the site is identified by the hashed
+ * filename, so there is no `data-domain` attribute and `init()` must be called.
+ * This is the snippet their dashboard issues, loaded from here rather than
+ * pasted into index.html — see initAnalytics() for why that matters.
+ */
+const PLAUSIBLE_SRC = 'https://plausible.io/js/pa-daqymW3bWDOhuUGNzyZtM.js';
 const OPT_OUT_KEY = 'ff-no-analytics';
 
 /** The only feature names that may ever be transmitted. */
 export type Feature = '3d' | 'preset' | 'play' | 'reset' | 'profile' | 'box-drag';
 
-type PlausibleFn = (event: string, opts?: { props?: Record<string, string> }) => void;
+type PlausibleFn = ((event: string, opts?: { props?: Record<string, string> }) => void) & {
+  q?: unknown[];
+  init?: (opts?: Record<string, unknown>) => void;
+  o?: Record<string, unknown>;
+};
 declare global {
   interface Window {
-    plausible?: PlausibleFn & { q?: unknown[] };
+    plausible?: PlausibleFn;
   }
 }
 
@@ -126,23 +135,42 @@ function allowed(): boolean {
 
 let loaded = false;
 
-/** Load the counting script once, if we are allowed to count at all. */
+/**
+ * Load the counting script once, if we are allowed to count at all.
+ *
+ * The vendor's instructions say to paste their snippet into index.html. Doing
+ * it from here instead is deliberate and strictly more private: a snippet in
+ * the document head loads and fires its automatic pageview for EVERY visitor,
+ * including ones sending Do Not Track or Global Privacy Control, and including
+ * anyone who ticked the opt-out. Loading behind allowed() means those visitors
+ * never fetch the script at all, so there is no request to their servers and
+ * nothing to retract. The bytes are identical to the snippet otherwise.
+ */
 export function initAnalytics(): void {
   if (loaded || !allowed()) return;
   loaded = true;
   try {
-    // Queue shim so events fired before the script lands are not lost.
-    window.plausible =
+    // Queue shim, verbatim from the vendor snippet: events fired before the
+    // script lands are replayed once it does.
+    const p =
       window.plausible ||
       (((...args: unknown[]) => {
-        (window.plausible!.q = window.plausible!.q || []).push(args);
+        (p.q = p.q || []).push(args);
       }) as PlausibleFn);
+    p.init = p.init || ((opts?: Record<string, unknown>) => { p.o = opts || {}; });
+    window.plausible = p;
 
     const s = document.createElement('script');
-    s.defer = true;
+    s.async = true;
     s.src = PLAUSIBLE_SRC;
-    s.setAttribute('data-domain', PLAUSIBLE_DOMAIN);
     document.head.appendChild(s);
+
+    // Starts tracking and sends one automatic pageview per page load. That
+    // pageview is the site-wide visitor count; the module breakdown comes from
+    // the custom events below. Hash-based routing is deliberately NOT enabled:
+    // a hash change already emits module_view, and turning it on would double
+    // every module visit as a pageview too.
+    p.init();
   } catch {
     /* never break the page over a counter */
   }
