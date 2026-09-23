@@ -72,6 +72,7 @@ import {
   steadyOutlet, stepParcels, timeWeightedRate, type Box as RttBox, type Parcel as RttParcel,
   type Source as RttSource,
 } from '../src/lib/rtt';
+import { bucket } from '../src/lib/analytics';
 
 let failures = 0;
 /** Relative comparison. For a target of exactly zero the tolerance is
@@ -1334,6 +1335,31 @@ check('profile endpoints: T(0) = Tc, T(1) = Tw; v(0) = 2v̄, v(1) = 0 (no-slip)'
       high < -1e-6 && close(timeWeightedRate(100, 100, 2), 0, 1e-12), String(high));
     check('round trip, one deposit at the bottom: dollar-weighted > 0', low > 1e-6, String(low));
   }
+}
+
+// ------------------------------------------------- usage-duration buckets
+// Not physics, but the one piece of the analytics logic that can be silently
+// wrong: a shifted boundary would misreport every duration figure, and the
+// error would be invisible in the dashboard. Boundaries are exclusive upper
+// bounds, so 10 s belongs to the SECOND bucket, not the first.
+{
+  console.log('\nUsage duration buckets');
+  const cases: [number, string][] = [
+    [0, '0-10s'], [9.99, '0-10s'], [10, '10-30s'], [29.99, '10-30s'],
+    [30, '30-60s'], [59.99, '30-60s'], [60, '1-2m'], [119.99, '1-2m'],
+    [120, '2-5m'], [299.99, '2-5m'], [300, '5-10m'], [599.99, '5-10m'],
+    [600, '10-30m'], [1799.99, '10-30m'], [1800, '30m+'], [86400, '30m+'],
+  ];
+  let bad = '';
+  for (const [sec, want] of cases) {
+    const got = bucket(sec);
+    if (got !== want) bad += ' ' + sec + '->' + got + '(want ' + want + ')';
+  }
+  check('every boundary lands in the bucket above it', bad === '', bad);
+  check('nonsense input degrades quietly rather than throwing',
+    bucket(-5) === '0-10s' && bucket(NaN) === '0-10s' && bucket(Infinity) === '30m+');
+  check('the labels are the closed set the notes document',
+    new Set(cases.map((c) => c[1])).size === 8);
 }
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);

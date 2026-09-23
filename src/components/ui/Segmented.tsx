@@ -1,3 +1,5 @@
+import { trackFeature, type Feature } from '../../lib/analytics';
+
 interface SegmentedProps<T extends string> {
   label?: string;
   /** Accessible name for toolbar groups that carry no visible label. */
@@ -7,6 +9,14 @@ interface SegmentedProps<T extends string> {
   onChange: (v: T) => void;
 }
 
+/** ariaLabels whose selection is worth counting, and what to call it. The
+ *  map keeps feature_use on a closed vocabulary: an unmapped group counts
+ *  nothing rather than transmitting whatever label it happens to carry. */
+const TRACKED: Record<string, { value: string; feature: Feature }> = {
+  'View dimension': { value: '3d', feature: '3d' },
+  'Velocity profile': { value: 'parabolic', feature: 'profile' },
+};
+
 export function Segmented<T extends string>({
   label,
   ariaLabel,
@@ -14,6 +24,13 @@ export function Segmented<T extends string>({
   options,
   onChange,
 }: SegmentedProps<T>) {
+  const handle = (v: T) => {
+    const t = ariaLabel ? TRACKED[ariaLabel] : undefined;
+    if (t && v === t.value) {
+      trackFeature(location.hash.replace('#', '') || 'divider', t.feature);
+    }
+    onChange(v);
+  };
   return (
     <div className="space-y-1.5">
       {label && (
@@ -35,7 +52,7 @@ export function Segmented<T extends string>({
               role="radio"
               aria-checked={active}
               title={opt.title}
-              onClick={() => onChange(opt.value)}
+              onClick={() => handle(opt.value)}
               className={
                 'flex-1 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ' +
                 (active

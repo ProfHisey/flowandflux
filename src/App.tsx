@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+
 import { ChevronDown, Moon, Sun, Waves } from 'lucide-react';
 import { DividerModule } from './modules/Divider/DividerModule';
 import { GasLiquidModule } from './modules/GasLiquid/GasLiquidModule';
@@ -22,6 +23,8 @@ import { PerfusionModule } from './modules/Perfusion/PerfusionModule';
 import { WalkerModule } from './modules/Walker/WalkerModule';
 import { RttModule } from './modules/Rtt/RttModule';
 import { RttLiteModule } from './modules/Rtt/RttLiteModule';
+import { useModuleAnalytics } from './hooks/useModuleAnalytics';
+import { ANALYTICS_ENABLED, isOptedOut, setOptedOut } from './lib/analytics';
 
 /**
  * Modules are grouped by the PHYSICS, not by any one course's lesson plan —
@@ -113,6 +116,46 @@ function initialModule(): ModuleId {
   // the render branch for it below is unreachable.
   if (h === 'perfusion') return 'perfusion';
   return ALL.find((m) => m.id === h)?.id ?? 'divider';
+}
+
+/**
+ * Rendered on the About page only while counting is switched on, so the page
+ * never describes something that is not happening. The claims here are the
+ * invariants in lib/analytics.ts, in plain words — keep the two in step.
+ */
+function UsageNotice() {
+  const [out, setOut] = useState(isOptedOut());
+  return (
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        How usage is measured
+      </h2>
+      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+        This site counts which tools get opened and roughly how long each one is used,
+        so the ones people actually reach for can be improved. The counting is anonymous
+        in a specific, checkable sense: no cookies, no accounts, no advertising, no
+        fingerprinting, and no identifier of any kind is stored in your browser.
+        Individual visits are never linked to one another — nothing connects one tool you
+        opened to the next, so no path through the site can be reconstructed. How long a
+        tool was open is recorded only as a coarse range, never an exact time, and nothing
+        you type or set is ever transmitted. The counts are handled by Plausible
+        Analytics, which does not store IP addresses. If your browser sends a Do Not Track
+        or Global Privacy Control signal, nothing is sent at all.
+      </p>
+      <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+        <input
+          type="checkbox"
+          checked={out}
+          onChange={(e) => {
+            setOptedOut(e.target.checked);
+            setOut(e.target.checked);
+          }}
+          className="h-3.5 w-3.5 accent-sky-600"
+        />
+        Don't count my usage on this device
+      </label>
+    </div>
+  );
 }
 
 function AboutPage() {
@@ -236,6 +279,8 @@ function AboutPage() {
         </p>
       </div>
 
+      {ANALYTICS_ENABLED && <UsageNotice />}
+
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Feedback
@@ -253,6 +298,10 @@ export default function App() {
   // the header toggle still lets anyone switch.
   const [dark, setDark] = useState(true);
   const [moduleId, setModuleId] = useState<ModuleId>(initialModule);
+
+  // Anonymous usage counting. Off until ANALYTICS_ENABLED is flipped; this is
+  // the ONLY call site, so the module lifecycle is measured in one place.
+  useModuleAnalytics(moduleId);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
