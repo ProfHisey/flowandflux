@@ -61,7 +61,9 @@ import {
   supplyC, tissueC, tissueDrop, type PerfusionParams,
 } from '../src/lib/perfusion';
 import {
-  N2, collisionRate, flightInDiameters, gasDiffusivity, meanFreePath, meanSpeed,
+  N2, collisionRate, dragCoefficient as zetaStokes, einsteinD, flightInDiameters,
+  gasDiffusivity, meanFreePath, meanFreePath2D, meanSpeed, ouCoefficients, stepRatio,
+  stepRegime,
 } from '../src/lib/kinetics';
 import {
   areaAvgT, areaAvgTNumeric, mixingCupT, mixingCupTNumeric, tempAt as mcTempAt,
@@ -1095,6 +1097,244 @@ check('D_gas = (1/3) lambda v_bar = 0.107 cm^2/s',
   String(gasDiffusivity(T0, P0, N2.d, N2.m)));
 check('mean free path scales as 1/P (compress -> liquid-ward)',
   close(meanFreePath(T0, 10 * P0, N2.d), meanFreePath(T0, P0, N2.d) / 10, 1e-12));
+
+// --- 29b. The step length, and the regime boundary it sets ----------------
+// 2D hard disks: lambda = 1/(sqrt2 n d), n per unit AREA, d the collision
+// diameter. Hand check: n = 0.001 /px^2, d = 10 px
+//   lambda = 1 / (2 * 1.414214 * 0.001 * 10) = 35.36 px, i.e. 3.54 diameters
+// The 2 is the one that is easy to lose: the cross-section is the exclusion
+// circle's DIAMETER 2d, not d. Dropping it doubles every prediction.
+console.log('\nStep length: the 2D law the on-screen boxes obey, and lambda/d');
+check('2D mean free path = 1/(2 sqrt2 n d) = 35.36 px (hand)',
+  close(meanFreePath2D(0.001, 10), 35.35534, 1e-5), String(meanFreePath2D(0.001, 10)));
+check('lambda scales as 1/n (crowd the box, shorten the flight)',
+  close(meanFreePath2D(0.002, 10), meanFreePath2D(0.001, 10) / 2, 1e-12));
+check('lambda scales as 1/d (fatter disks collide sooner)',
+  close(meanFreePath2D(0.001, 20), meanFreePath2D(0.001, 10) / 2, 1e-12));
+check('lambda/d = 3.54 diameters for that box',
+  close(stepRatio(meanFreePath2D(0.001, 10), 10), 3.535534, 1e-5));
+
+// The factor of 2 above, checked GEOMETRICALLY rather than by restating the
+// formula. Shoot straight rays through a field of randomly placed disks and
+// measure the mean distance to the first hit. For STATIONARY targets the
+// mean free path is 1/(n * sigma), and this pins sigma = 2d — the exclusion
+// circle's diameter — which is the step the algebra keeps losing. (The extra
+// sqrt2 in meanFreePath2D is the standard relative-motion correction for
+// targets that are themselves moving, and is not exercised here.)
+{
+  const d = 1;          // collision diameter
+  const nDens = 0.01;   // disks per unit area
+  const side = 640;
+  const N = Math.round(nDens * side * side);
+  let seed = 987654321 >>> 0;
+  const rnd = () => {
+    seed = (seed + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const cx = new Float64Array(N);
+  const cy = new Float64Array(N);
+  for (let i = 0; i < N; i++) { cx[i] = rnd() * side; cy[i] = rnd() * side; }
+
+  const rays = 1500;
+  const maxT = side / 4; // well inside the box, so edges cannot truncate
+  let sum = 0;
+  let counted = 0;
+  for (let r = 0; r < rays; r++) {
+    // Start near the middle so a ray of length maxT stays in the field.
+    const ox = side / 2 + (rnd() - 0.5) * side * 0.2;
+    const oy = side / 2 + (rnd() - 0.5) * side * 0.2;
+    const th = 2 * Math.PI * rnd();
+    const ux = Math.cos(th);
+    const uy = Math.sin(th);
+    let best = Infinity;
+    for (let i = 0; i < N; i++) {
+      const px = cx[i] - ox;
+      const py = cy[i] - oy;
+      const proj = px * ux + py * uy;
+      if (proj <= 0 || proj >= best) continue;      // behind us, or already beaten
+      const perp2 = px * px + py * py - proj * proj;
+      if (perp2 >= d * d) continue;                 // misses the exclusion circle
+      const t = proj - Math.sqrt(d * d - perp2);    // near intersection
+      if (t > 0 && t < best) best = t;
+    }
+    if (best < maxT) { sum += best; counted++; }
+  }
+  const measured = sum / counted;
+  // Rays that found no hit inside maxT are dropped, which truncates the
+  // exponential; correct for it so the comparison is like-for-like.
+  const frac = counted / rays;
+  const lamPred = 1 / (nDens * 2 * d);
+  // E[X | X < m] for an exponential of mean L, with m = maxT:
+  const truncatedMean = (L: number) => {
+    const m = maxT;
+    return L - (m * Math.exp(-m / L)) / (1 - Math.exp(-m / L));
+  };
+  check('ray-march: mean free distance matches 1/(n*2d), sigma = 2d',
+    Math.abs(measured / truncatedMean(lamPred) - 1) < 0.08,
+    `measured ${measured}, expected ${truncatedMean(lamPred)} (kept ${(frac * 100).toFixed(0)}%)`);
+  check('...and is NOT 1/(n*d), the factor-of-2 mistake this guards',
+    Math.abs(measured / truncatedMean(2 * lamPred) - 1) > 0.25,
+    `measured ${measured} vs the wrong ${truncatedMean(2 * lamPred)}`);
+}
+
+// The boundary that decides which physics you are allowed to use.
+check("regime: lambda/d = 181.6 (air) is 'dilute'",
+  stepRegime(flightInDiameters(T0, P0, N2.d)) === 'dilute');
+check("regime: lambda/d = 100 is still 'dense' (soft marker, not the boundary)",
+  stepRegime(100) === 'dense');
+check("regime: lambda/d = 1 exactly is 'dense' — a flight still exists",
+  stepRegime(1) === 'dense');
+check("regime: lambda/d just under 1 is 'continuum' — no flight left to count",
+  stepRegime(0.999) === 'continuum');
+check('the hard boundary is lambda/d = 1, and nothing else',
+  stepRegime(1) !== stepRegime(1 - 1e-12));
+
+// The two on-screen boxes at their default settings land on opposite sides
+// of that boundary — which is the whole module in one number.
+{
+  // gas: 30 disks of r = 5 in a ~300 x 290 px box
+  const nGasDens = 30 / (300 * 290);
+  const gasRatio = stepRatio(meanFreePath2D(nGasDens, 10), 10);
+  // liquid: phi = 0.7 of bidisperse disks, r = 8 and 11.2, mean collision
+  // diameter 2 * 9.6 = 19.2 px
+  const meanDiskArea = (Math.PI * (8 * 8 + 11.2 * 11.2)) / 2;
+  const nLiqDens = 0.7 / meanDiskArea;
+  const liqRatio = stepRatio(meanFreePath2D(nLiqDens, 19.2), 19.2);
+  check('default gas box has flights (lambda/d > 1)', gasRatio > 1, String(gasRatio));
+  check("default gas box is 'dense', NOT 'dilute' — the page says so too",
+    stepRegime(gasRatio) === 'dense', String(gasRatio));
+  check('default liquid box has no flight left (lambda/d < 1)',
+    liqRatio < 1, String(liqRatio));
+  check("default liquid box is 'continuum'",
+    stepRegime(liqRatio) === 'continuum', String(liqRatio));
+  check('the gas box out-steps the liquid box by more than 20x',
+    gasRatio / liqRatio > 20, `${gasRatio} / ${liqRatio}`);
+}
+
+// --- 29c. Drag is where liquid D comes from -------------------------------
+// zeta = 6 pi mu a. Hand: mu = 0.0089 P, a = 2e-8 cm
+//   zeta = 18.849556 * 0.0089 * 2e-8 = 3.3552e-9 g/s
+console.log('\nContinuum side: drag, and the Einstein relation');
+check('Stokes drag coefficient zeta = 6 pi mu a = 3.3552e-9 g/s (hand)',
+  close(zetaStokes(2e-8, 0.0089), 3.35523e-9, 1e-5), String(zetaStokes(2e-8, 0.0089)));
+check('drag coefficient is linear in mu and in a',
+  close(zetaStokes(4e-8, 0.0178), 4 * zetaStokes(2e-8, 0.0089), 1e-12));
+// THE identity: Stokes-Einstein is nothing but the Einstein relation with
+// Stokes' drag substituted in. Cross-library (kinetics <-> fick).
+check('D = k_B T / zeta with zeta = 6 pi mu a IS Stokes-Einstein, exactly',
+  close(einsteinD(zetaStokes(2e-8, 0.0089), 298), stokesEinstein(2e-8, 0.0089, 298), 1e-12),
+  `${einsteinD(zetaStokes(2e-8, 0.0089), 298)} vs ${stokesEinstein(2e-8, 0.0089, 298)}`);
+check('thicken the solvent, slow the diffusion: D ~ 1/mu',
+  close(einsteinD(zetaStokes(2e-8, 2 * 0.0089), 298),
+    einsteinD(zetaStokes(2e-8, 0.0089), 298) / 2, 1e-12));
+check('warm it at fixed mu and D rises linearly (the k_B T numerator)',
+  close(einsteinD(zetaStokes(2e-8, 0.0089), 596),
+    2 * einsteinD(zetaStokes(2e-8, 0.0089), 298), 1e-12));
+check('the continuum route lands in the liquid decade, 1e-5 cm^2/s',
+  einsteinD(zetaStokes(2e-8, 0.0089), 298) > 1e-5
+    && einsteinD(zetaStokes(2e-8, 0.0089), 298) < 5e-5,
+  String(einsteinD(zetaStokes(2e-8, 0.0089), 298)));
+
+// --- 29d. The continuum view's step rule, marched and measured ------------
+// The Langevin sphere in the Gases & Liquids continuum view has to DIFFUSE
+// at D = kT/zeta rather than be told to. These march the same coefficients
+// the canvas uses (lib/kinetics.ouCoefficients) with the same step policy
+// (h = tau_p / 8) and measure <r^2> = 4 D t off the trajectory.
+//
+// The step policy is the point of the last two checks: an earlier build used
+// a FLAT h = 1/480 s, which is larger than tau_p once mu > ~3, and the walk
+// then diffused 16% faster than kT/zeta. Tying h to tau_p removes that bias
+// across the whole slider range. Fixed seed, so the numbers are reproducible
+// and the tolerances below are Monte Carlo error, not slop.
+console.log('\nLangevin step rule: D = k_B T / zeta has to emerge, not be imposed');
+{
+  const TAU0 = 0.006;
+  const SUB = 8;
+  const m = 1;
+  const kT = 0.5 * 90 * 90; // matches the canvas at temp = 1x
+
+  check('OU decay over one step = exp(-h/tau_p) exactly',
+    close(ouCoefficients(TAU0 / SUB, TAU0, kT, m).decay, Math.exp(-1 / SUB), 1e-15));
+  {
+    // Stationary variance is the fixed point of var' = decay^2 var + kick^2,
+    // and "exact" means it is kT/m at ANY step size, not just small ones.
+    const settle = (h: number) => {
+      const { decay, kick } = ouCoefficients(h, TAU0, kT, m);
+      let v2 = 0;
+      for (let i = 0; i < 20000; i++) v2 = decay * decay * v2 + kick * kick;
+      return v2;
+    };
+    check('stationary velocity variance = kT/m', close(settle(TAU0 / SUB), kT / m, 1e-9),
+      String(settle(TAU0 / SUB)));
+    check('...still kT/m at a 50x larger step (no h-dependence at all)',
+      close(settle((50 * TAU0) / SUB), kT / m, 1e-9), String(settle((50 * TAU0) / SUB)));
+  }
+
+  // A deterministic generator, RESEEDED for every walk so the mu comparisons
+  // ride the same noise realization (common random numbers — it is the
+  // ratios that carry the physics, and this makes them precise). An LCG here
+  // silently halved the measured D: correlated successive draws wreck the
+  // velocity autocorrelation, which is exactly the integral D depends on.
+  // This is mulberry32, with both Box-Muller outputs used.
+  const makeGauss = () => {
+    let seed = 12345 >>> 0;
+    let spare: number | null = null;
+    const rnd = () => {
+      seed = (seed + 0x6d2b79f5) >>> 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    return () => {
+      if (spare !== null) { const v = spare; spare = null; return v; }
+      const u = Math.max(1e-12, rnd());
+      const th = 2 * Math.PI * rnd();
+      const r = Math.sqrt(-2 * Math.log(u));
+      spare = r * Math.sin(th);
+      return r * Math.cos(th);
+    };
+  };
+
+  /** March the real update rule at viscosity mu and measure D, px^2/s. */
+  const walk = (mu: number, reps: number, secs: number) => {
+    const gaussDet = makeGauss();
+    const tauP = TAU0 / mu;
+    const h = tauP / SUB;
+    const { decay, kick } = ouCoefficients(h, tauP, kT, m);
+    const steps = Math.round(secs / h);
+    let sum = 0;
+    for (let r = 0; r < reps; r++) {
+      let x = 0, y = 0, vx = 0, vy = 0;
+      for (let i = 0; i < steps; i++) {
+        vx = decay * vx + kick * gaussDet();
+        vy = decay * vy + kick * gaussDet();
+        x += vx * h;
+        y += vy * h;
+      }
+      sum += x * x + y * y;
+    }
+    return sum / reps / (4 * steps * h);
+  };
+  const target = (mu: number) => (kT / m) * (TAU0 / mu); // kT/zeta
+
+  const D1 = walk(1, 300, 6);
+  check('marched walk diffuses at D = kT/zeta (7%, Monte Carlo at 300 reps)',
+    Math.abs(D1 / target(1) - 1) < 0.07, `${D1} vs ${target(1)}`);
+  const D2 = walk(2, 300, 6);
+  check('double the viscosity, halve the diffusivity: D ~ 1/mu',
+    Math.abs(D2 / target(2) - 1) < 0.07, `${D2} vs ${target(2)}`);
+  const D4 = walk(4, 300, 6);
+  check('and again at 4x — no bias creeping in as the step policy tightens',
+    Math.abs(D4 / target(4) - 1) < 0.07, `${D4} vs ${target(4)}`);
+  check('the 1/mu scaling holds end to end: D(1x)/D(4x) = 4',
+    Math.abs(D1 / D4 / 4 - 1) < 0.05, String(D1 / D4));
+  check('thermal SPEED is untouched by mu — only the persistence changes',
+    close(kT / m, kT / m, 0) && Math.abs(
+      ouCoefficients(TAU0 / (4 * SUB), TAU0 / 4, kT, m).kick ** 2
+      / (1 - ouCoefficients(TAU0 / (4 * SUB), TAU0 / 4, kT, m).decay ** 2) / (kT / m) - 1) < 1e-9);
+}
 {
   // The four-decade punchline, cross-library: gas D from kinetic theory vs
   // liquid D from Stokes-Einstein (small solute, a = 0.2 nm, water at 25 C).

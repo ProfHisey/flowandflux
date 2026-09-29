@@ -6,7 +6,10 @@ import { Slider } from '../../components/ui/Slider';
 import { Segmented } from '../../components/ui/Segmented';
 import { EquationCard } from '../../components/ui/EquationCard';
 
-import { N2, collisionRate, flightInDiameters, gasDiffusivity, meanSpeed } from '../../lib/kinetics';
+import {
+  N2, collisionRate, dragCoefficient, einsteinD, flightInDiameters, gasDiffusivity,
+  meanSpeed, stepRegime, type StepRegime,
+} from '../../lib/kinetics';
 import { stokesEinstein } from '../../lib/fick';
 import { GasLiquidCanvas, type WanderStats } from './GasLiquidCanvas';
 import { GasLiquid3DCanvas } from './GasLiquid3DCanvas';
@@ -28,6 +31,19 @@ const FLIGHT_DIAM = flightInDiameters(T_EX, P_EX, N2.d);
 const COLL_RATE = collisionRate(T_EX, P_EX, N2.d, N2.m); // 1/s
 const D_GAS = gasDiffusivity(T_EX, P_EX, N2.d, N2.m); // cm^2/s
 const D_LIQ = stokesEinstein(2e-8, 0.0089, 298); // cm^2/s, a = 0.2 nm in water
+// The same liquid D by the two-step route the continuum view draws: first a
+// drag coefficient, then the Einstein relation. verify.ts pins them equal.
+const ZETA_EX = dragCoefficient(2e-8, 0.0089); // g/s
+const D_LIQ_EINSTEIN = einsteinD(ZETA_EX, 298); // cm^2/s
+
+/** One word per regime, shown beside lambda/d. The boundary that matters is
+ *  lambda/d = 1: above it a flight exists and kinetic theory can count it,
+ *  below it nothing is left to count and drag is the honest description. */
+const REGIME_WORD: Record<StepRegime, string> = {
+  dilute: 'dilute',
+  dense: 'dense',
+  continuum: 'continuum',
+};
 
 export function GasLiquidModule({ dark }: { dark: boolean }) {
   const [running, setRunning] = useState(true);
@@ -37,6 +53,9 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
   const [phi, setPhi] = useState(0.7);
   const [stats, setStats] = useState<WanderStats | null>(null);
   const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  const [liquidView, setLiquidView] = useState<'molecular' | 'continuum'>('molecular');
+  const [muRel, setMuRel] = useState(1);
+  const continuum = liquidView === 'continuum';
 
   return (
     <div className="space-y-5">
@@ -46,9 +65,34 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
         <div className="order-1 space-y-5 lg:col-start-1 lg:row-start-1">
           <Panel
             title="Two ways to wander"
-            subtitle="Same kind of molecule, same temperature. Only the crowding differs — watch the orange one."
+            subtitle={
+              continuum && dim === '2d'
+                ? 'Two models of the same liquid, next to the gas. On the right there are no molecules left — only viscosity, and one sphere being kicked and dragged.'
+                : 'Same kind of molecule, same temperature. Only the crowding differs — watch the orange one.'
+            }
             right={
               <div className="flex flex-wrap items-center justify-end gap-1.5">
+                {dim === '2d' && (
+                  <div className="w-[172px]">
+                    <Segmented<'molecular' | 'continuum'>
+                      ariaLabel="How to model the liquid"
+                      value={liquidView}
+                      options={[
+                        {
+                          value: 'molecular',
+                          label: 'Molecules',
+                          title: 'The liquid as hard disks — crowding and cages',
+                        },
+                        {
+                          value: 'continuum',
+                          label: 'Continuum',
+                          title: 'The liquid as a structureless viscous medium — one sphere, and drag',
+                        },
+                      ]}
+                      onChange={setLiquidView}
+                    />
+                  </div>
+                )}
                 <div className="w-28">
                   <Segmented<'2d' | '3d'>
                     ariaLabel="View dimension"
@@ -90,23 +134,41 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                   resetTick={resetTick}
                   running={running}
                   dark={dark}
+                  muRel={muRel}
+                  liquidView={liquidView}
                   onStats={setStats}
                 />
               )}
             </div>
-
-            <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-              Nothing here is scripted — every molecule just flies straight until it
-              hits another one, and the two pictures fall out of the crowding alone.
-              The gas molecule's path is long straight flights, redirected now and
-              then. The liquid molecule moves <em>just as fast</em>, but it cannot
-              finish a single body length before a neighbor turns it around: it
-              rattles in a cage, and only escapes when the cage happens to open. That
-              one difference is why a smell diffuses across a centimeter of still air
-              in seconds while sugar takes a day to cross an unstirred teacup — same
-              distance-squared clock, four decades apart in D. (Crossing a whole room
-              is a different story: that is air currents, as the Péclet module shows.)
-            </p>
+            {continuum && dim === '2d' ? (
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                The right-hand box has changed <em>model</em>, not temperature. Its
+                molecules are gone, replaced by a single number — the viscosity μ —
+                and the tagged sphere now feels only two things: a thermal kick, and
+                a drag force <strong>6πμa·v</strong> opposing whichever way it is
+                going. Nobody imposes a diffusivity on it; it walks, and the walk
+                turns out to have D = k_BT/ζ. That is the leap Stokes–Einstein asks
+                you to make, and it is a bold one: the sphere here is 0.2 nm, about
+                the size of a water molecule, so "a sphere in a structureless fluid"
+                is on its face absurd — and still lands within a factor of two. It is
+                the same 6πμa that sets a settling cell's terminal velocity in{' '}
+                <a className="underline hover:no-underline" href="#stokes">Stokes drag &amp; settling</a>:
+                one drag law, doing two jobs.
+              </p>
+            ) : (
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                Nothing here is scripted — every molecule just flies straight until it
+                hits another one, and the two pictures fall out of the crowding alone.
+                The gas molecule's path is long straight flights, redirected now and
+                then. The liquid molecule moves <em>just as fast</em>, but it cannot
+                finish a single body length before a neighbor turns it around: it
+                rattles in a cage, and only escapes when the cage happens to open. That
+                one difference is why a smell diffuses across a centimeter of still air
+                in seconds while sugar takes a day to cross an unstirred teacup — same
+                distance-squared clock, four decades apart in D. (Crossing a whole room
+                is a different story: that is air currents, as the Péclet module shows.)
+              </p>
+            )}
           </Panel>
         </div>
 
@@ -121,43 +183,98 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 value={stats ? stats.gasFlight.toFixed(1) : '—'}
                 unit="diameters"
                 tone="accent"
-                hint="mean path between molecular collisions"
+                hint={stats && stats.gasFlightN < 30
+                  ? `λ — measured path between collisions. Averaged over only  flights so far; it needs ~30 to settle, so expect it to climb.`
+                  : 'λ — measured path between collisions, averaged over the last 60'}
               />
               <Stat
-                label="Gas: collisions"
-                value={stats ? stats.gasColRate.toFixed(1) : '—'}
-                unit="/s"
-                hint="how often the walk is redirected"
-              />
-              <Stat
-                label="Gas: net wander"
-                value={stats ? stats.gasWander.toFixed(1) : '—'}
+                label={<>Gas: λ predicted</>}
+                value={stats ? stats.gasFlightPred.toFixed(1) : '—'}
                 unit="diameters"
+                hint="1/(2√2 n d) from this box's own density — the dilute law"
+              />
+              <Stat
+                label="Gas: λ/d"
+                value={stats ? stats.gasFlight.toFixed(1) : '—'}
+                unit={stats ? REGIME_WORD[stepRegime(stats.gasFlight)] : ''}
                 tone="accent"
-                hint="displacement over the last ~10 s"
+                hint="above 1, flights exist and can be counted"
               />
-              <Stat
-                label="Liquid: free flight"
-                value={stats ? stats.liqFlight.toFixed(2) : '—'}
-                unit="diameters"
-                tone="warm"
-                hint="under ONE diameter — the cage"
-              />
-              <Stat
-                label="Liquid: collisions"
-                value={stats ? stats.liqColRate.toFixed(0) : '—'}
-                unit="/s"
-                hint="constant contact with the neighbors"
-              />
-              <Stat
-                label="Liquid: net wander"
-                value={stats ? stats.liqWander.toFixed(1) : '—'}
-                unit="diameters"
-                tone="warm"
-                hint="same speed, nowhere to go"
-              />
+              {continuum ? (
+                <>
+                  <Stat
+                    label="Sphere: D measured"
+                    value={stats && stats.contD ? stats.contD.toFixed(3) : '—'}
+                    unit="dia²/s"
+                    tone="warm"
+                    hint="from the sphere's own ⟨r²⟩ = 4Dt"
+                  />
+                  <Stat
+                    label="Sphere: k_BT/ζ"
+                    value={stats ? stats.contDPred.toFixed(3) : '—'}
+                    unit="dia²/s"
+                    hint="what the Einstein relation predicts"
+                  />
+                  <Stat
+                    label="Sphere: net wander"
+                    value={stats ? stats.contWander.toFixed(1) : '—'}
+                    unit="diameters"
+                    tone="warm"
+                    hint="displacement over the last ~10 s"
+                  />
+                </>
+              ) : (
+                <>
+                  <Stat
+                    label="Liquid: free flight"
+                    value={stats ? stats.liqFlight.toFixed(2) : '—'}
+                    unit="diameters"
+                    tone="warm"
+                    hint={stats && stats.liqFlightN < 30
+                      ? `under ONE diameter — the cage. Only  flights so far.`
+                      : 'under ONE diameter — the cage'}
+                  />
+                  <Stat
+                    label={<>Liquid: λ predicted</>}
+                    value={stats ? stats.liqFlightPred.toFixed(2) : '—'}
+                    unit="diameters"
+                    hint="the dilute law, far outside its range here"
+                  />
+                  <Stat
+                    label="Liquid: λ/d"
+                    value={stats ? stats.liqFlight.toFixed(2) : '—'}
+                    unit={stats ? REGIME_WORD[stepRegime(stats.liqFlight)] : ''}
+                    tone="warm"
+                    hint="below 1 — no flight left to count"
+                  />
+                </>
+              )}
             </div>
             <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <strong>λ/d is the number that decides which physics you are allowed
+              to use.</strong>{' '}
+              {continuum ? (
+                <>
+                  The liquid box is below 1, so there is no free flight to count and
+                  kinetic theory has nothing to work with. What replaces it is on the
+                  right: drag. The sphere's measured D and the k_BT/ζ prediction are
+                  two independent numbers, and they agree — which is the Einstein
+                  relation earning its keep rather than being asserted.
+                </>
+              ) : (
+                <>
+                  Above 1 a molecule clears its own body between collisions and the
+                  flights can be counted; below 1 it never does. Watch the gas's
+                  measured λ meet its prediction as you rarefy the box, and fall
+                  below it as you crowd — the dilute law assumes a molecule is far
+                  likelier to be flying than touching, and says so by failing. The
+                  measured figure is a rolling mean over the tagged molecule's last
+                  flights, so give it a minute to settle, especially when rarefied:
+                  a long mean free path means few collisions to average.
+                </>
+              )}
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               The honest caveat: even this on-screen "gas" is far denser than a real
               one — drawn to true scale the box would be nearly empty, with seconds
               between collisions. A real air molecule flies about{' '}
@@ -171,7 +288,14 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
 
         {/* --------------------------------------------------- controls */}
         <div className="order-2 space-y-5 lg:col-start-2 lg:row-start-1 lg:row-span-2">
-          <Panel title="Setup" subtitle="Crowding sliders restart the boxes; temperature acts live.">
+          <Panel
+            title="Setup"
+            subtitle={
+              continuum
+                ? "Two molecular sliders and one continuum slider — the model decides which parameters even exist."
+                : "Crowding sliders restart the boxes; temperature acts live."
+            }
+          >
             <div className="space-y-5">
               <Slider
                 label="Temperature"
@@ -193,24 +317,40 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 onChange={setNGas}
                 hint="More molecules = shorter free flights. Rarefy it and the flights straighten out toward ballistic."
               />
-              <Slider
-                label="Liquid packing"
-                value={phi}
-                min={0.55}
-                max={0.78}
-                step={0.01}
-                format={(v) => `${Math.round(v * 100)}% full`}
-                onChange={setPhi}
-                hint="At 78% the cage barely ever opens. Loosen it and watch cage-hops turn back into flights. (Two sizes of molecule on purpose — a one-size 2D liquid freezes into a crystal.)"
-              />
+              {continuum ? (
+                <Slider
+                  label="Solvent viscosity μ"
+                  value={muRel}
+                  min={0.5}
+                  max={4}
+                  step={0.1}
+                  format={(v) => `${v.toFixed(1)}× water`}
+                  onChange={setMuRel}
+                  hint="The continuum's only property. Thicken it and watch the drag arrow grow while the velocity arrow does NOT — the sphere is kicked just as hard, it just cannot keep going. D = k_BT/ζ falls as 1/μ."
+                />
+              ) : (
+                <Slider
+                  label="Liquid packing"
+                  value={phi}
+                  min={0.55}
+                  max={0.78}
+                  step={0.01}
+                  format={(v) => `${Math.round(v * 100)}% full`}
+                  onChange={setPhi}
+                  hint="At 78% the cage barely ever opens. Loosen it and watch cage-hops turn back into flights. (Two sizes of molecule on purpose — a one-size 2D liquid freezes into a crystal.)"
+                />
+              )}
             </div>
           </Panel>
 
           <Panel title="Things to try">
             <ul className="list-disc space-y-2 pl-4 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               <li>Follow the orange molecule in each box for ten seconds. Describe the two paths in one word each.</li>
+              <li>Rarefy the gas to 8 molecules and watch measured λ climb to meet its prediction. Crowd it to 80 and watch it fall below — the dilute law failing, on cue.</li>
+              <li>Read λ/d in both boxes. Which side of 1 is each on, and which description does that license?</li>
+              <li>Switch the liquid to <strong>Continuum</strong>. The molecules vanish; does the sphere still diffuse? Compare its measured D against k_BT/ζ.</li>
+              <li>In Continuum, push μ from 0.5× to 4×. Which arrow grows, which one does not, and what happens to D?</li>
               <li>Crank the temperature to 2×. Both boxes speed up — does the liquid molecule escape its cage more often?</li>
-              <li>Rarefy the gas to 8 molecules, then crowd it to 80. Watch the free-flight readout track the crowding.</li>
               <li>Pack the liquid to 78%, then loosen to 55% — find the packing where "caged" starts to look like "gas".</li>
             </ul>
           </Panel>
@@ -237,6 +377,11 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
             title="Where liquid D comes from — Stokes–Einstein"
             latex={String.raw`D = \frac{k_B T}{6 \pi \mu a}`}
             note={`In a liquid there are no flights to speak of — the molecule is in permanent contact with its neighbors, so what limits it is drag (μ) and what drives it is thermal agitation (k_BT). A 0.2 nm solute in room-temperature water: D ≈ ${(D_LIQ * 1e5).toFixed(1)}×10⁻⁵ cm²/s. Note what appears here that kinetic theory lacks: viscosity — the cage itself. Heating a liquid loosens the cage (μ falls steeply), so liquid D climbs with temperature much faster than a gas's ~T^(3/2) at fixed pressure.`}
+          />
+          <EquationCard
+            title="Drag is the whole mechanism — ζ, then Einstein"
+            latex={String.raw`\zeta = 6 \pi \mu a, \qquad D = \frac{k_B T}{\zeta}`}
+            note={`Stokes–Einstein is not one law but two, and splitting them shows where the liquid's physics actually enters. The SECOND is general: the Einstein relation says a particle's diffusivity is thermal drive over dissipation, whatever the dissipation happens to be. The FIRST is the specifically liquid part — Stokes' drag on a sphere, the same 6πμa that sets a settling cell's terminal velocity. Substitute one into the other and the familiar form falls out: ζ = ${ZETA_EX.toExponential(2)} g/s for a 0.2 nm solute in water, so D = ${(D_LIQ_EINSTEIN * 1e5).toFixed(1)}×10⁻⁵ cm²/s — the same number as the card beside this one, by construction. The continuum view above runs exactly this: the sphere's measured D is compared live against k_BT/ζ.`}
           />
           <EquationCard
             title="The four decades"
