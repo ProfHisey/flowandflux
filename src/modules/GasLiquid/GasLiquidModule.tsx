@@ -153,7 +153,13 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 is on its face absurd — and still lands within a factor of two. It is
                 the same 6πμa that sets a settling cell's terminal velocity in{' '}
                 <a className="underline hover:no-underline" href="#stokes">Stokes drag &amp; settling</a>:
-                one drag law, doing two jobs.
+                one drag law, doing two jobs. Watch the <em>track</em> rather than
+                the sphere: it is all a particle-tracking instrument ever sees.
+                Nanoparticle tracking analysis records exactly this trace, fits
+                ⟨r²⟩ = 4Dt to it, and inverts Stokes–Einstein to report a size — the
+                same arithmetic the readouts below run on the same trajectory. Drag
+                never appears as a force you can point at; it shows up as how far
+                the track gets.
               </p>
             ) : (
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -207,7 +213,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                     value={stats && stats.contD ? stats.contD.toFixed(3) : '—'}
                     unit="dia²/s"
                     tone="warm"
-                    hint="from the sphere's own ⟨r²⟩ = 4Dt"
+                    hint="fitted live to this one track's ⟨r²⟩ = 4Dt — expect it to wander 10-20% around the prediction"
                   />
                   <Stat
                     label="Sphere: k_BT/ζ"
@@ -258,8 +264,12 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                   The liquid box is below 1, so there is no free flight to count and
                   kinetic theory has nothing to work with. What replaces it is on the
                   right: drag. The sphere's measured D and the k_BT/ζ prediction are
-                  two independent numbers, and they agree — which is the Einstein
-                  relation earning its keep rather than being asserted.
+                  two independent numbers, and they agree — the Einstein relation
+                  earning its keep rather than being asserted. They agree <em>loosely</em>,
+                  though, drifting 10-20% apart and back: one particle is a small
+                  sample, and its own excursions are the noise. That is not a defect
+                  of the simulation, it is why a real tracking instrument follows
+                  hundreds of particles and averages before it reports a size.
                 </>
               ) : (
                 <>
@@ -326,7 +336,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                   step={0.1}
                   format={(v) => `${v.toFixed(1)}× water`}
                   onChange={setMuRel}
-                  hint="The continuum's only property. Thicken it and watch the drag arrow grow while the velocity arrow does NOT — the sphere is kicked just as hard, it just cannot keep going. D = k_BT/ζ falls as 1/μ."
+                  hint="The continuum's only property — and watch what it does to the track. Thicken the solvent and the same thermal kicks buy less ground: the track pulls in, because D = k_BT/ζ falls as 1/μ. That shrinking is drag, seen through its consequence."
                 />
               ) : (
                 <Slider
@@ -349,7 +359,8 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
               <li>Rarefy the gas to 8 molecules and watch measured λ climb to meet its prediction. Crowd it to 80 and watch it fall below — the dilute law failing, on cue.</li>
               <li>Read λ/d in both boxes. Which side of 1 is each on, and which description does that license?</li>
               <li>Switch the liquid to <strong>Continuum</strong>. The molecules vanish; does the sphere still diffuse? Compare its measured D against k_BT/ζ.</li>
-              <li>In Continuum, push μ from 0.5× to 4×. Which arrow grows, which one does not, and what happens to D?</li>
+              <li>In Continuum, push μ from 0.5× to 4×. The track pulls in — by what factor should its width shrink when μ quadruples?</li>
+              <li>Watch the track, not the sphere. That track is the whole of what a particle-tracking instrument gets to see; everything it reports about size is inferred from its spread.</li>
               <li>Crank the temperature to 2×. Both boxes speed up — does the liquid molecule escape its cage more often?</li>
               <li>Pack the liquid to 78%, then loosen to 55% — find the packing where "caged" starts to look like "gas".</li>
             </ul>

@@ -1250,13 +1250,18 @@ check('the continuum route lands in the liquid decade, 1e-5 cm^2/s',
 // and the tolerances below are Monte Carlo error, not slop.
 console.log('\nLangevin step rule: D = k_B T / zeta has to emerge, not be imposed');
 {
-  const TAU0 = 0.006;
+  // Same constants and step policy as the canvas at temp = 1x.
+  const TAU0 = 0.05;
+  const D0 = 40;
   const SUB = 8;
+  const H_MAX = 1 / 120;
   const m = 1;
-  const kT = 0.5 * 90 * 90; // matches the canvas at temp = 1x
+  const kT = (m * D0) / TAU0;
+  const stepFor = (tauP: number) => Math.min(tauP / SUB, H_MAX);
 
   check('OU decay over one step = exp(-h/tau_p) exactly',
-    close(ouCoefficients(TAU0 / SUB, TAU0, kT, m).decay, Math.exp(-1 / SUB), 1e-15));
+    close(ouCoefficients(stepFor(TAU0), TAU0, kT, m).decay,
+      Math.exp(-stepFor(TAU0) / TAU0), 1e-15));
   {
     // Stationary variance is the fixed point of var' = decay^2 var + kick^2,
     // and "exact" means it is kT/m at ANY step size, not just small ones.
@@ -1266,10 +1271,10 @@ console.log('\nLangevin step rule: D = k_B T / zeta has to emerge, not be impose
       for (let i = 0; i < 20000; i++) v2 = decay * decay * v2 + kick * kick;
       return v2;
     };
-    check('stationary velocity variance = kT/m', close(settle(TAU0 / SUB), kT / m, 1e-9),
-      String(settle(TAU0 / SUB)));
+    check('stationary velocity variance = kT/m', close(settle(stepFor(TAU0)), kT / m, 1e-9),
+      String(settle(stepFor(TAU0))));
     check('...still kT/m at a 50x larger step (no h-dependence at all)',
-      close(settle((50 * TAU0) / SUB), kT / m, 1e-9), String(settle((50 * TAU0) / SUB)));
+      close(settle(50 * TAU0), kT / m, 1e-9), String(settle(50 * TAU0)));
   }
 
   // A deterministic generator, RESEEDED for every walk so the mu comparisons
@@ -1297,35 +1302,50 @@ console.log('\nLangevin step rule: D = k_B T / zeta has to emerge, not be impose
     };
   };
 
-  /** March the real update rule at viscosity mu and measure D, px^2/s. */
-  const walk = (mu: number, reps: number, secs: number) => {
+  /**
+   * March the real update rule at viscosity mu and measure D, px^2/s, by
+   * averaging r^2/(4W) over NON-OVERLAPPING windows of length W >> tau_p.
+   * Windowing is what makes this check meaningful rather than decorative:
+   * using only each run's final displacement gave a 7% standard error at
+   * these rep counts, which is the size of the tolerance, so it passed or
+   * failed on the seed. Windows multiply the sample count for free.
+   */
+  const walk = (mu: number, reps: number, secs: number, win: number) => {
     const gaussDet = makeGauss();
     const tauP = TAU0 / mu;
-    const h = tauP / SUB;
+    const h = stepFor(tauP);
     const { decay, kick } = ouCoefficients(h, tauP, kT, m);
-    const steps = Math.round(secs / h);
+    const nw = Math.round(win / h);
+    const wins = Math.floor(secs / win);
     let sum = 0;
+    let count = 0;
     for (let r = 0; r < reps; r++) {
-      let x = 0, y = 0, vx = 0, vy = 0;
-      for (let i = 0; i < steps; i++) {
-        vx = decay * vx + kick * gaussDet();
-        vy = decay * vy + kick * gaussDet();
-        x += vx * h;
-        y += vy * h;
+      let vx = 0;
+      let vy = 0;
+      for (let w = 0; w < wins; w++) {
+        let x = 0;
+        let y = 0;
+        for (let i = 0; i < nw; i++) {
+          vx = decay * vx + kick * gaussDet();
+          vy = decay * vy + kick * gaussDet();
+          x += vx * h;
+          y += vy * h;
+        }
+        sum += (x * x + y * y) / (4 * nw * h);
+        count++;
       }
-      sum += x * x + y * y;
     }
-    return sum / reps / (4 * steps * h);
+    return sum / count;
   };
-  const target = (mu: number) => (kT / m) * (TAU0 / mu); // kT/zeta
+  const target = (mu: number) => (kT / m) * (TAU0 / mu); // kT/zeta = D0/mu
 
-  const D1 = walk(1, 300, 6);
-  check('marched walk diffuses at D = kT/zeta (7%, Monte Carlo at 300 reps)',
+  const D1 = walk(1, 500, 20, 5);
+  check('marched walk diffuses at D = kT/zeta (2000 windowed samples)',
     Math.abs(D1 / target(1) - 1) < 0.07, `${D1} vs ${target(1)}`);
-  const D2 = walk(2, 300, 6);
+  const D2 = walk(2, 500, 20, 5);
   check('double the viscosity, halve the diffusivity: D ~ 1/mu',
     Math.abs(D2 / target(2) - 1) < 0.07, `${D2} vs ${target(2)}`);
-  const D4 = walk(4, 300, 6);
+  const D4 = walk(4, 500, 20, 5);
   check('and again at 4x — no bias creeping in as the step policy tightens',
     Math.abs(D4 / target(4) - 1) < 0.07, `${D4} vs ${target(4)}`);
   check('the 1/mu scaling holds end to end: D(1x)/D(4x) = 4',

@@ -40,15 +40,23 @@ import { meanFreePath2D, ouCoefficients } from '../../lib/kinetics';
  * stable at any step size). Diffusion is emergent, not imposed: over times
  * long compared with tau_p = m/zeta the sphere walks with D = k_B T / zeta,
  * and the readout MEASURES that from the trajectory rather than assuming it.
- * Equipartition is matched to the molecular boxes (kT = m V0^2 temp / 2), so
- * the sphere carries the SAME thermal speed as the molecules next door —
- * raising mu does not slow it down, it shortens how long it keeps going in
- * one direction. Same sentence as the cage, different mechanism.
+ * Raising mu leaves the thermal speed alone and shortens how long the sphere
+ * keeps going in one direction. Same sentence as the cage ("moves just as
+ * fast, nowhere to go"), different mechanism.
  *
- * The one labeled compromise: tau_p is stretched to ~6 ms of screen time so
- * the drag arrow is legible. In a real liquid momentum dies in picoseconds,
- * which is why the overdamped limit is the honest description there and why
- * the arrows are captioned as an instantaneous balance.
+ * WHAT YOU SEE IS THE TRACK, and the track is the measurement. Nanoparticle
+ * tracking analysis works exactly this way: record a particle's trajectory,
+ * fit <r^2> = 4Dt to it, and invert Stokes-Einstein for the hydrodynamic
+ * size. So the tapered track is not decoration around the physics, it IS the
+ * physics, and the readout beside it does to the simulated trajectory what
+ * the instrument does to a real one.
+ *
+ * Force arrows were built here first and removed: tau_p in a real liquid is
+ * picoseconds, so a faithful velocity arrow re-randomizes several times per
+ * frame and simply strobes. That is the same fact that makes the overdamped
+ * limit the honest description of a liquid — and it is why the track, which
+ * integrates over that noise, is the readable object. Raising mu still shows
+ * drag doing its work: the track pulls in, because D = k_B T / zeta falls.
  */
 
 export interface WanderStats {
@@ -122,15 +130,37 @@ const V0 = 90; // base thermal speed, px/s — schematic
 const R_GAS = 5;
 const R_LIQ = 8; // small species; big species is 1.4x
 const TRAIL = 260;
+/** The continuum track is kept far longer than the molecular trails: it is
+ *  the measurement, and a tracking instrument averages over a whole run. */
+const CONT_TRAIL = 1100;
 
-/** Continuum view: the momentum relaxation time at mu = 1x, and how finely
- *  the integrator resolves it. The step is tied to tau_p rather than fixed:
- *  a step LARGER than tau_p cannot resolve the momentum decay, and the walk
- *  then diffuses measurably faster than kT/zeta — 16% high at mu = 4x back
- *  when this was a flat 1/480 s. TAU_P0 itself is a labeled cosmetic
- *  stretch; see the header. */
-const TAU_P0 = 0.006;
+/**
+ * Continuum view constants.
+ *
+ * TAU_P0 is the momentum relaxation time at mu = 1x. A real liquid kills a
+ * particle's momentum in picoseconds — far below any frame — so the track a
+ * tracking instrument records is diffusive right down to its own resolution.
+ * Here tau_p is a few frames, which keeps the track visibly random-walky at
+ * the smallest scale it is drawn at, and that is the whole of the
+ * compromise. (An EARLIER build drew force arrows instead of the track and
+ * needed a tau_p of a full second to stop them strobing; the arrows are gone,
+ * and so is the need. See the module notes.)
+ *
+ * CONT_D0 is the primary constant: D is what the readout measures and what
+ * the physics cards claim, so it is held fixed and the thermal speed falls
+ * out of it as D = <v^2> tau_p / 2.
+ *
+ * CONT_SUB resolves tau_p; a step larger than tau_p cannot represent the
+ * momentum decay at all and the walk then diffuses measurably faster than
+ * kT/zeta (16% high at mu = 4x, back when the step was a flat 1/480 s).
+ * CONT_H_MAX additionally keeps the step at or below half a frame so the
+ * motion stays smooth: with tau_p now large, tau_p/CONT_SUB alone would be
+ * several frames long and the sphere would advance in visible jumps.
+ */
+const TAU_P0 = 0.05;
+const CONT_D0 = 40; // px^2/s at 1x, 1x — the wander the box wants
 const CONT_SUB = 8;
+const CONT_H_MAX = 1 / 120;
 const CONT_M = 1;
 
 function makeBox(x0: number, y0: number, x1: number, y1: number): BoxSim {
@@ -202,14 +232,18 @@ function makeCont(x0: number, y0: number, x1: number, y1: number): ContSim {
  * velocity, explicit drift for the position.
  *
  *   zeta = m / tau_p,  tau_p = TAU_P0 / muRel   (zeta proportional to mu)
- *   kT   = m V0^2 temp / 2                      (matches the molecular boxes)
- *   <v^2> per axis = kT/m      — independent of mu: same thermal speed
- *   D    = kT / zeta           — falls as 1/mu: shorter persistence
+ *   kT   = m D0 / TAU_P0 * temp                 (D is the primary constant)
+ *   <v^2> per axis = kT/m      — set by temperature alone, NOT by mu
+ *   D    = kT / zeta = D0 * temp / muRel        — falls as 1/mu
+ *
+ * So raising mu leaves the thermal speed (and the velocity arrow) untouched
+ * and shortens the persistence: the sphere is kicked just as hard and simply
+ * cannot keep going. That is the mechanism the arrows exist to show.
  */
 function stepCont(c: ContSim, dt: number, temp: number, muRel: number) {
   const tauP = TAU_P0 / muRel;
-  const h = tauP / CONT_SUB;
-  const kT = 0.5 * CONT_M * V0 * V0 * temp;
+  const h = Math.min(tauP / CONT_SUB, CONT_H_MAX);
+  const kT = ((CONT_M * CONT_D0) / TAU_P0) * temp;
   const { decay, kick } = ouCoefficients(h, tauP, kT, CONT_M);
   c.acc += dt;
   let guard = 0;
@@ -228,7 +262,7 @@ function stepCont(c: ContSim, dt: number, temp: number, muRel: number) {
     c.t += h;
   }
   c.trail.push({ x: c.x, y: c.y });
-  if (c.trail.length > TRAIL) c.trail.shift();
+  if (c.trail.length > CONT_TRAIL) c.trail.shift();
   const last = c.msd[c.msd.length - 1];
   if (!last || c.t - last.t > 0.1) c.msd.push({ t: c.t, x: c.x, y: c.y });
   while (c.msd.length && c.msd[0].t < c.t - 10.5) c.msd.shift();
@@ -358,30 +392,40 @@ function contWanderOf(c: ContSim): number {
   return Math.hypot(c.x - old.x, c.y - old.y) / (2 * R_LIQ);
 }
 
-/** Arrow with a head, in unzoomed px. */
-function arrow(
+/**
+ * The track of the continuum sphere, drawn as a tapered "dragontail": wide
+ * and bright at the sphere, thinning and fading into the past. Per-segment
+ * width and alpha, so the eye reads direction of travel without an arrow.
+ *
+ * This is the measurement, not decoration. Nanoparticle tracking analysis
+ * records exactly this track, fits <r^2> = 4Dt to it, and inverts
+ * Stokes-Einstein for the particle's hydrodynamic size — the same D the
+ * readout on this page computes from the same trajectory.
+ */
+function dragonTail(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, dx: number, dy: number,
-  color: string, width = 2,
+  tr: { x: number; y: number }[],
+  dark: boolean,
 ) {
-  const len = Math.hypot(dx, dy);
-  if (len < 2) return;
-  const ux = dx / len;
-  const uy = dy / len;
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = width;
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x + dx, y + dy);
-  ctx.stroke();
-  const hb = 6;
-  ctx.beginPath();
-  ctx.moveTo(x + dx, y + dy);
-  ctx.lineTo(x + dx - ux * hb - uy * hb * 0.5, y + dy - uy * hb + ux * hb * 0.5);
-  ctx.lineTo(x + dx - ux * hb + uy * hb * 0.5, y + dy - uy * hb - ux * hb * 0.5);
-  ctx.closePath();
-  ctx.fill();
+  if (tr.length < 2) return;
+  const n = tr.length;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (let i = 1; i < n; i++) {
+    const f = i / (n - 1); // 0 at the oldest point, 1 at the sphere
+    // Quadratic taper reads as a tail rather than a wedge.
+    ctx.lineWidth = 0.5 + 3.1 * f * f;
+    const a = 0.05 + 0.85 * f * f;
+    ctx.strokeStyle = dark
+      ? `rgba(251,146,60,${a.toFixed(3)})`
+      : `rgba(234,88,12,${a.toFixed(3)})`;
+    ctx.beginPath();
+    ctx.moveTo(tr[i - 1].x, tr[i - 1].y);
+    ctx.lineTo(tr[i].x, tr[i].y);
+    ctx.stroke();
+  }
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'butt';
 }
 
 export function GasLiquidCanvas({
@@ -478,7 +522,10 @@ export function GasLiquidCanvas({
     }
 
     // Trails first (under the molecules), fading toward the past.
-    const trails = continuum ? [gas.trail, cont.trail] : [gas.trail, liq.trail];
+    // Molecular trails: thin, uniform, just enough to read the path. The
+    // continuum sphere gets the tapered track instead — it is the thing the
+    // right-hand box exists to show, so it is drawn to be looked at.
+    const trails = continuum ? [gas.trail] : [gas.trail, liq.trail];
     for (const tr of trails) {
       for (let i = 1; i < tr.length; i++) {
         const a = (i / tr.length) * 0.75;
@@ -490,7 +537,7 @@ export function GasLiquidCanvas({
         ctx.stroke();
       }
     }
-
+    if (continuum) dragonTail(ctx, cont.trail, dark);
     const molBoxes = continuum
       ? ([[gas, dark ? 'rgba(34,211,238,0.85)' : 'rgba(8,145,178,0.8)']] as const)
       : ([
@@ -516,29 +563,10 @@ export function GasLiquidCanvas({
         ctx.stroke();
       }
     }
-
-    // The continuum sphere, with the force balance that moves it.
+    // The continuum sphere and its track. No force arrows: they were built
+    // first and correctly rejected — see the header. The TRACK is the
+    // physics here, and it is also the measurement.
     if (continuum) {
-      const speed = Math.hypot(cont.vx, cont.vy);
-      if (speed > 1e-6) {
-        const ux = cont.vx / speed;
-        const uy = cont.vy / speed;
-        // Velocity arrow tracks the thermal speed, which does NOT depend on
-        // mu. Drag arrow tracks zeta*v, which does. Raising mu lengthens one
-        // arrow and leaves the other alone — that is the whole mechanism.
-        const vLen = Math.min(34, (speed / V0) * 26);
-        const dLen = Math.min(46, vLen * liveRef.current.muRel);
-        arrow(ctx, cont.x, cont.y, ux * (R_LIQ + vLen), uy * (R_LIQ + vLen),
-          dark ? '#fbbf24' : '#b45309');
-        arrow(ctx, cont.x, cont.y, -ux * (R_LIQ + dLen), -uy * (R_LIQ + dLen),
-          dark ? '#f472b6' : '#be185d');
-        ctx.font = '600 10px ui-sans-serif, system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = dark ? '#fbbf24' : '#b45309';
-        ctx.fillText('v', cont.x + ux * (R_LIQ + vLen + 9), cont.y + uy * (R_LIQ + vLen + 9) + 3);
-        ctx.fillStyle = dark ? '#f472b6' : '#be185d';
-        ctx.fillText('6πμa·v', cont.x - ux * (R_LIQ + dLen + 18), cont.y - uy * (R_LIQ + dLen + 11) + 3);
-      }
       ctx.fillStyle = 'rgb(249,115,22)';
       ctx.beginPath();
       ctx.arc(cont.x, cont.y, R_LIQ, 0, Math.PI * 2);
@@ -550,7 +578,7 @@ export function GasLiquidCanvas({
       ctx.font = '500 10px ui-sans-serif, system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = dark ? '#a5b4fc' : '#4f46e5';
-      ctx.fillText('no molecules here — just μ', (cont.x0 + cont.x1) / 2, cont.y1 - 8);
+      ctx.fillText('no molecules here — just μ, and one tracked particle', (cont.x0 + cont.x1) / 2, cont.y1 - 8);
     }
 
     // Honesty line: the picture is schematic; the cards carry real numbers.
@@ -565,13 +593,13 @@ export function GasLiquidCanvas({
     );
     ctx.textAlign = 'right';
     ctx.fillText(
-      continuum ? 'drag settling slowed to be visible' : 'sizes & speeds schematic',
+      continuum ? 'the track is the measurement — fit its spread, get D' : 'sizes & speeds schematic',
       W - pad - 2, H - pad + 4,
     );
 
     emitRef.current += frame.dt;
     if (onStats && emitRef.current >= 0.5 && gas.elapsed > 0.5) {
-      const kT = 0.5 * CONT_M * V0 * V0 * liveRef.current.temp;
+      const kT = ((CONT_M * CONT_D0) / TAU_P0) * liveRef.current.temp;
       const zeta = CONT_M / (TAU_P0 / liveRef.current.muRel);
       const d2 = (2 * R_LIQ) ** 2;
       onStats({
