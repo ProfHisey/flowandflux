@@ -73,7 +73,7 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
             right={
               <div className="flex flex-wrap items-center justify-end gap-1.5">
                 {dim === '2d' && (
-                  <div className="w-[172px]">
+                  <div className="w-56">
                     <Segmented<'molecular' | 'continuum'>
                       ariaLabel="How to model the liquid"
                       value={liquidView}
