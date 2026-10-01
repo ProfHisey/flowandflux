@@ -1,6 +1,21 @@
 import type { PecletParams } from '../../lib/peclet';
 import { mMToMolPerCm3 } from '../../lib/fick';
 
+/**
+ * Full-scale bath concentration, mM — the range of the two bath sliders AND
+ * the ceiling the profile chart's axis is pinned to. The chart axis is
+ * deliberately not fitted to the curve (see PecletChart), so these two must
+ * stay the same number: import it, don't retype it.
+ */
+export const C_SLIDER_MAX_MM = 20;
+
+/**
+ * Below this bath concentration the pinned axis is abandoned for a fitted one.
+ * The 'draft' preset runs at 1e-3 mM and would otherwise be an invisible line
+ * along the floor.
+ */
+export const C_PINNED_AXIS_FLOOR_MM = 0.2;
+
 export interface Preset {
   id: string;
   name: string;

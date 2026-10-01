@@ -20,7 +20,7 @@ import { D_LANDMARKS } from '../FicksLaw/presets';
 import { PecletCanvas } from './PecletCanvas';
 import { Peclet3DCanvas } from './Peclet3DCanvas';
 import { PecletChart } from './PecletChart';
-import { DEFAULT_PARAMS, PRESETS } from './presets';
+import { C_SLIDER_MAX_MM, DEFAULT_PARAMS, PRESETS } from './presets';
 
 export function PecletModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<PecletParams>(DEFAULT_PARAMS);
@@ -155,7 +155,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
           </Panel>
 
           <Panel title="Profiles and regimes">
-            <PecletChart params={params} dark={dark} />
+            <PecletChart params={params} dark={dark} pinned={presetId === ''} />
           </Panel>
         </div>
 
@@ -200,7 +200,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
                 unit="mM"
                 value={molPerCm3TomM(params.C0)}
                 min={0}
-                max={20}
+                max={C_SLIDER_MAX_MM}
                 step={0.05}
                 onChange={(v) => set('C0', mMToMolPerCm3(v))}
               />
@@ -209,7 +209,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
                 unit="mM"
                 value={molPerCm3TomM(params.CL)}
                 min={0}
-                max={20}
+                max={C_SLIDER_MAX_MM}
                 step={0.05}
                 onChange={(v) => set('CL', mMToMolPerCm3(v))}
               />
