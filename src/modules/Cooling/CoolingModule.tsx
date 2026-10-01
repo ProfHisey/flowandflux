@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pause, Play, RotateCcw, Zap } from 'lucide-react';
 import { InlineMath } from 'react-katex';
 
@@ -18,6 +18,7 @@ import {
 import { sci, timeS } from '../../lib/format';
 import { Segmented } from '../../components/ui/Segmented';
 import { CoolingCanvas } from './CoolingCanvas';
+import { Cooling3DCanvas } from './Cooling3DCanvas';
 import { FinCanvas } from './FinCanvas';
 import { Fin3DCanvas } from './Fin3DCanvas';
 import { CoolingChart } from './CoolingChart';
@@ -30,9 +31,16 @@ export function CoolingModule({ dark }: { dark: boolean }) {
   const [resetTick, setResetTick] = useState(0);
   const [view, setView] = useState<'flow' | 'fin'>('flow');
   const [finShape, setFinShape] = useState<'pin' | 'rect'>('pin');
-  // The 2D/3D pair lives INSIDE the fin view; the Flow view is 2D-only
-  // (its 3D counterpart is the fin itself, a different subject).
-  const [finDim, setFinDim] = useState<'2d' | '3d'>('2d');
+  // One 2D/3D toggle serves both scenes, so 3D is on offer from the landing
+  // view rather than hiding behind the Fin tab.
+  const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  // The Flow view's visual clock lives here so its 2D and 3D canvases show
+  // one cooling: flipping the view changes the camera, not the experiment.
+  const flowClock = useRef(0);
+  const reheat = () => {
+    flowClock.current = 0;
+    setResetTick((t) => t + 1);
+  };
 
   const set = <K extends keyof CoolingParams>(key: K, value: CoolingParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -77,7 +85,6 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   />
                 </div>
                 {view === 'fin' && (
-                  <>
                     <div className="w-28">
                       <Segmented<'pin' | 'rect'>
                         ariaLabel="Fin cross-section"
@@ -89,20 +96,26 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                         onChange={setFinShape}
                       />
                     </div>
-                    <div className="w-28">
-                      <Segmented<'2d' | '3d'>
-                        ariaLabel="View dimension"
-                        value={finDim}
-                        options={[
-                          { value: '2d', label: '2D', title: 'Side-on with the T(x) profile — drag to pan, scroll to zoom' },
-                          { value: '3d', label: '3D', title: 'The fin in the stream — drag to orbit' },
-                        ]}
-                        onChange={setFinDim}
-                      />
-                    </div>
-                  </>
                 )}
-                <IconButton label="Reheat and restart" onClick={() => setResetTick((t) => t + 1)}>
+                <div className="w-28">
+                  <Segmented<'2d' | '3d'>
+                    ariaLabel="View dimension"
+                    value={dim}
+                    options={
+                      view === 'flow'
+                        ? [
+                            { value: '2d', label: '2D', title: 'Face-on view — drag to pan, scroll to zoom' },
+                            { value: '3d', label: '3D', title: 'The object in a volume of stream — drag to orbit' },
+                          ]
+                        : [
+                            { value: '2d', label: '2D', title: 'Side-on with the T(x) profile — drag to pan, scroll to zoom' },
+                            { value: '3d', label: '3D', title: 'The fin in the stream — drag to orbit' },
+                          ]
+                    }
+                    onChange={setDim}
+                  />
+                </div>
+                <IconButton label="Reheat and restart" onClick={reheat}>
                   <Zap size={15} />
                 </IconButton>
                 <IconButton
@@ -116,14 +129,27 @@ export function CoolingModule({ dark }: { dark: boolean }) {
           >
             {view === 'flow' ? (
               <>
-                <CoolingCanvas
-                  h={params.h}
-                  lc={params.V / params.A}
-                  heating={params.Tinf > params.T0}
-                  resetTick={resetTick}
-                  running={running}
-                  dark={dark}
-                />
+                {dim === '3d' ? (
+                  <Cooling3DCanvas
+                    h={params.h}
+                    lc={params.V / params.A}
+                    heating={params.Tinf > params.T0}
+                    resetTick={resetTick}
+                    running={running}
+                    dark={dark}
+                    clock={flowClock}
+                  />
+                ) : (
+                  <CoolingCanvas
+                    h={params.h}
+                    lc={params.V / params.A}
+                    heating={params.Tinf > params.T0}
+                    resetTick={resetTick}
+                    running={running}
+                    dark={dark}
+                    clock={flowClock}
+                  />
+                )}
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                   Tracers bend around the object on real streamlines, creep through the
                   film at its surface, and carry its warmth off as a wake — which starves
@@ -131,12 +157,19 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   watched. The object is drawn in one uniform color on purpose: a single
                   temperature everywhere is the lumped assumption, and the Biot readout
                   below says when it is earned.
+                  {dim === '3d' && (
+                    <>
+                      {' '}In 3D the object is a sphere and the streamlines are the ones
+                      for flow around a sphere, so the wake trails off as a plume; the
+                      clock is the same one the 2D view runs on.
+                    </>
+                  )}
                 </p>
               </>
             ) : (
               <>
                 <div>
-                  {finDim === '2d' ? (
+                  {dim === '2d' ? (
                     <FinCanvas
                       params={{
                         h: params.h, k: params.k, R: 0.004, L: 0.08,

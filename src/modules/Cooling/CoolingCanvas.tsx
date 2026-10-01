@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
 import { rampWarm } from '../FourierLaw/FourierCanvas';
 import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
@@ -28,7 +28,7 @@ interface Tracer {
 const COUNT = 240;
 const FLOW = 70; // px/s
 /** Visual time constant, s: fast enough to watch, and labeled as such. */
-const TAU_VIS = 14;
+export const TAU_VIS = 14;
 
 export function CoolingCanvas({
   h,
@@ -37,6 +37,7 @@ export function CoolingCanvas({
   resetTick,
   running,
   dark,
+  clock,
 }: {
   /** Physical h, W/m^2 K — only used to size the drawn film (labeled cue). */
   h: number;
@@ -47,9 +48,11 @@ export function CoolingCanvas({
   resetTick: number;
   running: boolean;
   dark: boolean;
+  /** The visual clock, owned by the module so 2D and 3D share one cooling. */
+  clock: MutableRefObject<number>;
 }) {
   const tracersRef = useRef<Tracer[]>([]);
-  const tRef = useRef(0);
+  const tRef = clock;
   const zoomRef = useRef(1);
   const [zoomTick, setZoomTick] = useState(0);
 
@@ -57,7 +60,6 @@ export function CoolingCanvas({
 
   useEffect(() => {
     tracersRef.current = [];
-    tRef.current = 0;
   }, [resetTick]);
 
   const canvasRef = useCanvas((ctx, frame) => {
