@@ -22,7 +22,7 @@ invented, course-neutral examples throughout.
 
 ## What's here
 
-Seventeen interactive modules, grouped by physics:
+Eighteen interactive modules, grouped by physics:
 
 - **Start** — a [PhET](https://phet.colorado.edu)-style mixing box (mass and
   heat), zero equations by design;
@@ -30,8 +30,10 @@ Seventeen interactive modules, grouped by physics:
   decades between the two.
 - **The flux laws** — Fick's law (random walkers vs. `j = −D ∂C/∂x`, measured two
   independent ways), Fourier's law (an energy-exchange lattice), Newton's law of
-  viscosity (sliding layers, grip links, dye kinematics), and composite-wall
-  resistance networks with a live ΔT budget.
+  viscosity (sliding layers, grip links, dye kinematics), composite-wall
+  resistance networks with a live ΔT budget, and boundary conditions — steady
+  diffusion with generation where you pick a condition for each face and watch
+  which profile you get, including the pairs that admit no steady state at all.
 - **Unsteady** — bolus dispersion (a spreading Gaussian the walkers keep landing
   on, for a release of mass or of heat) and sudden contact (erf fronts,
   effusivity, why metal feels cold).

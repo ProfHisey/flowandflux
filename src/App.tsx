@@ -12,6 +12,7 @@ import { PoiseuilleModule } from './modules/Poiseuille/PoiseuilleModule';
 import { PecletModule } from './modules/Peclet/PecletModule';
 import { CoolingModule } from './modules/Cooling/CoolingModule';
 import { WallModule } from './modules/Wall/WallModule';
+import { BoundaryConditionsModule } from './modules/BoundaryConditions/BCModule';
 import { TransientModule } from './modules/Transient/TransientModule';
 // Heisler charts are UNPUBLISHED for now (Sept 2026) — module code intact in
 // modules/Transient/HeislerModule.tsx; restore by uncommenting this import, the
@@ -61,6 +62,7 @@ const GROUPS: ModuleGroup[] = [
       { id: 'fourier', name: "Fourier's law", tag: 'heat down a gradient' },
       { id: 'newton', name: "Newton's viscosity", tag: 'momentum down a gradient' },
       { id: 'wall', name: 'The wall', tag: 'resistances as circuits' },
+      { id: 'bc', name: 'Boundary conditions', tag: 'value, flux, or a film — what closes the equation' },
     ],
   },
   {
@@ -369,6 +371,7 @@ export default function App() {
         {moduleId === 'fick' && <FicksLawModule dark={dark} />}
         {moduleId === 'fourier' && <FourierLawModule dark={dark} />}
         {moduleId === 'wall' && <WallModule dark={dark} />}
+        {moduleId === 'bc' && <BoundaryConditionsModule dark={dark} />}
         {moduleId === 'bolus' && <UnsteadyModule dark={dark} />}
         {moduleId === 'touch' && <TransientModule dark={dark} />}
         {/* Unpublished for now: {moduleId === 'heisler' && <HeislerModule dark={dark} />} */}

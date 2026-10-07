@@ -66,6 +66,10 @@ import {
   stepRegime,
 } from '../src/lib/kinetics';
 import {
+  biot as genBiot, fluxAt, generatedPerArea, insideDropFraction, shapeExponent, slopeAt,
+  solveJump, solveProfile, valueAt, type ProfileParams,
+} from '../src/lib/bcprofile';
+import {
   areaAvgT, areaAvgTNumeric, mixingCupT, mixingCupTNumeric, tempAt as mcTempAt,
   velocityAt as mcVelocityAt, type MixingCupParams,
 } from '../src/lib/mixingcup';
@@ -1622,5 +1626,223 @@ check('profile endpoints: T(0) = Tc, T(1) = Tw; v(0) = 2v̄, v(1) = 0 (no-slip)'
     new Set(cases.map((c) => c[1])).size === 8);
 }
 
+
+// --- 40. Steady diffusion with generation, and the BC taxonomy ------------
+// The lecture's slab: 0 < x < L, uniform generation S, the core insulated by
+// symmetry and the face held at T0. Worked by hand there as
+//   T(x) = T0 + (S/k)(Lx - x^2/2),  T(core) = T0 + S L^2 / (2k)
+// and "all the heat made inside leaves through the one open face": k dT/dx|0
+// = S L. This module measures s from the CORE outward, so x = L - s; the two
+// closed forms are checked against each other pointwise below.
+console.log('\nSteady generation + boundary conditions (lecture slab, by hand)');
+{
+  const k = 0.5;      // W/m.K, tissue
+  const S = 800;      // W/m^3
+  const L = 0.03;     // m
+  const T0 = 33;      // degC, held face
+  const slab: ProfileParams = {
+    geometry: 'slab', L, kD: k, gen: S,
+    inner: { kind: 'symmetry' },
+    outer: { kind: 'value', value: T0 },
+  };
+  const lecture = (x: number) => T0 + (S / k) * (L * x - (x * x) / 2);
+  let worst = 0;
+  for (let i = 0; i <= 40; i++) {
+    const s = (i / 40) * L;
+    worst = Math.max(worst, Math.abs(valueAt(slab, s) - lecture(L - s)));
+  }
+  check('profile matches the lecture closed form pointwise (x = L - s)',
+    worst < 1e-9, String(worst));
+  check('core sits S L^2 / 2k above the held face',
+    close(valueAt(slab, 0) - T0, (S * L * L) / (2 * k), 1e-12),
+    String(valueAt(slab, 0) - T0));
+  check('held face reads back exactly T0', close(valueAt(slab, L), T0, 1e-12));
+  check('zero slope at the insulated core', close(slopeAt(slab, 0), 0, 1e-12));
+  check('all the generation leaves the one open face: q(L) = S L',
+    close(fluxAt(slab, L), S * L, 1e-12), String(fluxAt(slab, L)));
+  check('...which is exactly generation per unit area',
+    close(fluxAt(slab, L), generatedPerArea(slab), 1e-12));
+}
+
+// The same slab with the face convecting instead of held (slide 27):
+//   T(face) = Tinf + S L / h      (the whole output crosses the film)
+//   T(core) = Tinf + S L / h (1 + Bi/2),   Bi = h L / k
+//   (T_core - T_face) / (T_core - Tinf) = (Bi/2) / (1 + Bi/2)
+{
+  const k = 0.5;
+  const S = 800;
+  const L = 0.03;
+  const h = 10;
+  const Tinf = 22;
+  const slab: ProfileParams = {
+    geometry: 'slab', L, kD: k, gen: S,
+    inner: { kind: 'symmetry' },
+    outer: { kind: 'mixed', h, inf: Tinf },
+  };
+  const Bi = genBiot(slab);
+  check('Bi = h L / k', close(Bi, (h * L) / k, 1e-12), String(Bi));
+  check('face temperature = Tinf + S L / h (the film drop)',
+    close(valueAt(slab, L), Tinf + (S * L) / h, 1e-12), String(valueAt(slab, L)));
+  check('core = Tinf + (S L / h)(1 + Bi/2)',
+    close(valueAt(slab, 0), Tinf + ((S * L) / h) * (1 + Bi / 2), 1e-12),
+    String(valueAt(slab, 0)));
+  check('drop inside over total drop = (Bi/2)/(1 + Bi/2)',
+    close(insideDropFraction(slab), (Bi / 2) / (1 + Bi / 2), 1e-12),
+    String(insideDropFraction(slab)));
+  check('the mixed condition is actually satisfied at the face',
+    close(-k * slopeAt(slab, L), h * (valueAt(slab, L) - Tinf), 1e-12));
+  check('small Bi puts the whole drop in the film',
+    insideDropFraction({ ...slab, outer: { kind: 'mixed', h: 1e4, inf: Tinf } }) > 0.99
+      && insideDropFraction({ ...slab, outer: { kind: 'mixed', h: 1e-3, inf: Tinf } }) < 0.01);
+}
+
+// Curved geometries: regularity at the center does the symmetry for you.
+console.log('\nGeneration in a cylinder and a sphere');
+{
+  const k = 15;
+  const S = 2.4e5;
+  const R = 0.02;
+  const Tw = 40;
+  const mk = (g: 'cylinder' | 'sphere'): ProfileParams => ({
+    geometry: g, L: R, kD: k, gen: S,
+    inner: { kind: 'symmetry' },
+    outer: { kind: 'value', value: Tw },
+  });
+  const cyl = mk('cylinder');
+  const sph = mk('sphere');
+  check('cylinder: center rises S R^2 / 4k above the wall',
+    close(valueAt(cyl, 0) - Tw, (S * R * R) / (4 * k), 1e-12));
+  check('sphere: center rises S R^2 / 6k above the wall',
+    close(valueAt(sph, 0) - Tw, (S * R * R) / (6 * k), 1e-12));
+  check('cylinder surface flux = S R / 2', close(fluxAt(cyl, R), (S * R) / 2, 1e-12));
+  check('sphere surface flux = S R / 3', close(fluxAt(sph, R), (S * R) / 3, 1e-12));
+  for (const [name, p] of [['cylinder', cyl], ['sphere', sph]] as const) {
+    check(`${name}: surface flux is generation per unit area`,
+      close(fluxAt(p, p.L), generatedPerArea(p), 1e-12));
+    check(`${name}: zero slope at the center, with no condition imposed there`,
+      close(slopeAt(p, 0), 0, 1e-12));
+  }
+  // The shell balance itself, by numerical differentiation:
+  //   (1/s^n) d/ds (s^n k dT/ds) + S = 0
+  for (const [name, p] of [['slab', { ...cyl, geometry: 'slab' as const }], ['cylinder', cyl], ['sphere', sph]] as const) {
+    const n = shapeExponent(p.geometry);
+    let worst = 0;
+    for (let i = 1; i < 20; i++) {
+      const s = (i / 20) * R;
+      // Step scaled to POSITION, not to R. A fixed step leaves a truncation
+      // residual of (1/3)(d/s)^2 once you divide by s^n, which blows up near
+      // the center and fails the sphere at 8e-6 while the algebra is exact.
+      const d = s * 1e-4;
+      const f = (u: number) => Math.pow(u, n) * p.kD * slopeAt(p, u);
+      const lhs = (f(s + d) - f(s - d)) / (2 * d) / Math.pow(s, n);
+      worst = Math.max(worst, Math.abs(lhs + p.gen) / p.gen);
+    }
+    check(`${name}: satisfies the shell balance to < 1e-6 relative`, worst < 1e-6, String(worst));
+  }
+}
+
+// Closure: two flux conditions never set a level, and may not even be
+// consistent. This is the physics of "nothing can leave", not a solver fault.
+console.log('\nWhen the conditions do not close the problem');
+{
+  const base: ProfileParams = {
+    geometry: 'slab', L: 0.02, kD: 2, gen: 5000,
+    inner: { kind: 'flux', flux: 0 },
+    outer: { kind: 'flux', flux: 0 },
+  };
+  check('sealed both faces with generation inside: no steady state',
+    solveProfile(base).closure === 'no-steady-state');
+  const balanced: ProfileParams = {
+    ...base, outer: { kind: 'flux', flux: base.gen * base.L },
+  };
+  check('...but let exactly S L out and the shape is fine, the level floats',
+    solveProfile(balanced).closure === 'floating');
+  check('floating solutions are flagged as anchored, not passed off as exact',
+    solveProfile(balanced).anchored === true);
+  check('sealed both faces with NO generation is merely floating',
+    solveProfile({ ...base, gen: 0 }).closure === 'floating');
+  check('one value condition is enough to pin the level',
+    solveProfile({ ...base, inner: { kind: 'value', value: 10 } }).closure === 'ok');
+  // Same story on a symmetric cylinder: the surface flux is already decided.
+  const cyl: ProfileParams = {
+    geometry: 'cylinder', L: 0.02, kD: 2, gen: 5000,
+    inner: { kind: 'symmetry' }, outer: { kind: 'flux', flux: 0 },
+  };
+  check('cylinder with a sealed surface and generation: no steady state',
+    solveProfile(cyl).closure === 'no-steady-state');
+  check('cylinder with the flux that generation demands: floating',
+    solveProfile({ ...cyl, outer: { kind: 'flux', flux: (5000 * 0.02) / 2 } }).closure === 'floating');
+}
+
+// The conditions do what they say, one at a time.
+console.log('\nEach condition, checked at the surface it stands on');
+{
+  const p: ProfileParams = {
+    geometry: 'slab', L: 0.05, kD: 1.2, gen: 3000,
+    inner: { kind: 'value', value: 5 },
+    outer: { kind: 'value', value: 25 },
+  };
+  check('value / value: both faces read back exactly',
+    close(valueAt(p, 0), 5, 1e-12) && close(valueAt(p, p.L), 25, 1e-12));
+  const pf: ProfileParams = { ...p, inner: { kind: 'flux', flux: 400 } };
+  check('inner flux: the stated power really enters the face',
+    close(fluxAt(pf, 0), 400, 1e-12), String(fluxAt(pf, 0)));
+  const po: ProfileParams = { ...p, outer: { kind: 'flux', flux: 900 } };
+  check('outer flux: the stated power really leaves the face',
+    close(fluxAt(po, po.L), 900, 1e-12), String(fluxAt(po, po.L)));
+  check('global balance holds whatever the pair: q(L) - q(0) = S L',
+    close(fluxAt(po, po.L) - fluxAt(po, 0), p.gen * p.L, 1e-12));
+  const pm: ProfileParams = { ...p, outer: { kind: 'mixed', h: 25, inf: 20 } };
+  check('mixed: -k dT/ds = h (Ts - Tinf) at the face',
+    close(-pm.kD * slopeAt(pm, pm.L), 25 * (valueAt(pm, pm.L) - 20), 1e-12));
+  // The mass twin carries Phi: the surface equilibrates with Phi*C_inf.
+  const pp: ProfileParams = { ...p, outer: { kind: 'mixed', h: 25, inf: 20, phi: 0.4 } };
+  check('mixed, mass twin: -D dC/ds = h_m (Cs - Phi C_inf)',
+    close(-pp.kD * slopeAt(pp, pp.L), 25 * (valueAt(pp, pp.L) - 0.4 * 20), 1e-12));
+  check('Phi = 1 is the heat case, exactly',
+    close(valueAt({ ...pm, outer: { ...pm.outer, phi: 1 } }, 0), valueAt(pm, 0), 1e-12));
+  // Symmetry and a zero-flux condition are the same statement.
+  const a: ProfileParams = { ...p, inner: { kind: 'symmetry' } };
+  const b: ProfileParams = { ...p, inner: { kind: 'flux', flux: 0 } };
+  check('symmetry IS the zero-flux condition, not an extra assumption',
+    close(valueAt(a, 0), valueAt(b, 0), 1e-12) && close(slopeAt(a, 0), 0, 1e-12));
+}
+
+// Heat and mass are the same algebra with different labels — the spine of
+// the course. Identical numbers in, identical profile out.
+console.log('\nThe mass twin is the same equation');
+{
+  const heat: ProfileParams = {
+    geometry: 'sphere', L: 0.01, kD: 0.6, gen: 1500,
+    inner: { kind: 'symmetry' }, outer: { kind: 'mixed', h: 40, inf: 37 },
+  };
+  const mass: ProfileParams = { ...heat }; // same numbers, read as D / eps / h_m
+  let worst = 0;
+  for (let i = 0; i <= 20; i++) {
+    const s = (i / 20) * heat.L;
+    worst = Math.max(worst, Math.abs(valueAt(heat, s) - valueAt(mass, s)));
+  }
+  check('heat and mass profiles coincide when the numbers do', worst < 1e-12);
+}
+
+// The jump. Flux is continuous at an interface; the value need not be.
+console.log('\nAn interface: flux cannot jump, concentration can');
+{
+  const j = solveJump({ L1: 0.01, kD1: 2, L2: 0.02, kD2: 0.5, left: 100, right: 20, phi: 1 });
+  const series = (100 - 20) / (0.01 / 2 + 0.02 / 0.5);
+  check('Phi = 1: the familiar series-resistance flux', close(j.flux, series, 1e-12), String(j.flux));
+  check('Phi = 1: no jump — a temperature is continuous',
+    close(j.interfaceLeft, j.interfaceRight, 1e-12));
+  const jp = solveJump({ L1: 0.01, kD1: 2, L2: 0.02, kD2: 0.5, left: 100, right: 20, phi: 2.5 });
+  check('Phi = 2.5: the value steps by exactly that ratio',
+    close(jp.interfaceLeft, 2.5 * jp.interfaceRight, 1e-12),
+    `${jp.interfaceLeft} vs ${jp.interfaceRight}`);
+  check('flux is the same number on both sides of the step',
+    close((100 - jp.interfaceLeft) / (0.01 / 2), jp.flux, 1e-12)
+      && close((jp.interfaceRight - 20) / (0.02 / 0.5), jp.flux, 1e-12));
+  check('a solute that prefers the left side drives less through',
+    solveJump({ L1: 0.01, kD1: 2, L2: 0.02, kD2: 0.5, left: 100, right: 20, phi: 4 }).flux
+      < solveJump({ L1: 0.01, kD1: 2, L2: 0.02, kD2: 0.5, left: 100, right: 20, phi: 1 }).flux);
+}
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);
