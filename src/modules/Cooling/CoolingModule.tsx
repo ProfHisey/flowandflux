@@ -194,9 +194,10 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   {finShape === 'pin' ? (
                     <>
                       A pin fin (4 mm radius, 8 cm long — fixed for this view) grown from a
-                      base at T₀, shaded by its own solution θ = cosh(m(L−x))/cosh(mL) with
-                      m = √(hP/kA) = √(2h/kR) (the insulated-tip solution — a convecting
-                      tip is absorbed by adding R/2 to L). Every color is physical and answers to the
+                      base at T₀, shaded by its own solution θ/θ₀ = (e^−mx + e^−2mL·e^mx)/(1 + e^−2mL)
+                      with m = √(hP/kA) = √(2h/kR) — the insulated-tip solution, written in
+                      the exponentials it is built from. A convecting tip is absorbed by the
+                      corrected length L_c = L + A/P, which is R/2 for a pin. Every color is physical and answers to the
                       sliders: raise h and the color dies faster along the rod — the fluid
                       drains the fin before heat gets far; raise k (copper) and the whole rod
                       holds the base color. When the far end reaches the fluid temperature,
@@ -206,8 +207,8 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   ) : (
                     <>
                       A rectangular plate fin (4 cm wide, 2 mm thick, 8 cm long — fixed for
-                      this view): the same solution θ = cosh(m(L−x))/cosh(mL), because the
-                      shape enters ONLY through m = √(hP/kA). Thin and wide means P/A ≈ 2/t,
+                      this view): the same solution θ/θ₀ = (e^−mx + e^−2mL·e^mx)/(1 + e^−2mL),
+                      because the shape enters ONLY through m = √(hP/kA). Thin and wide means P/A ≈ 2/t,
                       so m ≈ √(2h/kt) — the thinner the blade, the faster it fades. Plates
                       pack far more surface per gram of metal than pins, which is why every
                       CPU heat sink you have ever seen is a row of these, faces along the

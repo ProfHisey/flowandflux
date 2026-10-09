@@ -60,8 +60,8 @@ const GROUPS: ModuleGroup[] = [
     items: [
       { id: 'fick', name: "Fick's law", tag: 'mass down a gradient' },
       { id: 'fourier', name: "Fourier's law", tag: 'heat down a gradient' },
-      { id: 'newton', name: "Newton's viscosity", tag: 'momentum down a gradient' },
-      { id: 'wall', name: 'The wall', tag: 'resistances as circuits' },
+      { id: 'newton', name: "Newton's law of viscosity", tag: 'momentum down a gradient' },
+      { id: 'wall', name: 'Transport resistance', tag: "Ohm's law for heat and mass — layers as resistors" },
       { id: 'bc', name: 'Boundary conditions', tag: 'value, flux, or a film — what closes the equation' },
     ],
   },

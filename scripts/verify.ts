@@ -953,6 +953,51 @@ check('long-fin limit: profile -> e^{-mx}',
     rod.Tinf + (rod.T0 - rod.Tinf) * Math.exp(-Math.sqrt(2 * rod.h / (rod.k * rod.R)) * 0.1),
     1e-6,
   ), String(finTemp({ ...rod, L: 10 }, 0.1)));
+
+// The profile is written in the exponential form the course sheet carries,
+//   (e^-mx + e^-2mL e^mx) / (1 + e^-2mL),
+// which is algebraically the hyperbolic one. Pin that, because "we rewrote it
+// and the answers did not move" is the whole claim.
+{
+  let worst = 0;
+  for (let i = 0; i <= 40; i++) {
+    const x = (i / 40) * rod.L;
+    const mL = finML(rod);
+    const xi = x / rod.L;
+    const hyp = Math.cosh(mL * (1 - xi)) / Math.cosh(mL);
+    const got = (finTemp(rod, x) - rod.Tinf) / (rod.T0 - rod.Tinf);
+    worst = Math.max(worst, Math.abs(got - hyp));
+  }
+  check('exponential profile == cosh(m(L-x))/cosh(mL), pointwise', worst < 1e-12,
+    String(worst));
+  const e = Math.exp(-2 * finML(rod));
+  check('(1 - e^-2mL)/(1 + e^-2mL) == tanh(mL)',
+    close((1 - e) / (1 + e), Math.tanh(finML(rod)), 1e-14));
+}
+// ...and the reason to prefer it: every exponent is <= 0, so there is no mL at
+// which it blows up. The hyperbolic version needed a hand-placed branch above
+// mL = 30 because cosh overflows; this one just keeps working.
+{
+  const huge: FinParams = { ...rod, k: 1e-5 };       // mL ~ 1.6e4
+  check('a wildly long fin stays finite with no special case',
+    Number.isFinite(finTemp(huge, huge.L)) && Number.isFinite(finHeat(huge)),
+    `${finTemp(huge, huge.L)}, ${finHeat(huge)}`);
+  check('...and its tip has reached the fluid exactly',
+    close(finTemp(huge, huge.L), huge.Tinf, 1e-12), String(finTemp(huge, huge.L)));
+  check('...while the base still reads T0',
+    close(finTemp(huge, 0), huge.T0, 1e-12));
+}
+// The sheet's rule of thumb: treat a fin as "very long" once mL >= 3.
+{
+  const atML = (target: number) => {
+    const L = target / (finML(rod) / rod.L);
+    return { ...rod, L };
+  };
+  const f3 = atML(3);
+  const relErr = Math.abs(finHeat(f3) / (Math.sqrt(f3.h * 2 * Math.PI * f3.R * f3.k * Math.PI * f3.R * f3.R) * (f3.T0 - f3.Tinf)) - 1);
+  check('mL = 3 is a fair "very long fin": heat rate within 1% of sqrt(hPkA)dT',
+    relErr < 0.01, String(relErr));
+}
 check('effectiveness = Q_fin / Q_bare and is >> 1 here',
   close(finEffectiveness(rod), finHeat(rod) / bareHeat(rod), 1e-12) && finEffectiveness(rod) > 10,
   String(finEffectiveness(rod)));

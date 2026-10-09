@@ -9,8 +9,13 @@
  * With the insulated-tip boundary condition (the standard classroom
  * closure; a convecting tip is absorbed by the corrected length L + R/2):
  *
- *   theta(x)/theta_0 = cosh(m(L - x)) / cosh(mL)
- *   Q_fin = sqrt(h P k A) * theta_0 * tanh(mL)
+ *   theta(x)/theta_0 = (e^-mx + e^-2mL e^mx) / (1 + e^-2mL)
+ *   Q_fin = sqrt(h P k A) * theta_0 * (1 - e^-2mL)/(1 + e^-2mL)
+ *
+ * written in exponentials, as the course sheet carries them. The hyperbolic
+ * forms are the same expressions folded up; the exponential ones show where
+ * they came from — two roots of the ODE, A1 e^mx + A2 e^-mx, with the tip
+ * condition fixing A1 = A2 e^-2mL.
  *
  * The one number that matters is mL. Small mL: the fin is nearly
  * isothermal and every added centimeter helps. Large mL: the far end has
@@ -66,24 +71,39 @@ export function finML(p: FinParams): number {
   return finM(p) * p.L;
 }
 
-/** Temperature at distance x from the base, degC (insulated tip). */
+/** Temperature at distance x from the base, degC (insulated tip).
+ *
+ * The profile in the exponential form the course sheet carries:
+ *
+ *   (T - Tinf)/(T0 - Tinf) = (e^-mx + e^-2mL e^mx) / (1 + e^-2mL)
+ *
+ * COMPUTED as e^-mx + e^-m(2L-x) over 1 + e^-2mL, which is the same
+ * expression with the second term's exponents already combined. That matters:
+ * written literally, e^mx overflows for a long fin while e^-2mL underflows,
+ * and the product they were supposed to form is lost. Combined, every
+ * exponent is <= 0 for 0 <= x <= L, so nothing overflows at any mL and the
+ * long-fin limit falls out on its own as e^-2mL -> 0 — no special case for
+ * large mL, which the hyperbolic version needed.
+ */
 export function finTemp(p: FinParams, x: number): number {
   const mL = finML(p);
   const xi = x / p.L;
-  // cosh(m(L-x))/cosh(mL), computed stably for large mL.
-  let shape: number;
-  if (mL > 30) {
-    shape = Math.exp(-mL * xi); // the infinite-fin limit
-  } else {
-    shape = Math.cosh(mL * (1 - xi)) / Math.cosh(mL);
-  }
+  const shape =
+    (Math.exp(-mL * xi) + Math.exp(-mL * (2 - xi))) / (1 + Math.exp(-2 * mL));
   return p.Tinf + (p.T0 - p.Tinf) * shape;
 }
 
-/** Heat the fin actually moves, W. */
+/** Heat the fin actually moves, W — the gradient at the base, -kA dT/dx|0:
+ *
+ *   Q = sqrt(h P k A) (T0 - Tinf) (1 - e^-2mL) / (1 + e^-2mL)
+ *
+ * The trailing factor is tanh(mL) wearing the sheet's clothes. It runs from 0
+ * (no fin) to 1 (the long fin, where the tip has already reached the fluid
+ * and extra length earns nothing). */
 export function finHeat(p: FinParams): number {
   const { P, A } = finSection(p);
-  return Math.sqrt(p.h * P * p.k * A) * (p.T0 - p.Tinf) * Math.tanh(finML(p));
+  const e = Math.exp(-2 * finML(p));
+  return Math.sqrt(p.h * P * p.k * A) * (p.T0 - p.Tinf) * ((1 - e) / (1 + e));
 }
 
 /** The same base area, bare: what the fin is competing against, W. */

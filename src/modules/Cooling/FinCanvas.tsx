@@ -6,7 +6,7 @@ import { applyZoom, chip2d, useWheelZoom } from '../FicksLaw/FickCanvas';
 
 /**
  * The fin side-on: a small base flange at T0 on the left, the fin running
- * right, every column shaded by its own solution θ(x) = cosh(m(L−x))/cosh(mL),
+ * right, every column shaded by its own solution θ/θ₀ = (e^−mx + e^−2mL e^mx)
  * and the temperature profile drawn above it as a curve — the instrumented
  * view the 3D tab deliberately leaves out. The pin draws as a rod, the
  * plate as the thin blade it is (side view shows its 2 mm thickness); the
@@ -99,7 +99,7 @@ export function FinCanvas({ params, dark }: { params: FinParams; dark: boolean }
       ctx.stroke();
       ctx.fillStyle = dark ? '#fbbf24' : '#b45309';
       ctx.textAlign = 'right';
-      ctx.fillText('T(x) = T∞ + θ₀·cosh(m(L−x))/cosh(mL)', x1, bandTop - 6);
+      ctx.fillText('θ/θ₀ = (e^−mx + e^−2mL e^mx)/(1 + e^−2mL)', x1, bandTop - 6);
     }
 
     // Chips, matching the 3D view's.

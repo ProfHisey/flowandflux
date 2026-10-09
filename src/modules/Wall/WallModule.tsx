@@ -451,20 +451,21 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-          Module 2 · Resistance networks
+          Flux laws
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          Composite walls as circuits
+          Ohm's law for heat and mass
         </span>
       </div>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
-        The Wall
+        Transport resistance
       </h1>
       <p className="max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-        Stack layers, add the convection films, and the equivalent circuit draws itself:
-        every layer a resistor, one Q through them all, and the temperature drop divided
-        in proportion to resistance. The game is finding the resistor that eats the
-        budget — then noticing that nothing else matters.
+        A driving force over a resistance gives a rate — the same sentence whether the
+        rate is current, heat or mass. Stack layers, add the convection films, and the
+        equivalent circuit draws itself: every layer a resistor, one Q through them all,
+        and the drop divided in proportion to resistance. The game is finding the
+        resistor that eats the budget — then noticing that nothing else matters.
       </p>
     </header>
   );

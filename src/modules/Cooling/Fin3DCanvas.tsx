@@ -6,7 +6,7 @@ import { rampWarm } from '../FourierLaw/FourierCanvas';
 
 /**
  * A pin fin in 3D, shaded ring by ring with its own temperature solution
- * theta(x) = cosh(m(L-x))/cosh(mL) — every color on the rod is physical,
+ * theta/theta_0 = (e^-mx + e^-2mL e^mx)/(1 + e^-2mL) — every color is physical,
  * computed live from h, k, and the fin geometry.
  *
  * The same fluid tracers as the 2D flow view stream past it (along z,

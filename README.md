@@ -30,8 +30,9 @@ Eighteen interactive modules, grouped by physics:
   decades between the two.
 - **The flux laws** — Fick's law (random walkers vs. `j = −D ∂C/∂x`, measured two
   independent ways), Fourier's law (an energy-exchange lattice), Newton's law of
-  viscosity (sliding layers, grip links, dye kinematics), composite-wall
-  resistance networks with a live ΔT budget, and boundary conditions — steady
+  viscosity (sliding layers, grip links, dye kinematics), transport resistance
+  (Ohm's law for heat and mass — composite walls and films as a circuit, with a
+  live ΔT budget), and boundary conditions — steady
   diffusion with generation where you pick a condition for each face and watch
   which profile you get, including the pairs that admit no steady state at all.
 - **Unsteady** — bolus dispersion (a spreading Gaussian the walkers keep landing
