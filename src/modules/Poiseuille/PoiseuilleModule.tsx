@@ -409,7 +409,7 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-          Module 3 · Pressure-driven flow
+          Momentum
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
           Poiseuille · the three-flow family · Navier–Stokes disarmed

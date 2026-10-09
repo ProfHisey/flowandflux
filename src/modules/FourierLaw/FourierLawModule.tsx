@@ -498,7 +498,7 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-          Module 2 · Conduction
+          Flux laws
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
           Steady-state heat transfer

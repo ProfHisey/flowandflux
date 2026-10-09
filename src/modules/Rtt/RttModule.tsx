@@ -572,10 +572,10 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-          Momentum & flow · The Reynolds transport theorem
+          Momentum
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          System vs control volume — and whose return is it
+          The Reynolds transport theorem — and whose return is it
         </span>
       </div>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">

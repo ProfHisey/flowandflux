@@ -320,7 +320,7 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-800 dark:bg-sky-950 dark:text-sky-300">
-          Module 4 · Convection meets diffusion
+          Convection
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
           The Péclet number — a race between two clocks

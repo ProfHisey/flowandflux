@@ -368,7 +368,7 @@ function ModuleHeader() {
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800 dark:bg-violet-950 dark:text-violet-300">
-          Start here
+          Start
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
           Intuition before equations
