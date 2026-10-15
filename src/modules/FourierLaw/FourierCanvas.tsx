@@ -50,12 +50,26 @@ interface Molecule {
   oy: number;
 }
 
-/** Lattice size for the slab's energy-exchange simulation. */
-const NXL = 36;
-const NYL = 10;
+/** Lattice size for the slab's energy-exchange simulation — and, since every
+ *  site carries exactly one drawn molecule, the slab's molecule count.
+ *  Doubled Oct 2026 (36x10 = 360 -> 50x14 = 700) to sit closer to the Fick
+ *  canvas's PARTICLE_BUDGET of 1400; the aspect ratio is held at ~3.6:1.
+ *
+ *  NXL MUST STAY EVEN. The midplane counter fires on `i === NXL / 2 - 1`, so
+ *  an odd NXL makes that test never match and the energy ledger silently
+ *  reads zero. */
+const NXL = 50;
+const NYL = 14;
 /** Exchange rate constant, 1/s. Visual, like D_VIS: it sets how lively the
  *  hand-off looks, not any physical conductivity. */
 const EX_RATE = 7;
+
+/** Molecules scattered through the curved shell. Doubled Oct 2026 alongside
+ *  the slab lattice, same reason. These are not on a lattice and carry no
+ *  energy ledger — the curved view is geometric intuition only. */
+const CURVED_MOLECULES = 760;
+/** Mean spacing falls as 1/sqrt(density), so the dot shrinks to match. */
+const CURVED_R_DOT = 1.7;
 
 /** Warm ramp for temperature, the counterpart of the indigo/cyan mass ramp.
  *  Low-to-high T, legible on light and dark pages. */
@@ -406,6 +420,10 @@ function drawLatticeMolecules(
     moleculesRef.current = list;
   }
 
+  // Dot radius tracks the lattice spacing, so the mesh stays legible if the
+  // lattice is resized again rather than silently turning into mush.
+  const rDot = Math.max(1.4, Math.min(2.6, 0.22 * Math.min(slabW / NXL, slabH / NYL)));
+
   // Jiggle amplitude, normalized to the CURRENT temperature range — a
   // labeled exaggeration, since the honest sqrt(T_abs) ratio would be
   // invisible. The energy field decides who jiggles hardest.
@@ -454,7 +472,7 @@ function drawLatticeMolecules(
     const u = Math.min(1, Math.max(0, (E[n] - tLo) / span));
     ctx.fillStyle = rampWarm(u, dark);
     ctx.beginPath();
-    ctx.arc(q.ax + q.ox, q.ay + q.oy, 2.6, 0, Math.PI * 2);
+    ctx.arc(q.ax + q.ox, q.ay + q.oy, rDot, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = edge;
     ctx.lineWidth = 0.8;
@@ -508,7 +526,7 @@ function drawCurved(
     let list = moleculesRef.current;
     if (list.length === 0) {
       list = [];
-      for (let n = 0; n < 380; n++) {
+      for (let n = 0; n < CURVED_MOLECULES; n++) {
         list.push({
           ax: Math.sqrt(rIn * rIn + Math.random() * (rOut * rOut - rIn * rIn)),
           ay: Math.random() * Math.PI * 2,
@@ -533,7 +551,7 @@ function drawCurved(
       ctx.arc(
         cx + q.ax * Math.cos(q.ay) + q.ox,
         cy + q.ax * Math.sin(q.ay) + q.oy,
-        2.4, 0, Math.PI * 2,
+        CURVED_R_DOT, 0, Math.PI * 2,
       );
       ctx.fill();
       ctx.strokeStyle = edge;
