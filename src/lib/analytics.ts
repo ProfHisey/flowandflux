@@ -45,7 +45,7 @@ export const ANALYTICS_ENABLED = true;
  * secret — every GoatCounter site exposes it in its page source. Empty means
  * "not set up", and then nothing is sent, exactly as if the switch were off.
  */
-const GOATCOUNTER_CODE = '';
+const GOATCOUNTER_CODE = 'flowandflux';
 const COUNT_URL = `https://${GOATCOUNTER_CODE}.goatcounter.com/count`;
 const OPT_OUT_KEY = 'ff-no-analytics';
 
