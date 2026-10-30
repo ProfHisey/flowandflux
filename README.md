@@ -36,11 +36,13 @@ Eighteen interactive modules, grouped by physics:
   diffusion with generation where you pick a condition for each face and watch
   which profile you get, including the pairs that admit no steady state at all.
 - **Unsteady** — bolus dispersion (a spreading Gaussian the walkers keep landing
-  on, for a release of mass or of heat) and sudden contact (erf fronts,
-  effusivity, why metal feels cold).
+  on, for a release of mass or of heat), semi-infinite media (a face held or fed
+  through a film, a front marching in as √t, and the similarity collapse that
+  makes every profile one curve), and sudden contact (erf fronts, effusivity, why
+  metal feels cold).
 - **Momentum** — Stokes drag and settling (true-magnitude force arrows, the a²
   law, the centrifuge), and Poiseuille flow with parallel plates and the falling
-  film, derived on-page by cancelling Navier–Stokes terms.
+  film, derived on-page by canceling Navier–Stokes terms.
 - **Convection** — the Péclet number (walkers that wander *and* drift), Newton's
   law of cooling (the film-and-wake mechanism of h, plus a fin), the mixing cup
   (what "the" temperature of a flowing stream even means), and Nu & Sh

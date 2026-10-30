@@ -32,36 +32,25 @@
  * Control, silent if the visitor opted out, and silent if anything throws —
  * analytics must never be able to break the page.
  *
- * Transport is Plausible (cookieless, no IP retention). Swap `send()` and the
- * loader for a self-hosted instance and nothing else here changes.
+ * Transport is GoatCounter (no cookies, no stored IP addresses), reached
+ * WITHOUT its script — see beacon() for why. Point COUNT_URL at a self-hosted
+ * GoatCounter and nothing else here changes.
  */
 
-/** The switch. Turns collection and the third-party script on or off
- *  together; nothing here runs, and no request is made, when it is false. */
+/** The switch. Nothing here runs, and no request is made, when it is false. */
 export const ANALYTICS_ENABLED = true;
 
 /**
- * Plausible's current script format: the site is identified by the hashed
- * filename, so there is no `data-domain` attribute and `init()` must be called.
- * This is the snippet their dashboard issues, loaded from here rather than
- * pasted into index.html — see initAnalytics() for why that matters.
+ * The GoatCounter site code: the subdomain of <code>.goatcounter.com. Not a
+ * secret — every GoatCounter site exposes it in its page source. Empty means
+ * "not set up", and then nothing is sent, exactly as if the switch were off.
  */
-const PLAUSIBLE_SRC = 'https://plausible.io/js/pa-daqymW3bWDOhuUGNzyZtM.js';
+const GOATCOUNTER_CODE = '';
+const COUNT_URL = `https://${GOATCOUNTER_CODE}.goatcounter.com/count`;
 const OPT_OUT_KEY = 'ff-no-analytics';
 
 /** The only feature names that may ever be transmitted. */
 export type Feature = '3d' | 'preset' | 'play' | 'reset' | 'profile' | 'box-drag';
-
-type PlausibleFn = ((event: string, opts?: { props?: Record<string, string> }) => void) & {
-  q?: unknown[];
-  init?: (opts?: Record<string, unknown>) => void;
-  o?: Record<string, unknown>;
-};
-declare global {
-  interface Window {
-    plausible?: PlausibleFn;
-  }
-}
 
 // ------------------------------------------------------------- buckets
 
@@ -112,7 +101,7 @@ export function setOptedOut(value: boolean): void {
 // ------------------------------------------------------------- guards
 
 function allowed(): boolean {
-  if (!ANALYTICS_ENABLED) return false;
+  if (!ANALYTICS_ENABLED || !GOATCOUNTER_CODE) return false;
   if (typeof window === 'undefined' || typeof document === 'undefined') return false;
 
   const host = location.hostname;
@@ -133,53 +122,68 @@ function allowed(): boolean {
 
 // ------------------------------------------------------------- transport
 
+/**
+ * Event names on the wire: the event, then its closed-vocabulary parts, joined
+ * by '/' — `module_dwell/fick/2-5m`. GoatCounter events carry a name and
+ * nothing else, so the properties ride in the name. Every segment must match
+ * a strict pattern or nothing is sent at all: a defense in depth for the
+ * closed-vocabulary invariant, should a module id ever be mistyped into
+ * something else. Exported for verify.ts.
+ */
+const SEGMENT = /^[a-z0-9][a-z0-9+_-]*$/;
+export function eventPath(event: string, parts: readonly string[]): string | null {
+  const segs = [event, ...parts];
+  return segs.every((seg) => SEGMENT.test(seg)) ? segs.join('/') : null;
+}
+
+/**
+ * One count, sent straight to GoatCounter's documented counting endpoint.
+ *
+ * Their count.js is deliberately NOT loaded. It would attach the referrer, the
+ * page title, the screen width and the query string to every hit, and bind its
+ * own click tracking; the Plausible script did the equivalent and was seen in
+ * the export sending its own 'engagement' events and outbound-link URLs —
+ * strings outside this file's closed vocabulary. Sending the request here
+ * means no third-party code runs in a visitor's browser, and the request
+ * carries exactly: p (the event name), e (it is an event), ns (no session
+ * grouping, so each count stands alone), and rnd (a cache-buster).
+ *
+ * Mechanism, in the same order count.js uses: sendBeacon first, because it
+ * survives the tab being hidden or closed — which is precisely when a dwell
+ * fires — then the documented 1x1 GET pixel if the beacon is refused.
+ */
+function beacon(params: Record<string, string>): void {
+  const query = Object.entries({ ...params, rnd: Math.random().toString(36).slice(2, 7) })
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+  const url = `${COUNT_URL}?${query}`;
+  if (typeof navigator.sendBeacon === 'function' && navigator.sendBeacon(url)) return;
+  new Image().src = url;
+}
+
 let loaded = false;
 
 /**
- * Load the counting script once, if we are allowed to count at all.
- *
- * The vendor's instructions say to paste their snippet into index.html. Doing
- * it from here instead is deliberate and strictly more private: a snippet in
- * the document head loads and fires its automatic pageview for EVERY visitor,
- * including ones sending Do Not Track or Global Privacy Control, and including
- * anyone who ticked the opt-out. Loading behind allowed() means those visitors
- * never fetch the script at all, so there is no request to their servers and
- * nothing to retract. The bytes are identical to the snippet otherwise.
+ * Count the page load, once, if we are allowed to count at all. That one
+ * non-event hit is the site-wide visit count; the module breakdown comes from
+ * the events below. Visitors sending Do Not Track or Global Privacy Control,
+ * or who ticked the opt-out, never reach this request.
  */
 export function initAnalytics(): void {
   if (loaded || !allowed()) return;
   loaded = true;
   try {
-    // Queue shim, verbatim from the vendor snippet: events fired before the
-    // script lands are replayed once it does.
-    const p =
-      window.plausible ||
-      (((...args: unknown[]) => {
-        (p.q = p.q || []).push(args);
-      }) as PlausibleFn);
-    p.init = p.init || ((opts?: Record<string, unknown>) => { p.o = opts || {}; });
-    window.plausible = p;
-
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = PLAUSIBLE_SRC;
-    document.head.appendChild(s);
-
-    // Starts tracking and sends one automatic pageview per page load. That
-    // pageview is the site-wide visitor count; the module breakdown comes from
-    // the custom events below. Hash-based routing is deliberately NOT enabled:
-    // a hash change already emits module_view, and turning it on would double
-    // every module visit as a pageview too.
-    p.init();
+    beacon({ p: '/', ns: 'true' });
   } catch {
     /* never break the page over a counter */
   }
 }
 
-function send(event: string, props: Record<string, string>): void {
+function send(event: string, parts: readonly string[]): void {
   if (!allowed()) return;
   try {
-    window.plausible?.(event, { props });
+    const p = eventPath(event, parts);
+    if (p) beacon({ p, e: 'true', ns: 'true' });
   } catch {
     /* never break the page over a counter */
   }
@@ -189,7 +193,7 @@ function send(event: string, props: Record<string, string>): void {
 
 /** A module was opened. */
 export function trackView(module: string): void {
-  send('module_view', { module });
+  send('module_view', [module]);
 }
 
 /**
@@ -199,15 +203,15 @@ export function trackView(module: string): void {
  * visitor who clicked through the nav from one who actually used the thing.
  */
 export function trackEngage(module: string): void {
-  send('module_engage', { module });
+  send('module_engage', [module]);
 }
 
 /** A module visit ended. `seconds` is ACTIVE time; it is bucketed here. */
 export function trackDwell(module: string, seconds: number): void {
-  send('module_dwell', { module, bucket: bucket(seconds) });
+  send('module_dwell', [module, bucket(seconds)]);
 }
 
 /** A named feature was used. Enum only — see the closed-vocabulary invariant. */
 export function trackFeature(module: string, feature: Feature): void {
-  send('feature_use', { module, feature });
+  send('feature_use', [module, feature]);
 }

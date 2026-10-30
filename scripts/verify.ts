@@ -70,6 +70,10 @@ import {
   solveJump, solveProfile, valueAt, type ProfileParams,
 } from '../src/lib/bcprofile';
 import {
+  erfAcc, erfcAcc, erfcx, filmFluxPerUnit, heldAmountPerUnit, heldFluxPerUnit,
+  heldHeatEnergy, heldHeatFlux, penetration, surfaceFilm, thetaFilm, thetaHeld,
+} from '../src/lib/semiinf';
+import {
   areaAvgT, areaAvgTNumeric, mixingCupT, mixingCupTNumeric, tempAt as mcTempAt,
   velocityAt as mcVelocityAt, type MixingCupParams,
 } from '../src/lib/mixingcup';
@@ -78,7 +82,7 @@ import {
   steadyOutlet, stepParcels, timeWeightedRate, type Box as RttBox, type Parcel as RttParcel,
   type Source as RttSource,
 } from '../src/lib/rtt';
-import { bucket } from '../src/lib/analytics';
+import { bucket, eventPath } from '../src/lib/analytics';
 
 let failures = 0;
 /** Relative comparison. For a target of exactly zero the tolerance is
@@ -1669,6 +1673,25 @@ check('profile endpoints: T(0) = Tc, T(1) = Tw; v(0) = 2v̄, v(1) = 0 (no-slip)'
     bucket(-5) === '0-10s' && bucket(NaN) === '0-10s' && bucket(Infinity) === '30m+');
   check('the labels are the closed set the notes document',
     new Set(cases.map((c) => c[1])).size === 8);
+
+  // GoatCounter events carry a name and nothing else, so the properties ride
+  // in the name. The encoding is the one place a typo would silently corrupt
+  // every figure, or let a non-vocabulary string onto the wire.
+  console.log('\nUsage event names on the wire');
+  check('a dwell encodes as event/module/bucket',
+    eventPath('module_dwell', ['fick', '2-5m']) === 'module_dwell/fick/2-5m');
+  check('a feature encodes as event/module/feature',
+    eventPath('feature_use', ['rtt', 'box-drag']) === 'feature_use/rtt/box-drag');
+  {
+    const all = cases.map((c) => eventPath('module_dwell', ['fick', c[1]]));
+    check('every bucket label survives the encoding (30m+ included)',
+      all.every((x, i) => x === 'module_dwell/fick/' + cases[i][1]), all.join(' '));
+  }
+  check('never starts with "/" (GoatCounter reads that as a page, not an event)',
+    !eventPath('module_view', ['fick'])!.startsWith('/'));
+  check('anything outside the vocabulary sends nothing: a slash, a space, a capital, an empty part',
+    eventPath('module_view', ['fick/../x']) === null && eventPath('module_view', ['Fick']) === null
+      && eventPath('module_view', ['a b']) === null && eventPath('module_view', ['']) === null);
 }
 
 
@@ -1888,6 +1911,199 @@ console.log('\nAn interface: flux cannot jump, concentration can');
   check('a solute that prefers the left side drives less through',
     solveJump({ L1: 0.01, kD1: 2, L2: 0.02, kD2: 0.5, left: 100, right: 20, phi: 4 }).flux
       < solveJump({ L1: 0.01, kD1: 2, L2: 0.02, kD2: 0.5, left: 100, right: 20, phi: 1 }).flux);
+}
+
+// --- 41. The semi-infinite medium, in the sheet's notation ----------------
+// theta = (C - C0)/(Cs - C0) RISES 0 -> 1, so the held-surface solution is
+// erfc(eta). The sheet's erf table, then the structure of the solution.
+console.log('\nSemi-infinite medium: the error function, and erfcx');
+check('erf(0.5) = 0.520 (sheet table)', close(erfAcc(0.5), 0.5205, 1e-3), String(erfAcc(0.5)));
+check('erf(1) = 0.843 (sheet table)', close(erfAcc(1), 0.8427, 1e-3), String(erfAcc(1)));
+check('erf(2) = 0.995 (sheet table)', close(erfAcc(2), 0.9953, 1e-3), String(erfAcc(2)));
+check('erfcx(0) = 1', close(erfcx(0), 1, 1e-6));
+{
+  let worst = 0;
+  for (const z of [0.1, 0.3, 0.7, 1.2, 1.8, 2.5]) {
+    worst = Math.max(worst, Math.abs(erfAcc(z) - erf(z)));
+  }
+  check('agrees with lib/transient erf where both are valid (< 3e-7)', worst < 3e-7, String(worst));
+  // Deep tail: erfcx(z) ~ (1/(z sqrt pi))(1 - 1/(2z^2) + 3/(4z^4)). A&S 7.1.26
+  // gives erfc absolutely, so 1 - erf(z) is noise out here; erfcx is not.
+  const z = 8;
+  const asym = (1 / (z * Math.sqrt(Math.PI))) * (1 - 1 / (2 * z * z) + 3 / (4 * z ** 4));
+  check('erfcx keeps relative accuracy deep in the tail (z = 8)',
+    Math.abs(erfcx(z) / asym - 1) < 1e-5, `${erfcx(z)} vs ${asym}`);
+  check('erfcx never overflows (z = 50 is finite and positive)',
+    Number.isFinite(erfcx(50)) && erfcx(50) > 0);
+}
+
+console.log('\nSurface held: erfc(eta), and the similarity collapse');
+{
+  const D = 1e-5;      // cm^2/s
+  const t = 3600;      // s
+  check('theta = 1 at the face for every t > 0', close(thetaHeld(0, D, t), 1, 1e-6));
+  check('theta -> 0 deep inside', thetaHeld(50 * Math.sqrt(D * t), D, t) < 1e-12);
+  // The collapse: theta depends on x and t only through eta.
+  let worst = 0;
+  for (const x of [0.02, 0.1, 0.3, 0.6]) {
+    worst = Math.max(worst, Math.abs(thetaHeld(x, D, t) - thetaHeld(2 * x, D, 4 * t)));
+  }
+  check('similarity: theta(x, t) = theta(2x, 4t) exactly — one curve in eta',
+    worst < 1e-12, String(worst));
+  // The PDE, dtheta/dt = D d2theta/dx2, by central differences.
+  {
+    const x = 0.15;
+    const dx = 1e-4;
+    const dt = 1e-2;
+    const lhs = (thetaHeld(x, D, t + dt) - thetaHeld(x, D, t - dt)) / (2 * dt);
+    const rhs = (D * (thetaHeld(x + dx, D, t) - 2 * thetaHeld(x, D, t) + thetaHeld(x - dx, D, t))) / (dx * dx);
+    // erfcx is a Chebyshev fit good to 1.2e-7 fractionally; a second
+    // difference amplifies that to ~1e-5, so 1e-4 is the honest bound. A wrong
+    // formula would be off by order one, not by this.
+    check('satisfies dtheta/dt = D d2theta/dx2 (to the accuracy of the fit)', Math.abs(lhs - rhs) < 1e-4 * Math.abs(rhs),
+      `${lhs} vs ${rhs}`);
+  }
+  // Flux at the face: -D dtheta/dx at x = 0 must equal sqrt(D/(pi t)).
+  {
+    const dx = 1e-6;
+    const num = -D * (thetaHeld(dx, D, t) - thetaHeld(0, D, t)) / dx;
+    check('face flux = sqrt(D / (pi t)) per unit (Cs - C0)',
+      close(num, heldFluxPerUnit(D, t), 1e-3), `${num} vs ${heldFluxPerUnit(D, t)}`);
+    check('...and falls as 1/sqrt(t): quadruple t, halve the flux',
+      close(heldFluxPerUnit(D, 4 * t), heldFluxPerUnit(D, t) / 2, 1e-12));
+  }
+  // Amount delivered: the integral of theta over depth, and also the time
+  // integral of the face flux. Two routes to one number.
+  {
+    const L = 20 * Math.sqrt(D * t);
+    const N = 20000;
+    let area = 0;
+    for (let i = 0; i < N; i++) {
+      const xm = ((i + 0.5) / N) * L;
+      area += thetaHeld(xm, D, t) * (L / N);
+    }
+    check('M/A = 2 sqrt(Dt/pi): the area under the profile',
+      close(area, heldAmountPerUnit(D, t), 1e-6), `${area} vs ${heldAmountPerUnit(D, t)}`);
+    // Time integral of 1/sqrt(t) has an integrable singularity at 0; use the
+    // substitution t = s^2 so the integrand is smooth.
+    const S = Math.sqrt(t);
+    let tint = 0;
+    for (let i = 0; i < N; i++) {
+      const s = ((i + 0.5) / N) * S;
+      tint += heldFluxPerUnit(D, s * s) * 2 * s * (S / N);
+    }
+    check('...equals the time integral of the face flux',
+      close(tint, heldAmountPerUnit(D, t), 1e-6), `${tint}`);
+    check('M/A grows as sqrt(t): quadruple t, double the amount',
+      close(heldAmountPerUnit(D, 4 * t), 2 * heldAmountPerUnit(D, t), 1e-12));
+  }
+  // Penetration depth to the 1 % criterion.
+  {
+    const th = thetaHeld(penetration(D, t), D, t);
+    check('theta at delta = 3.65 sqrt(Dt) is the 1 % mark (0.010)',
+      Math.abs(th - 0.01) < 0.0003, String(th));
+    check('delta grows as sqrt(t), not t', close(penetration(D, 4 * t), 2 * penetration(D, t), 1e-12));
+  }
+}
+
+console.log('\nSurface held, heat: a flux or an amount also needs k or rho cp');
+{
+  // Tissue-ish: k = 0.5, rho cp = 3.6e6 -> alpha = 1.389e-7 m^2/s.
+  const k = 0.5;
+  const rhoCp = 3.6e6;
+  const alpha = k / rhoCp;
+  const dT = 20;
+  const t = 60;
+  // Cross-library: lib/transient's semiInfFlux works in k, rho, c and the
+  // falling convention; the magnitude must be identical.
+  const ref = Math.abs(semiInfFlux({ k, rho: 1000, c: rhoCp / 1000, Ti: 37, Ts: 37 - dT }, t));
+  check('heat face flux k dT / sqrt(pi alpha t) == lib/transient (cross-library)',
+    close(heldHeatFlux(k, alpha, dT, t), ref, 1e-12), `${heldHeatFlux(k, alpha, dT, t)} vs ${ref}`);
+  // E/A is J/m^2: integrate rho cp (T - T0) over depth.
+  const L = 20 * Math.sqrt(alpha * t);
+  const N = 20000;
+  let E = 0;
+  for (let i = 0; i < N; i++) {
+    const xm = ((i + 0.5) / N) * L;
+    E += rhoCp * dT * thetaHeld(xm, alpha, t) * (L / N);
+  }
+  check('E/A = 2 rho cp dT sqrt(alpha t / pi), in J/m^2',
+    close(E, heldHeatEnergy(rhoCp, alpha, dT, t), 1e-6), `${E}`);
+  // The sheet's HW3 audit note, as a number: D -> alpha alone in M/A gives
+  // dT * 2 sqrt(alpha t/pi), which is K.m. Off by exactly rho cp.
+  const naive = dT * heldAmountPerUnit(alpha, t);
+  check('naive D -> alpha substitution is off by exactly rho cp (units K.m, not J/m^2)',
+    close(heldHeatEnergy(rhoCp, alpha, dT, t) / naive, rhoCp, 1e-12));
+}
+
+console.log('\nSurface film: Robin, and why the collapse breaks');
+{
+  const D = 1e-5;
+  const t = 3600;
+  const kappa = D;     // mass: the flux law is -D dC/dx
+  const h = 2e-4;      // cm/s
+  // erfcx(0) is 1 + 3e-8 rather than exactly 1 (the fit's error at zero),
+  // so these two routes agree to the fit's accuracy, not to round-off.
+  check('face: theta(0, t) = 1 - erfcx(h sqrt(t/D))',
+    close(thetaFilm(0, D, h, kappa, t), surfaceFilm(D, h, kappa, t), 1e-6));
+  // The film fills on its own clock, D/h^2 (250 s here), not instantly.
+  {
+    const tf = D / (h * h);
+    check('the face starts empty and creeps up on the film clock D/h^2',
+      surfaceFilm(D, h, kappa, tf / 1e4) < 0.02 && surfaceFilm(D, h, kappa, 1e4 * tf) > 0.9
+        && surfaceFilm(D, h, kappa, t) < surfaceFilm(D, h, kappa, 10 * t),
+      String(surfaceFilm(D, h, kappa, tf / 1e4)));
+  }
+  // Limits.
+  {
+    let worst = 0;
+    for (const x of [0, 0.05, 0.2, 0.5]) {
+      worst = Math.max(worst, Math.abs(thetaFilm(x, D, 1e6, kappa, t) - thetaHeld(x, D, t)));
+    }
+    check('h -> infinity recovers the held surface, erfc(eta)', worst < 1e-5, String(worst));
+    // As h -> 0 the intake goes to zero LINEARLY in h, not to a floor.
+    check('h -> 0: nothing gets in, and the intake scales with h',
+      thetaFilm(0.05, D, 1e-14, kappa, t) < 1e-8
+        && close(thetaFilm(0.05, D, 1e-9, kappa, t) / thetaFilm(0.05, D, 1e-10, kappa, t), 10, 1e-3),
+      String(thetaFilm(0.05, D, 1e-14, kappa, t)));
+  }
+  // The Robin condition itself: -D dtheta/dx|0 = h (1 - theta(0, t)).
+  {
+    const dx = 1e-7;
+    const lhs = -D * (thetaFilm(dx, D, h, kappa, t) - thetaFilm(0, D, h, kappa, t)) / dx;
+    const rhs = h * (1 - thetaFilm(0, D, h, kappa, t));
+    check('satisfies -D dtheta/dx = h (1 - theta) at the face', close(lhs, rhs, 1e-3), `${lhs} vs ${rhs}`);
+    check('film flux helper equals h (1 - theta_s), to the accuracy of the fit',
+      close(filmFluxPerUnit(D, h, kappa, t), rhs, 1e-6));
+  }
+  // The PDE holds in the interior too.
+  {
+    const x = 0.12;
+    const dx = 1e-4;
+    const dt = 1e-2;
+    const lhs = (thetaFilm(x, D, h, kappa, t + dt) - thetaFilm(x, D, h, kappa, t - dt)) / (2 * dt);
+    const rhs = (D * (thetaFilm(x + dx, D, h, kappa, t) - 2 * thetaFilm(x, D, h, kappa, t)
+      + thetaFilm(x - dx, D, h, kappa, t))) / (dx * dx);
+    check('film solution satisfies the diffusion equation', Math.abs(lhs - rhs) < 1e-5 * Math.abs(rhs),
+      `${lhs} vs ${rhs}`);
+  }
+  // Similarity is LOST: the film has its own length D/h.
+  {
+    const x = 0.1;
+    const gap = Math.abs(thetaFilm(x, D, h, kappa, t) - thetaFilm(2 * x, D, h, kappa, 4 * t));
+    check('similarity breaks with a film: theta(x,t) != theta(2x,4t)', gap > 1e-3, String(gap));
+  }
+  // The trap the erfcx form exists to dodge.
+  {
+    const strong = thetaFilm(0.01, D, 50, kappa, 1e7);
+    check('a strong film at late time is finite, not Infinity * 0 = NaN',
+      Number.isFinite(strong) && strong >= 0 && strong <= 1, String(strong));
+    const ea = 0.01 / (2 * Math.sqrt(D * 1e7));
+    const literal = Math.exp((50 * 0.01) / D + (50 * 50 * 1e7) / D)
+      * erfcAcc(ea + (50 / D) * Math.sqrt(D * 1e7));
+    check('...where the literal sheet form genuinely does blow up',
+      !Number.isFinite(literal), String(literal));
+  }
 }
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} FAILED`}`);
 process.exit(failures === 0 ? 0 : 1);

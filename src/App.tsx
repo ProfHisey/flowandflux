@@ -13,6 +13,7 @@ import { PecletModule } from './modules/Peclet/PecletModule';
 import { CoolingModule } from './modules/Cooling/CoolingModule';
 import { WallModule } from './modules/Wall/WallModule';
 import { BoundaryConditionsModule } from './modules/BoundaryConditions/BCModule';
+import { SemiInfiniteModule } from './modules/SemiInfinite/SemiInfiniteModule';
 import { TransientModule } from './modules/Transient/TransientModule';
 // Heisler charts are UNPUBLISHED for now (Sept 2026) — module code intact in
 // modules/Transient/HeislerModule.tsx; restore by uncommenting this import, the
@@ -70,6 +71,7 @@ const GROUPS: ModuleGroup[] = [
     short: 'Unsteady',
     items: [
       { id: 'bolus', name: 'Bolus dispersion', tag: 'a release spreading as √t' },
+      { id: 'semi', name: 'Semi-infinite media', tag: 'a face held, a front marching in as √t' },
       { id: 'touch', name: 'Sudden contact', tag: 'erf fronts and the 44 °C line' },
       // Unpublished for now (see the HeislerModule import note):
       // { id: 'heisler', name: 'Heisler charts', tag: 'the finite body — Bi and Fo decide' },
@@ -140,8 +142,9 @@ function UsageNotice() {
         Individual visits are never linked to one another — nothing connects one tool you
         opened to the next, so no path through the site can be reconstructed. How long a
         tool was open is recorded only as a coarse range, never an exact time, and nothing
-        you type or set is ever transmitted. The counts are handled by Plausible
-        Analytics, which does not store IP addresses. If your browser sends a Do Not Track
+        you type or set is ever transmitted. The counts are handled by GoatCounter, which
+        does not store IP addresses; the site sends each count itself, so none of
+        GoatCounter's own code runs in your browser. If your browser sends a Do Not Track
         or Global Privacy Control signal, nothing is sent at all.
       </p>
       <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
@@ -373,6 +376,7 @@ export default function App() {
         {moduleId === 'wall' && <WallModule dark={dark} />}
         {moduleId === 'bc' && <BoundaryConditionsModule dark={dark} />}
         {moduleId === 'bolus' && <UnsteadyModule dark={dark} />}
+        {moduleId === 'semi' && <SemiInfiniteModule dark={dark} />}
         {moduleId === 'touch' && <TransientModule dark={dark} />}
         {/* Unpublished for now: {moduleId === 'heisler' && <HeislerModule dark={dark} />} */}
         {moduleId === 'newton' && <NewtonModule dark={dark} />}
