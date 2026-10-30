@@ -42,12 +42,16 @@ interface HMol {
 
 export function Bolus3DCanvas({
   cargo = 'mass',
+  geom = 'point',
   releaseTick,
   running,
   dark,
   cam: camProp,
 }: {
   cargo?: 'mass' | 'heat';
+  /** 'point' spreads as a sphere, sqrt(6Dt); 'line' is a needle track seen
+   *  from the side, spreading as a cylinder, sqrt(4Dt). */
+  geom?: 'point' | 'line';
   releaseTick: number;
   running: boolean;
   dark: boolean;
@@ -60,13 +64,13 @@ export function Bolus3DCanvas({
   const internalCam = useOrbitCam(0.55, -0.3);
   const cam = camProp ?? internalCam;
 
-  const redrawKey = `${cargo}|${releaseTick}|${dark}|${cam.camTick}`;
+  const redrawKey = `${cargo}|${geom}|${releaseTick}|${dark}|${cam.camTick}`;
 
   useEffect(() => {
     listRef.current = [];
     heatRef.current = [];
     tRef.current = 0;
-  }, [releaseTick, cargo]);
+  }, [releaseTick, cargo, geom]);
 
   const canvasRef = useCanvas((ctx, frame) => {
     const { width: W, height: H } = frame;
@@ -99,7 +103,8 @@ export function Bolus3DCanvas({
       // lattice earns it emergently); the hint owns that.
       const s4 = 4 * D_VIS * tH;
       for (const q of mols) {
-        const r2 = q.x * q.x + q.y * q.y + q.z * q.z;
+        // Distance from the source: the point, or the line's axis (y runs along it).
+        const r2 = geom === 'line' ? q.x * q.x + q.z * q.z : q.x * q.x + q.y * q.y + q.z * q.z;
         const u = Math.exp(-r2 / s4);
         const amp = 0.5 + 4.5 * u;
         if (dt > 0) {
@@ -121,7 +126,12 @@ export function Bolus3DCanvas({
       const list = listRef.current;
       if (list.length === 0) {
         for (let i = 0; i < COUNT; i++) {
-          list.push([(Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4]);
+          // A line source starts spread UNIFORMLY along its track. A reflecting
+          // walk keeps a uniform distribution uniform, so motion along the line
+          // is real and changes nothing -- which is why it is a 2D problem.
+          list.push(geom === 'line'
+            ? [(Math.random() - 0.5) * 4, (Math.random() - 0.5) * 2 * B, (Math.random() - 0.5) * 4]
+            : [(Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4]);
         }
       }
       if (dt > 0) {
@@ -143,37 +153,69 @@ export function Bolus3DCanvas({
     }
     const t = Math.max(tRef.current, 0.02);
 
-    // The prediction: sigma = sqrt(6 D t), drawn as three great circles.
-    const sigma = Math.min(1.6 * B, Math.sqrt(6 * D_VIS * t));
+    // The prediction, in the geometry of the release. A point spreads into
+    // three axes, so its rms radius is sqrt(6Dt): three great circles. A line
+    // spreads into the two axes perpendicular to it, sqrt(4Dt): a cylinder
+    // around the track. sigma^2 = 2 n D t, n the number of axes it spreads into.
+    const isLine = geom === 'line';
+    const nAx = isLine ? 4 : 6;
+    const sigma = Math.min(1.6 * B, Math.sqrt(nAx * D_VIS * t));
     const amber = dark ? 'rgba(251,191,36,0.7)' : 'rgba(217,119,6,0.65)';
     const NC = 40;
-    for (let j = 0; j < NC; j++) {
-      const a0 = (j / NC) * Math.PI * 2;
-      const a1 = ((j + 1) / NC) * Math.PI * 2;
-      pt.seg(
-        [sigma * Math.cos(a0), sigma * Math.sin(a0), 0],
-        [sigma * Math.cos(a1), sigma * Math.sin(a1), 0], amber, 1.5,
-      );
-      pt.seg(
-        [sigma * Math.cos(a0), 0, sigma * Math.sin(a0)],
-        [sigma * Math.cos(a1), 0, sigma * Math.sin(a1)], amber, 1.5,
-      );
-      pt.seg(
-        [0, sigma * Math.cos(a0), sigma * Math.sin(a0)],
-        [0, sigma * Math.cos(a1), sigma * Math.sin(a1)], amber, 1.5,
-      );
+    if (isLine) {
+      // Rings in the x-z plane at several heights, plus four rulings.
+      for (const yy of [-B, -B / 2, 0, B / 2, B]) {
+        for (let j = 0; j < NC; j++) {
+          const a0 = (j / NC) * Math.PI * 2;
+          const a1 = ((j + 1) / NC) * Math.PI * 2;
+          pt.seg(
+            [sigma * Math.cos(a0), yy, sigma * Math.sin(a0)],
+            [sigma * Math.cos(a1), yy, sigma * Math.sin(a1)], amber, 1.4,
+          );
+        }
+      }
+      for (let j = 0; j < 4; j++) {
+        const a = (j / 4) * Math.PI * 2;
+        pt.seg([sigma * Math.cos(a), -B, sigma * Math.sin(a)], [sigma * Math.cos(a), B, sigma * Math.sin(a)], amber, 1.2);
+      }
+      // The track itself.
+      pt.seg([0, -B, 0], [0, B, 0], dark ? 'rgba(226,232,240,0.5)' : 'rgba(15,23,42,0.4)', 1.5);
+    } else {
+      for (let j = 0; j < NC; j++) {
+        const a0 = (j / NC) * Math.PI * 2;
+        const a1 = ((j + 1) / NC) * Math.PI * 2;
+        pt.seg(
+          [sigma * Math.cos(a0), sigma * Math.sin(a0), 0],
+          [sigma * Math.cos(a1), sigma * Math.sin(a1), 0], amber, 1.5,
+        );
+        pt.seg(
+          [sigma * Math.cos(a0), 0, sigma * Math.sin(a0)],
+          [sigma * Math.cos(a1), 0, sigma * Math.sin(a1)], amber, 1.5,
+        );
+        pt.seg(
+          [0, sigma * Math.cos(a0), sigma * Math.sin(a0)],
+          [0, sigma * Math.cos(a1), sigma * Math.sin(a1)], amber, 1.5,
+        );
+      }
     }
     wireBox(pt, -B, -B, -B, B, B, B, faint);
     pt.flush();
 
-    pt.chip([0, sigma + 16, 0], `amber sphere: σ = √(6Dt) — the 3D diffusion clock`, dark);
+    pt.chip(
+      isLine ? [sigma + 18, B * 0.6, 0] : [0, sigma + 16, 0],
+      isLine ? 'amber cylinder: σ = √(4Dt) — two axes, around the track' : 'amber sphere: σ = √(6Dt) — the 3D diffusion clock',
+      dark,
+    );
+    const walls = Math.sqrt(nAx * D_VIS * t) > 1.1 * B;
     pt.hint(
       dark,
       cargo === 'heat'
-        ? `t = ${t.toFixed(1)} s · the molecules never move — glow painted from the point solution`
-        : Math.sqrt(6 * D_VIS * t) > 1.1 * B
+        ? `t = ${t.toFixed(1)} s · the molecules never move — glow painted from the ${isLine ? 'line' : 'point'} solution`
+        : walls
           ? `t = ${t.toFixed(1)} s · the cloud is feeling the walls — the open-medium σ no longer applies`
-          : `t = ${t.toFixed(1)} s (visual clock) · a point release spreads as a sphere`,
+          : isLine
+            ? `t = ${t.toFixed(1)} s (visual clock) · a line release spreads as a cylinder`
+            : `t = ${t.toFixed(1)} s (visual clock) · a point release spreads as a sphere`,
     );
   }, { running, redrawKey });
 
@@ -187,7 +229,9 @@ export function Bolus3DCanvas({
       aria-label={
         cargo === 'heat'
           ? 'A fixed 3D cloud of molecules with a hot spot of energy spreading through it, tracked by the predicted sigma sphere'
-          : 'A point release of particles spreading spherically in 3D, tracked by the predicted sigma sphere'
+          : geom === 'line'
+            ? 'A line release of particles spreading outward from a straight track as a cylinder, tracked by the predicted sigma cylinder'
+            : 'A point release of particles spreading spherically in 3D, tracked by the predicted sigma sphere'
       }
     />
   );
