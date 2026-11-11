@@ -34,7 +34,8 @@ import {
 } from '../src/lib/transient';
 import {
   area, drivingGradient, flowRate, hydraulicResistance, reynolds,
-  shear, vAvg, velocity as pvel, vMax, wallShear, type PoiseuilleParams,
+  screenSpeedFactor, screenSpeedPinned, shear, vAvg, velocity as pvel, vMax, wallShear,
+  type PoiseuilleParams,
 } from '../src/lib/poiseuille';
 import {
   dragCoefficient, dragForce as stokesDrag, mass as stokesMass, netWeight,
@@ -805,10 +806,55 @@ console.log('\nNavier-Stokes survivors (term-killer panel)');
   // nothing about the profile moves, because gravity was cancelled.
   {
     const pl: PoiseuilleParams = { ...cap, geometry: 'plates' };
-    check('tube and plates: profile is independent of rho (gravity cancelled)',
+    check('tube and plates: profile is independent of rho (gravity canceled)',
       close(pvel({ ...t, rho: t.rho * 3 }, 0.4 * t.R), pvel(t, 0.4 * t.R), 1e-12) &&
         close(pvel({ ...pl, rho: pl.rho * 3 }, 0.4 * pl.h), pvel(pl, 0.4 * pl.h), 1e-12));
   }
+}
+
+// --- 38c. Every slider moves the animation, and the right way ------------------
+// The canvases' on-screen speed is screenSpeedFactor(v_max): each factor of
+// ten in the real peak speed is a factor of two on screen, 10 um/s to 10 m/s,
+// pinned outside. The page states that rule, so it is pinned here. The
+// original design fixed the on-screen speed and divided mu, dP, L and rho
+// out of the picture entirely (audit, Nov 2026); these checks keep every
+// slider's DIRECTION honest, geometry by geometry.
+console.log('\nPoiseuille animation: every slider moves it, the right way');
+{
+  const k = screenSpeedFactor;
+  check('the stated rule: 1 m/s is the reference, factor 1', close(k(1), 1, 1e-12));
+  check('the stated rule: x10 real speed is x2 on screen (0.01 -> 0.1 m/s)', close(k(0.1) / k(0.01), 2, 1e-12));
+  check('pinned outside 10 um/s .. 10 m/s', close(k(1e-7), k(1e-5), 1e-12) && close(k(1e3), k(10), 1e-12)
+    && screenSpeedPinned(1e-7) === 'slow' && screenSpeedPinned(1e3) === 'fast' && screenSpeedPinned(0.6) === null);
+  check('nonsense speed (0, NaN) degrades to the slow pin, never NaN on screen',
+    close(k(0), k(1e-5), 1e-12) && close(k(Number.NaN), k(1e-5), 1e-12));
+  check('the default capillary keeps its old 85 px/s (98 px/s x factor)',
+    close(98 * k(vMax(cap)), 85, 0.01), String(98 * k(vMax(cap))));
+
+  const screen = (q: PoiseuilleParams) => k(vMax(q));
+  const faster = (q: PoiseuilleParams, d: Partial<PoiseuilleParams>) => screen({ ...q, ...d }) > screen(q) * 1.001;
+  const slower = (q: PoiseuilleParams, d: Partial<PoiseuilleParams>) => screen({ ...q, ...d }) < screen(q) * 0.999;
+  const same = (q: PoiseuilleParams, d: Partial<PoiseuilleParams>) => close(screen({ ...q, ...d }), screen(q), 1e-12);
+  const tb: PoiseuilleParams = { ...cap, geometry: 'tube' };
+  const pl: PoiseuilleParams = { ...cap, geometry: 'plates' };
+  const fl: PoiseuilleParams = { ...cap, geometry: 'film', h: 2e-4 };
+  for (const [name, q] of [['tube', tb], ['plates', pl], ['film', fl]] as const) {
+    check(`${name}: viscosity up -> slower`, slower(q, { mu: q.mu * 2 }));
+    check(`${name}: width W changes nothing in the section (wide-channel model)`, same(q, { W: q.W * 10 }));
+  }
+  for (const [name, q] of [['tube', tb], ['plates', pl]] as const) {
+    check(`${name}: pressure up -> faster`, faster(q, { dP: q.dP * 2 }));
+    check(`${name}: longer channel (same dP) -> slower`, slower(q, { L: q.L * 2 }));
+    check(`${name}: density changes nothing (only Re cares)`, same(q, { rho: q.rho * 2 }));
+  }
+  check('tube: wider bore -> faster (v_max goes as R^2)', faster(tb, { R: tb.R * 2 }));
+  check('tube: the gap h is not a tube dimension -> no change', same(tb, { h: tb.h * 2 }));
+  check('plates: wider gap -> faster (v_max goes as h^2)', faster(pl, { h: pl.h * 2 }));
+  check('film: thicker film -> faster (v_max goes as h^2)', faster(fl, { h: fl.h * 2 }));
+  check('film: denser fluid -> faster (rho g IS the driver)', faster(fl, { rho: fl.rho * 2 }));
+  check('film: dP and L are not drivers -> no change', same(fl, { dP: 5e4 }) && same(fl, { L: 1 }));
+  check('a 20% narrower tube visibly slows (the stenosis preset): 0.8^2 v_max on a compressed scale',
+    close(screen({ ...tb, R: tb.R * 0.8 }) / screen(tb), 2 ** Math.log10(0.64), 1e-9));
 }
 
 // ==========================================================================

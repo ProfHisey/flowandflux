@@ -24,6 +24,7 @@ import { Poiseuille3DCanvas } from './Poiseuille3DCanvas';
 import { PoiseuilleChart } from './PoiseuilleChart';
 import { NSAnatomy } from './NSAnatomy';
 import { DEFAULT_PARAMS, PRESETS } from './presets';
+import { RE_TRANSITION } from './turbulenceBanner';
 
 export function PoiseuilleModule({ dark }: { dark: boolean }) {
   const [params, setParams] = useState<PoiseuilleParams>(DEFAULT_PARAMS);
@@ -52,7 +53,7 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
     }),
     [params],
   );
-  const turbulent = derived.Re > 2000;
+  const turbulent = derived.Re > RE_TRANSITION;
 
   return (
     <div className="space-y-5">
@@ -112,7 +113,9 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                   The classic dye-front demo: a flat sheet of dye is released and the
                   flow itself sculpts it — a bullet in the tube, a parabolic curtain
                   between the plates, a sagging half-parabola down the film. The
-                  velocity profile is not drawn here; it is what the dye BECOMES.
+                  velocity profile is not drawn here; it is what the dye BECOMES. Speed is
+                  compressed exactly as in 2D, so every slider that changes how fast the
+                  fluid moves changes how fast the dye runs.
                 </p>
               </>
             ) : (
@@ -124,10 +127,13 @@ export function PoiseuilleModule({ dark }: { dark: boolean }) {
                   dark={dark}
                 />
                 <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Tracers ride the profile without diffusing, and the on-screen peak speed
-                  is fixed for legibility — the shape and every readout are physical. Watch
-                  a tracer near the wall against one on the centerline: same fluid, same
-                  driving force, and the wall one barely moves. That spread IS the profile.
+                  Tracers ride the profile without diffusing. The shape and every readout
+                  are physical; the speed on screen is compressed so every setting stays
+                  watchable — each factor of ten in the real peak speed is a factor of two
+                  here, from 10 µm/s up to 10 m/s, and pinned beyond. The real peak speed
+                  is printed on the canvas. Watch a tracer near the wall against one on the
+                  centerline: same fluid, same driving force, and the wall one barely
+                  moves. That spread IS the profile.
                 </p>
               </>
             )}

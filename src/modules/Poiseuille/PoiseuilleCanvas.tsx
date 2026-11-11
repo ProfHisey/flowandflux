@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import { vMax, velocity, type PoiseuilleParams } from '../../lib/poiseuille';
+import {
+  reynolds, screenSpeedFactor, screenSpeedPinned, vMax, velocity, type PoiseuilleParams,
+} from '../../lib/poiseuille';
+import { sci } from '../../lib/format';
+import { drawTurbulenceBanner } from './turbulenceBanner';
 import { rampFlow } from '../NewtonViscosity/NewtonCanvas';
 import { applyZoom, chip2d, useWheelZoom } from '../FicksLaw/FickCanvas';
 
@@ -9,14 +13,24 @@ import { applyZoom, chip2d, useWheelZoom } from '../FicksLaw/FickCanvas';
  * velocity profile shape. Tube and plates run left to right under a
  * pressure difference; the film runs DOWN a wall under nothing but its own
  * weight. Tracers do not diffuse (same design decision as the Newton
- * module: the profile is the lesson), and the on-screen peak speed is
- * fixed for legibility — the SHAPE of the profile and every readout are
- * physical.
+ * module: the profile is the lesson). The SHAPE of the profile and every
+ * readout are physical; the on-screen SPEED is compressed — each factor of
+ * ten in the real peak speed is a factor of two on screen (see
+ * screenSpeedFactor) — so every slider visibly speeds or slows the flow in
+ * the right direction, and the real peak speed is printed on the canvas.
  */
 
 const COUNT = 130;
-/** On-screen speed of the fastest fluid, px/s. Visual, like D_VIS. */
-const V_VIS = 85;
+/** On-screen peak speed, px/s, for a REAL peak of 1 m/s; scaled by
+ *  screenSpeedFactor. Visual, like D_VIS. 98 keeps the default capillary
+ *  (0.625 m/s) at the 85 px/s it always had. */
+const V_VIS_REF = 98;
+/** Peak profile-arrow length, px, at 1 m/s — the arrows carry the same speed
+ *  as the tracers, so a slider reads even while paused. Floored so the
+ *  profile's SHAPE never vanishes at very slow settings. */
+const ARROW_REF = 53;
+const ARROW_REF_FILM = 46;
+const ARROW_MIN = 10;
 
 interface Tracer {
   /** Streamwise position, px. */
@@ -55,6 +69,13 @@ export function PoiseuilleCanvas({
     const pad = 8;
     const dt = running && showParticles ? frame.dt : 0;
     const vpk = Math.max(vMax(p), 1e-12);
+    const k = screenSpeedFactor(vpk);
+    const vScreen = V_VIS_REF * k;
+    const arrowPeak = Math.max(ARROW_MIN, ARROW_REF * k);
+    const pinned = screenSpeedPinned(vpk);
+    const peakLabel = `peak speed ${sci(vpk)} m/s${
+      pinned === 'fast' ? ' · faster than shown' : pinned === 'slow' ? ' · slower than shown' : ''
+    }`;
 
     // Normalized speed at transverse fraction f in [0, 1].
     const speedAt = (f: number): number => {
@@ -71,6 +92,7 @@ export function PoiseuilleCanvas({
     const tS = Math.min(1, Math.max(0, (Math.log10(sDim) + 4.3) / 2)); // 5e-5..5e-3 m
     const tL = Math.min(1, Math.max(0, (Math.log10(p.L) + 2) / 2)); // 0.01..1 m
 
+    let bannerAt: [number, number] | null = null;
     if (!isFilm) {
       // ---------------- horizontal conduit: tube or plates ----------------
       const wallT = 13;
@@ -85,6 +107,10 @@ export function PoiseuilleCanvas({
       const chW = x1 - x0;
       const chH = y1 - y0;
       if (chW <= 0 || chH <= 0) return;
+      // Past the transition the parabola is only what N-S gives if the flow
+      // stayed laminar. Parked in the fluid below the centerline P labels,
+      // clear of the wall captions and the real-speed label above the tube.
+      bannerAt = [(x0 + x1) / 2, ycS + Math.max(halfG * 0.55, 30)];
 
       // Speed shading, row by row.
       for (let py = 0; py < chH; py++) {
@@ -96,7 +122,7 @@ export function PoiseuilleCanvas({
       drawWall(ctx, x0, y1, chW, wallT, dark);
 
       if (showParticles) {
-        stepTracers(tracersRef, chW, dt, speedAt);
+        stepTracers(tracersRef, chW, dt, speedAt, vScreen);
         ctx.fillStyle = dark ? 'rgba(226,232,240,0.85)' : 'rgba(15,23,42,0.65)';
         for (const q of tracersRef.current) {
           ctx.beginPath();
@@ -123,7 +149,7 @@ export function PoiseuilleCanvas({
       for (let i = 0; i <= 6; i++) {
         const f = i / 6;
         const y = y0 + f * chH;
-        const len = speedAt(f) * 46;
+        const len = speedAt(f) * arrowPeak;
         if (len < 1.5) continue;
         ctx.beginPath();
         ctx.moveTo(x0 + 4, y);
@@ -143,8 +169,10 @@ export function PoiseuilleCanvas({
       ctx.lineTo(x0 + 4, y1);
       ctx.stroke();
 
-      // Pressure ends.
-      chip2d(ctx, x0 + 52, (y0 + y1) / 2, 'P + ΔP', dark);
+      // Pressure ends. The inlet chip sits just past the longest profile
+      // arrow, which now grows with the real speed — at a fixed x it covered
+      // the arrow tips (it already clipped the default one).
+      chip2d(ctx, x0 + 4 + arrowPeak + 34, (y0 + y1) / 2, 'P + ΔP', dark);
       chip2d(ctx, x1 - 40, (y0 + y1) / 2, 'P', dark);
 
       ctx.fillStyle = dark ? '#cbd5e1' : '#475569';
@@ -157,6 +185,9 @@ export function PoiseuilleCanvas({
         x0, y0 - wallT - 6,
       );
       ctx.fillText('flow →  driven by the pressure difference', x0, y1 + wallT + 16);
+      ctx.textAlign = 'right';
+      ctx.fillText(peakLabel, x1, y0 - wallT - 6);
+      ctx.textAlign = 'left';
     } else {
       // ------------------------- falling film -------------------------
       const wallT = 13;
@@ -172,6 +203,7 @@ export function PoiseuilleCanvas({
       );
       const x1 = x0 + filmW;
       const chH = y1 - y0;
+      bannerAt = [W / 2, y0 + 30];
       if (chH <= 0) return;
 
       // Speed shading, column by column: zero at the wall, max at the
@@ -193,7 +225,7 @@ export function PoiseuilleCanvas({
       ctx.setLineDash([]);
 
       if (showParticles) {
-        stepTracers(tracersRef, chH, dt, speedAt);
+        stepTracers(tracersRef, chH, dt, speedAt, vScreen);
         ctx.fillStyle = dark ? 'rgba(226,232,240,0.85)' : 'rgba(15,23,42,0.65)';
         for (const q of tracersRef.current) {
           ctx.beginPath();
@@ -210,7 +242,7 @@ export function PoiseuilleCanvas({
       for (let i = 0; i <= 5; i++) {
         const f = i / 5;
         const x = x0 + f * filmW;
-        const len = speedAt(f) * 40;
+        const len = speedAt(f) * Math.max(ARROW_MIN, ARROW_REF_FILM * k);
         if (len < 1.5) continue;
         ctx.beginPath();
         ctx.moveTo(x, y0 + 4);
@@ -243,11 +275,15 @@ export function PoiseuilleCanvas({
       ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText('g — the only driver', gx + 8, (y0 + y1) / 2 + 4);
+      ctx.fillText(peakLabel, gx + 8, (y0 + y1) / 2 + 20);
 
       ctx.textAlign = 'center';
       ctx.fillText('wall · no slip', x0 - wallT / 2, y0 - 8);
       ctx.fillText('free surface · zero shear, max speed', x1, y1 + 16);
     }
+
+    // Drawn last so tracers and arrows never paint over it.
+    if (bannerAt) drawTurbulenceBanner(ctx, bannerAt[0], bannerAt[1], reynolds(p), dark);
   }, { running: running && showParticles, redrawKey });
 
   useWheelZoom(canvasRef, zoomRef, setZoomTick);
@@ -267,6 +303,7 @@ function stepTracers(
   span: number,
   dt: number,
   speedAt: (f: number) => number,
+  vScreen: number,
 ) {
   const list = tracersRef.current!;
   if (list.length === 0) {
@@ -276,7 +313,7 @@ function stepTracers(
   }
   if (dt > 0) {
     for (const q of list) {
-      q.a += speedAt(q.f) * V_VIS * dt;
+      q.a += speedAt(q.f) * vScreen * dt;
       if (q.a > span) {
         q.a -= span;
         q.f = Math.random();

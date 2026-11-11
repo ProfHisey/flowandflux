@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import type { PoiseuilleParams } from '../../lib/poiseuille';
+import { reynolds, screenSpeedFactor, vMax, type PoiseuilleParams } from '../../lib/poiseuille';
+import { drawTurbulenceBanner } from './turbulenceBanner';
 import { useOrbitCam, useOrbitControls, type OrbitCam } from '../shared/paint3d';
 import { rampFlow } from '../NewtonViscosity/NewtonCanvas';
 
@@ -12,13 +13,17 @@ import { rampFlow } from '../NewtonViscosity/NewtonCanvas';
  * velocity profile made solid, the single most photographed demo in
  * viscous flow.
  *
- * Drag to orbit, scroll to zoom. On-screen speeds are fixed for
- * legibility; the SHAPES are the physics.
+ * Drag to orbit, scroll to zoom. The SHAPES are the physics; on-screen speed
+ * is compressed exactly as in 2D (screenSpeedFactor: each factor of ten in
+ * the real peak speed is a factor of two here), so the sliders that change
+ * how fast the fluid moves change how fast this moves.
  */
 
 type Vec3 = [number, number, number];
 
-const V3 = 55; // px/s at the profile peak — cosmetic
+/** px/s at the profile peak for a REAL peak of 1 m/s, scaled by
+ *  screenSpeedFactor — cosmetic. 63 keeps the default capillary at 55. */
+const V3_REF = 63;
 const N_TRACE = 150;
 
 interface Tr {
@@ -44,7 +49,7 @@ export function Poiseuille3DCanvas({
   cam?: OrbitCam;
 }) {
   const tracersRef = useRef<Tr[]>([]);
-  const dyeAgeRef = useRef(0);
+  const dyeDistRef = useRef(0);
   const paramsRef = useRef(params);
   paramsRef.current = params;
 
@@ -56,7 +61,7 @@ export function Poiseuille3DCanvas({
 
   useEffect(() => {
     tracersRef.current = [];
-    dyeAgeRef.current = 0;
+    dyeDistRef.current = 0;
   }, [params.geometry]);
 
   const loopRunning = running && showParticles;
@@ -67,6 +72,7 @@ export function Poiseuille3DCanvas({
     const cx = W / 2;
     const cyc = H / 2;
     const dt = loopRunning ? frame.dt : 0;
+    const V3 = V3_REF * screenSpeedFactor(vMax(p));
 
     const cy = Math.cos(yawRef.current);
     const sy = Math.sin(yawRef.current);
@@ -145,11 +151,14 @@ export function Poiseuille3DCanvas({
     const tLs = Math.min(1, Math.max(0, (Math.log10(p.L) + 2) / 2));
     const tW = Math.min(1, Math.max(0, (Math.log10(p.W) + 2.3) / 2.3)); // 0.005..1 m
 
-    // Dye front clock: reset when the fastest dye reaches ~80% of the run.
+    // Dye front, tracked as the DISTANCE the peak has travelled (px), not as a
+    // time: a slider dragged mid-flight changes the speed, and a time-based
+    // clock would make the front jump. Reset when the fastest dye reaches ~80%
+    // of the run. `age` re-expresses that distance at the current speed so the
+    // front formulas below stay in px.
     const TL = 1.7 * fit * (p.geometry === 'film' ? 1 : 0.75 + 0.25 * tLs);
-    const maxAge = (0.8 * TL) / V3;
-    dyeAgeRef.current = (dyeAgeRef.current + dt) % maxAge;
-    const age = dyeAgeRef.current;
+    dyeDistRef.current = (dyeDistRef.current + V3 * dt) % (0.8 * TL);
+    const age = dyeDistRef.current / V3;
     const xStart = -TL / 2 + 0.06 * TL;
 
     const chipQueue: [Vec3, string][] = [];
@@ -386,6 +395,8 @@ export function Poiseuille3DCanvas({
     ctx.fillText('drag to rotate · scroll to zoom · double-click to reset', W - 10, H - 10);
     ctx.textAlign = 'left';
     ctx.fillText('fuchsia: a flat dye front, deformed by the profile itself', 10, H - 10);
+
+    drawTurbulenceBanner(ctx, W / 2, 27, reynolds(p), dark);
   }, { running: loopRunning, redrawKey });
 
   useOrbitControls(canvasRef, cam, loopRunning);

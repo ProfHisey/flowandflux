@@ -144,6 +144,40 @@ export function hydraulicResistance(p: PoiseuilleParams): number {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * The canvases' one cosmetic number: how fast the animation runs
+ * ------------------------------------------------------------------ */
+
+/**
+ * On-screen speed is COMPRESSED, not fixed: every factor of ten in the real
+ * peak speed is a factor of two on screen. Across these sliders the real
+ * v_max spans ~18 decades, so a faithful animation would freeze or blur at
+ * almost every setting — but a FIXED speed (the original design) made mu,
+ * dP, L, rho and the speed half of R and h invisible: the animation divided
+ * them all out. Compressed, every slider moves the animation the right way,
+ * and a multiplicative change stays multiplicative.
+ *
+ *   factor = 2^log10(v_max / 1 m/s), pinned to [1/32, 2]
+ *
+ * — the stated rule holds from 10 um/s to 10 m/s and is pinned outside. The
+ * page states it, so verify.ts pins it. Not physics: a labeled compromise,
+ * kept here so both canvases share it and the suite can check it.
+ */
+export const SCREEN_SPEED_SLOW = 1e-5; // m/s
+export const SCREEN_SPEED_FAST = 10; // m/s
+
+/** Multiplier on a canvas's on-screen speed, relative to a 1 m/s peak. */
+export function screenSpeedFactor(vPeak: number): number {
+  const v = Number.isFinite(vPeak) && vPeak > 0 ? vPeak : SCREEN_SPEED_SLOW;
+  return 2 ** Math.log10(Math.min(SCREEN_SPEED_FAST, Math.max(SCREEN_SPEED_SLOW, v)));
+}
+
+/** Which end of the compressed range a real peak speed falls off, if either. */
+export function screenSpeedPinned(vPeak: number): 'slow' | 'fast' | null {
+  if (!(vPeak >= SCREEN_SPEED_SLOW)) return 'slow'; // also catches NaN and v <= 0
+  return vPeak > SCREEN_SPEED_FAST ? 'fast' : null;
+}
+
 export interface ProfilePoint {
   /** transverse position, m */
   s: number;
