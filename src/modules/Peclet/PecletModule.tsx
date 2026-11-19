@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pause, Play, RotateCcw } from 'lucide-react';
+import { Pause, Play, RotateCcw, Route } from 'lucide-react';
 import { InlineMath } from 'react-katex';
 
 import { Panel, Stat } from '../../components/ui/Panel';
@@ -27,6 +27,7 @@ export function PecletModule({ dark }: { dark: boolean }) {
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [running, setRunning] = useState(true);
   const [dim, setDim] = useState<'2d' | '3d'>('2d');
+  const [showTracks, setShowTracks] = useState(true);
 
   const set = <K extends keyof PecletParams>(key: K, value: PecletParams[K]) => {
     setParams((p) => ({ ...p, [key]: value }));
@@ -79,12 +80,21 @@ export function PecletModule({ dark }: { dark: boolean }) {
                 >
                   {running ? <Pause size={15} /> : <Play size={15} />}
                 </IconButton>
+                {dim === '2d' && (
+                  <IconButton
+                    label={showTracks ? 'Hide walker tracks' : 'Show walker tracks'}
+                    active={showTracks}
+                    onClick={() => setShowTracks((v) => !v)}
+                  >
+                    <Route size={15} />
+                  </IconButton>
+                )}
               </div>
             }
           >
             <div>
               {dim === '2d' ? (
-                <PecletCanvas Pe={derived.Pe} running={running} dark={dark} />
+                <PecletCanvas Pe={derived.Pe} running={running} dark={dark} showTracks={showTracks} />
               ) : (
                 <Peclet3DCanvas Pe={derived.Pe} running={running} dark={dark} />
               )}
@@ -96,6 +106,20 @@ export function PecletModule({ dark }: { dark: boolean }) {
               entire subject — is real. The amber curve is the analytic solution;
               the walkers, who have never seen it, keep landing on it.
             </p>
+            {dim === '2d' && showTracks && (
+              <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                The{' '}
+                <span className="font-semibold text-fuchsia-700 dark:text-fuchsia-300">magenta paths</span>{' '}
+                are three walkers&apos; most recent stretch of motion, and the{' '}
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400">dashed green arrow</span>{' '}
+                beside each is where the flow alone would have carried it in the same time. The
+                gap between path and arrow is the wandering. Each path covers a quarter of the
+                time diffusion needs to cross the channel, which makes the arrow exactly Pe/4
+                times the typical wander: tangles below Pe ≈ 4, streaks laid along their arrows
+                above. Watch the cloud instead and diffusion seems to win at every Pe — over any
+                short distance it always does. Pe is a verdict about the whole channel.
+              </p>
+            )}
           </Panel>
 
         </div>

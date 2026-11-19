@@ -84,6 +84,23 @@ export function convectionTime(p: PecletParams): number {
   return p.L / p.v;
 }
 
+/**
+ * The window a tracked walker's path is drawn over on the canvas: a quarter
+ * of diffusion's own crossing time,
+ *
+ *   tau = t_diff / 4 = L^2 / 8D.
+ *
+ * Over tau the flow alone carries a walker v tau = Pe L / 8, while its
+ * wandering spreads sqrt(2 D tau) = L / 2 along the channel (rms). So the
+ * arrow-to-wander ratio the canvas draws is exactly Pe / 4, whatever the
+ * channel's size on screen: tangles below Pe ~ 4, streaks above. The caption
+ * leans on that, so verify.ts pins it. Any consistent units (the canvas uses
+ * px and px^2/s).
+ */
+export function trackWindow(L: number, D: number): number {
+  return (L * L) / (8 * D);
+}
+
 export interface ProfilePoint {
   /** position, cm */
   x: number;

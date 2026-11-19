@@ -44,7 +44,7 @@ import {
 } from '../src/lib/stokes';
 import {
   concentration as pecC, convectionTime, diffusionTime as pecTdiff,
-  peclet, theta, totalFlux, type PecletParams,
+  peclet, theta, totalFlux, trackWindow, type PecletParams,
 } from '../src/lib/peclet';
 import {
   crossoverTime, density, driftToSpread, meanPosition, normalCdf,
@@ -969,6 +969,22 @@ check('the two clocks: Pe = 2 t_diff / t_conv',
   close(peclet(pore), (2 * pecTdiff(pore)) / convectionTime(pore), 1e-12));
 check('perfume with a draft: Pe = 30,000',
   close(peclet({ D: 0.1, v: 10, L: 300, C0: 1e-9, CL: 0 }), 30000, 1e-12));
+// The canvas's tracked walkers: each path spans tau = L^2/8D, beside an arrow
+// for where the flow alone carried it. The caption says arrow : wander = Pe/4.
+{
+  const L = 600, D = 300; // the canvas's own px and px^2/s
+  const tau = trackWindow(L, D);
+  check('track window is a quarter of the diffusion time: tau = t_diff / 4',
+    close(tau, pecTdiff({ D, v: 1, L, C0: 1, CL: 0 }) / 4, 1e-12));
+  check('over tau the wandering spreads L/2 (rms, along the channel)',
+    close(Math.sqrt(2 * D * tau), L / 2, 1e-12));
+  let worst = 0;
+  for (const Pe of [0.1, 1, 4, 20, 60]) {
+    const v = (Pe * D) / L;
+    worst = Math.max(worst, Math.abs((v * tau) / Math.sqrt(2 * D * tau) / (Pe / 4) - 1));
+  }
+  check('arrow : wander = Pe / 4 exactly, at every Pe (even at Pe = 4)', worst < 1e-12, String(worst));
+}
 
 // ==========================================================================
 // The pin fin
