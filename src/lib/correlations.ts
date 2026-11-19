@@ -28,6 +28,8 @@
  * SI units.
  */
 
+import { compressRatio } from './visual';
+
 export type CorrGeometry = 'plate' | 'cylinder' | 'sphere' | 'tube';
 
 export interface Fluid {
@@ -141,4 +143,16 @@ export function validity(p: CorrParams): string | null {
         return `Sc = ${Sc.toPrecision(2)}: outside Dittus–Boelter's fitted range (0.7–160) — the Sh number is an extrapolation.`;
       return null;
   }
+}
+
+/**
+ * The canvases' flow-arrow speed multiplier — cosmetic, by the site-wide rule
+ * in lib/visual: 1 at the slider's top (50 m/s), halved per decade slower,
+ * pinned five decades below (the slider stops at 1 mm/s, 4.7 below, so the
+ * whole range is honest). It used to be a fixed 40 px/s, which is why the
+ * velocity slider read as dead: only the log-scaled films moved.
+ */
+export const CORR_FLOW_TOP = 50; // m/s
+export function corrFlowFactor(v: number): number {
+  return compressRatio(v, CORR_FLOW_TOP, 5, 0);
 }

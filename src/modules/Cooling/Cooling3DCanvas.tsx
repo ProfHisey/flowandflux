@@ -1,5 +1,7 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
+import { coolingScreenTau, type CoolClock } from '../../lib/cooling';
+import { timeS } from '../../lib/format';
 import { rampWarm } from '../FourierLaw/FourierCanvas';
 import {
   FAINT,
@@ -10,7 +12,6 @@ import {
   type OrbitCam,
   type Vec3,
 } from '../shared/paint3d';
-import { TAU_VIS } from './CoolingCanvas';
 
 /**
  * The Flow view as a volume: the same lumped object, now a sphere, sitting
@@ -37,6 +38,8 @@ export function Cooling3DCanvas({
   running,
   dark,
   clock,
+  tau,
+  scrubT,
   cam: camProp,
 }: {
   /** Physical h, W/m^2 K — only used to size the drawn film (labeled cue). */
@@ -48,15 +51,20 @@ export function Cooling3DCanvas({
   resetTick: number;
   running: boolean;
   dark: boolean;
-  /** The visual clock, owned by the module so 2D and 3D share one cooling. */
-  clock: MutableRefObject<number>;
+  /** The shared cooling state (theta, real t), owned by the module so 2D
+   *  and 3D show one experiment. */
+  clock: MutableRefObject<CoolClock>;
+  /** The real time constant rho V c_p / h A, s — sets the on-screen pace. */
+  tau: number;
+  /** The Time slider's value — only so a paused canvas repaints on a scrub. */
+  scrubT: number;
   cam?: OrbitCam;
 }) {
   const tracersRef = useRef<{ p: Vec3; carry: number }[]>([]);
   const internalCam = useOrbitCam(0.5, -0.28);
   const cam = camProp ?? internalCam;
 
-  const redrawKey = `${dark}|${resetTick}|${h}|${heating}|${lc}|${cam.camTick}`;
+  const redrawKey = `${dark}|${resetTick}|${h}|${heating}|${lc}|${tau}|${scrubT}|${cam.camTick}`;
 
   useEffect(() => {
     tracersRef.current = [];
@@ -81,8 +89,12 @@ export function Cooling3DCanvas({
     const film = Math.max(4, Math.min(0.2 * fit, 26 - 5 * Math.log10(Math.max(1, h))));
 
     const dt = running ? frame.dt : 0;
-    clock.current += dt;
-    const theta = Math.exp(-clock.current / TAU_VIS);
+    const tauVis = coolingScreenTau(tau);
+    if (dt > 0) {
+      clock.current.theta *= Math.exp(-dt / tauVis);
+      clock.current.t += (dt * tau) / tauVis;
+    }
+    const theta = clock.current.theta;
 
     const list = tracersRef.current;
     if (list.length === 0) {
@@ -223,7 +235,7 @@ export function Cooling3DCanvas({
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.textAlign = 'right';
-    ctx.fillText(`visual clock: τ ≈ ${TAU_VIS} s on screen — real τ in the readouts`, W - 10, 18);
+    ctx.fillText(`t ≈ ${timeS(clock.current.t)} real · τ shown as ${tauVis.toFixed(1)} s`, W - 10, 18);
     pt.hint(dark);
   }, { running, redrawKey });
 

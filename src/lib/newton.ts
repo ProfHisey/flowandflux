@@ -23,6 +23,8 @@
  *   drag force      N
  */
 
+import { compressPinned, compressRatio } from './visual';
+
 export interface NewtonParams {
   /** Dynamic viscosity, Pa s */
   mu: number;
@@ -94,4 +96,29 @@ export function profile(p: NewtonParams, n = 60): ProfilePoint[] {
     out.push({ y, t, u: velocity(p, y), tau: shearStress(p) });
   }
   return out;
+}
+
+/**
+ * The canvases' two cosmetic scales, by the site-wide rule in lib/visual
+ * (each factor of ten real = a factor of two on screen):
+ *
+ *   plate speed: 1 at U = 10 m/s (the fastest preset), halved per decade
+ *                slower, pinned six decades below. U = 0 is a plate at rest.
+ *   drag force:  1 at the default setup's F = 2e-4 N, doubled per decade,
+ *                pinned two decades below and 3.2 above (honey, 0.25 N, fits).
+ *
+ * mu rightly leaves the motion alone (u = U y/H whatever the fluid); what mu
+ * changes is the FORCE it takes to keep the plate moving, so that is what
+ * the arrow on the top plate carries. verify.ts pins both directions.
+ */
+export const NEWTON_SPEED_TOP = 10; // m/s
+export const NEWTON_FORCE_REF = 2e-4; // N
+export function newtonSpeedFactor(U: number): number {
+  return U > 0 ? compressRatio(U, NEWTON_SPEED_TOP, 6, 0) : 0;
+}
+export function newtonForceFactor(F: number): number {
+  return F > 0 ? compressRatio(F, NEWTON_FORCE_REF, 2, 3.2) : 0;
+}
+export function newtonForcePinned(F: number): 'slow' | 'fast' | null {
+  return F > 0 ? compressPinned(F, NEWTON_FORCE_REF, 2, 3.2) : null;
 }

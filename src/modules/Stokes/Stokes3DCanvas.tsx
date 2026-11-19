@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import { dragForce, gEff, terminalVelocity, type StokesParams } from '../../lib/stokes';
+import { dragForce, gEff, stokesScreenFactor, terminalVelocity, type StokesParams } from '../../lib/stokes';
 import {
   FAINT,
   makePainter,
@@ -59,7 +59,8 @@ export function Stokes3DCanvas({
     const BX = 0.62 * fit;
     const BY = 0.92 * fit;
     const dir = terminalVelocity(p) >= 0 ? 1 : -1; // 1 = settling (down)
-    const V = 30; // px/s, cosmetic
+    // The 2D tab's compressed fall speed, scaled to this box (cosmetic).
+    const V = 140 * stokesScreenFactor(terminalVelocity(p));
 
     const list = cloudRef.current;
     if (list.length === 0) {

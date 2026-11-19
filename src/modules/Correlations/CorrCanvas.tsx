@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import { nusselt, sherwood, type CorrParams } from '../../lib/correlations';
+import { corrFlowFactor, nusselt, sherwood, type CorrParams } from '../../lib/correlations';
 import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
 
 /**
@@ -44,8 +44,9 @@ export function CorrCanvas({ params, dark }: { params: CorrParams; dark: boolean
     const body = dark ? '#475569' : '#cbd5e1';
     const label = dark ? '#cbd5e1' : '#475569';
 
-    // Flow arrows marching left to right.
-    offsetRef.current = (offsetRef.current + 40 * dt) % 60;
+    // Flow arrows marching left to right, at the compressed flow speed
+    // (100 px/s at 50 m/s, halved per decade slower — the default 5 m/s is 50).
+    offsetRef.current = (offsetRef.current + 100 * corrFlowFactor(p.v) * dt) % 60;
     ctx.strokeStyle = dark ? 'rgba(148,163,184,0.4)' : 'rgba(100,116,139,0.4)';
     ctx.fillStyle = ctx.strokeStyle;
     ctx.lineWidth = 1.5;

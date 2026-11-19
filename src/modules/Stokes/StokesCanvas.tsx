@@ -3,10 +3,13 @@ import { useCanvas } from '../../hooks/useCanvas';
 import {
   dragForce,
   gEff,
+  stokesScreenFactor,
+  stokesScreenPinned,
   terminalVelocity,
   type StokesParams,
 } from '../../lib/stokes';
 import { applyZoom, chip2d, useWheelZoom } from '../FicksLaw/FickCanvas';
+import { sci } from '../../lib/format';
 
 /**
  * A settling column. A cloud of small particles drifts down at terminal
@@ -16,13 +19,19 @@ import { applyZoom, chip2d, useWheelZoom } from '../FicksLaw/FickCanvas';
  *
  * A strobe trail behind the specimen shows equally spaced dots: constant
  * velocity, because tau is microseconds and the approach to terminal speed
- * happened before the first frame. (On-screen fall speed is fixed for
- * legibility; the physical v-inf spans nine decades across the presets and
- * lives in the readouts.)
+ * happened before the first frame. (The physical v-inf spans nine decades
+ * across the presets, so the on-screen fall speed is COMPRESSED, not to
+ * scale: see V_TOP. The real v-inf is printed on the canvas.)
  */
 
 const COUNT = 46;
-const V_VIS = 34; // px/s on screen — cosmetic, stated in the caption
+/** Fall speed on screen, px/s, at a REAL v-inf of 2 cm/s (just above the
+ *  centrifuged-cell preset). Slower settling is compressed by the site-wide
+ *  rule in lib/visual — each 10x slower is 2x slower here — down to a pin six
+ *  decades below; faster (the raindrop) pins at the top. So radius (v ∝ a^2),
+ *  viscosity, density difference and the centrifuge all visibly change the
+ *  fall, and the caption says how. */
+const V_TOP = 160;
 
 interface P {
   x: number;
@@ -67,6 +76,8 @@ export function StokesCanvas({
 
     const vinf = terminalVelocity(p);
     const dir = vinf >= 0 ? 1 : -1; // negative: the particle floats
+    const vVis = V_TOP * stokesScreenFactor(vinf);
+    const pin = stokesScreenPinned(vinf);
 
     // Fluid.
     ctx.fillStyle = dark ? 'rgba(30,41,59,0.5)' : 'rgba(241,245,249,0.8)';
@@ -82,7 +93,7 @@ export function StokesCanvas({
     ctx.fillStyle = dark ? 'rgba(148,163,184,0.7)' : 'rgba(100,116,139,0.6)';
     for (const q of list) {
       if (dt > 0) {
-        q.y += dir * V_VIS * dt;
+        q.y += dir * vVis * dt;
         if (dir > 0 && q.y > y1 - 3) q.y = y0 + 3;
         if (dir < 0 && q.y < y0 + 3) q.y = y1 - 3;
       }
@@ -99,7 +110,7 @@ export function StokesCanvas({
     const sy = (y0 + y1) / 2;
     const R = 9 + 21 * Math.min(1, Math.max(0, (Math.log10(p.a) + 8) / 5.3));
 
-    strobeRef.current = (strobeRef.current + dir * V_VIS * dt) % 26;
+    strobeRef.current = (strobeRef.current + dir * vVis * dt) % 26;
     ctx.fillStyle = dark ? 'rgba(226,232,240,0.35)' : 'rgba(15,23,42,0.25)';
     for (let i = 1; i <= 6; i++) {
       const yy = sy - dir * (i * 26 + strobeRef.current - 26);
@@ -203,6 +214,11 @@ export function StokesCanvas({
         : dir > 0 ? 'settling at terminal velocity' : 'floating upward (ρp < ρf)',
       dark,
     );
+    chip2d(
+      ctx, sx, y0 + 38,
+      `v∞ = ${sci(Math.abs(vinf))} m/s${pin === 'fast' ? ' · faster than shown' : pin === 'slow' ? ' · slower than shown' : ''}`,
+      dark,
+    );
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'right';
@@ -211,7 +227,7 @@ export function StokesCanvas({
       x1 - 4, y1 + 18,
     );
     ctx.textAlign = 'left';
-    ctx.fillText('on-screen speed fixed; the real v∞ is in the readouts', x0, y1 + 18);
+    ctx.fillText('fall speed compressed: 10× the real v∞ is 2× on screen', x0, y1 + 18);
   }, { running, redrawKey });
 
   useWheelZoom(canvasRef, zoomRef, setZoomTick);

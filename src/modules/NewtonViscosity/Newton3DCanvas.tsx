@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import type { NewtonParams } from '../../lib/newton';
+import { newtonSpeedFactor, type NewtonParams } from '../../lib/newton';
 import { useOrbitCam, useOrbitControls, type OrbitCam } from '../shared/paint3d';
 import { rampFlow, type NewtonView } from './NewtonCanvas';
 
@@ -31,7 +31,10 @@ type Vec3 = [number, number, number];
 const LAYERS = 7;
 const PER_X = 9;
 const PER_Z = 5;
-/** Top-sheet speed on screen, px/s. Visual, like D_VIS. */
+/** The dye and layers' REFERENCE speed, px/s. The real on-screen top speed
+ *  is 140 px/s at U = 10 m/s scaled by newtonSpeedFactor (17.5 px/s at the
+ *  default 1 cm/s), and every clock here runs at (real / reference), so the
+ *  dye curtains are distance travelled and never jump when U changes. */
 const U_VIS3 = 55;
 
 export function Newton3DCanvas({
@@ -167,6 +170,10 @@ export function Newton3DCanvas({
     const ctr = (v: Vec3): Vec3 => [v[0] - BW / 2, v[1] - BH / 2, v[2] - BD / 2];
 
     const uVisAt = (y: number) => (U_VIS3 * y) / BH;
+    const kRel = (140 * newtonSpeedFactor(p.U)) / U_VIS3;
+    // Profile arrows keep their old length at the default plate speed and
+    // scale with the on-screen speed from there (floored, capped).
+    const arrowScale = p.U > 0 ? Math.min(2.6, Math.max(0.24, (kRel * U_VIS3) / 17.5)) : 0;
 
     // ------------------------------------------------------------ plates
     // Opaque and heavily textured on purpose: the no-slip grip at the
@@ -174,7 +181,7 @@ export function Newton3DCanvas({
     // real, rough surface — not a ghost.
     const plateFill = dark ? '#3f4c63' : '#dde3ec';
     const hatchCol = dark ? 'rgba(226,232,240,0.5)' : 'rgba(71,85,105,0.5)';
-    plateShiftRef.current = (plateShiftRef.current + U_VIS3 * dt) % 16;
+    plateShiftRef.current = (plateShiftRef.current + U_VIS3 * kRel * dt) % 16;
     // Parametric clip of the segment (xa,pa)->(xb,pb) to x in [0, BW]:
     // returns the clipped endpoints or null.
     const clipX = (
@@ -308,7 +315,7 @@ export function Newton3DCanvas({
 
       const xs: number[][] = [];
       for (let i = 0; i < LAYERS; i++) {
-        offsetsRef.current[i] = (offsetsRef.current[i] + uVisAt(layerY(i)) * dt) % BW;
+        offsetsRef.current[i] = (offsetsRef.current[i] + uVisAt(layerY(i)) * kRel * dt) % BW;
         const off = offsetsRef.current[i];
         xs.push(patternRef.current[i].map((f) => (f * BW + off) % BW));
       }
@@ -345,7 +352,7 @@ export function Newton3DCanvas({
     }
 
     if (showParticles && view === 'dye') {
-      timeRef.current += dt;
+      timeRef.current += dt * kRel;
       const t = timeRef.current;
 
       // Faint sheets for depth reference.
@@ -432,7 +439,7 @@ export function Newton3DCanvas({
     for (const zf of [2, BD - 2]) {
       for (let i = 0; i <= 4; i++) {
         const y = (BH * i) / 4;
-        const len = (uVisAt(y) / U_VIS3) * BW * 0.16;
+        const len = (uVisAt(y) / U_VIS3) * BW * 0.16 * arrowScale;
         if (len < 2) continue;
         seg(ctr([4, y, zf]), ctr([4 + len, y, zf]), arrowCol, 1.6);
         seg(ctr([4 + len, y, zf]), ctr([4 + len - 6, y + 4, zf]), arrowCol, 1.6);

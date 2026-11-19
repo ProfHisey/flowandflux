@@ -13,6 +13,7 @@ import {
   tau,
   temperature,
   totalEnergy,
+  type CoolClock,
   type CoolingParams,
 } from '../../lib/cooling';
 import { sci, timeS } from '../../lib/format';
@@ -34,11 +35,11 @@ export function CoolingModule({ dark }: { dark: boolean }) {
   // One 2D/3D toggle serves both scenes, so 3D is on offer from the landing
   // view rather than hiding behind the Fin tab.
   const [dim, setDim] = useState<'2d' | '3d'>('2d');
-  // The Flow view's visual clock lives here so its 2D and 3D canvases show
+  // The Flow view's cooling STATE lives here so its 2D and 3D canvases show
   // one cooling: flipping the view changes the camera, not the experiment.
-  const flowClock = useRef(0);
+  const flowClock = useRef<CoolClock>({ theta: 1, t: 0 });
   const reheat = () => {
-    flowClock.current = 0;
+    flowClock.current = { theta: 1, t: 0 };
     setResetTick((t) => t + 1);
   };
 
@@ -131,6 +132,8 @@ export function CoolingModule({ dark }: { dark: boolean }) {
               <>
                 {dim === '3d' ? (
                   <Cooling3DCanvas
+                    tau={derived.tau}
+                    scrubT={params.t}
                     h={params.h}
                     lc={params.V / params.A}
                     heating={params.Tinf > params.T0}
@@ -141,6 +144,8 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   />
                 ) : (
                   <CoolingCanvas
+                    tau={derived.tau}
+                    scrubT={params.t}
                     h={params.h}
                     lc={params.V / params.A}
                     heating={params.Tinf > params.T0}
@@ -156,7 +161,11 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                   as the object spends its temperature gap. That is the exponential,
                   watched. The object is drawn in one uniform color on purpose: a single
                   temperature everywhere is the lumped assumption, and the Biot readout
-                  below says when it is earned.
+                  below says when it is earned. The cooling on screen runs on a compressed
+                  clock: each factor of ten in the real τ is a factor of two in the animation,
+                  so h, the size, the density and cₚ all visibly change the pace, and the canvas
+                  prints the real time it is showing. Drag the Time slider to jump the picture
+                  to any moment.
                   {dim === '3d' && (
                     <>
                       {' '}In 3D the object is a sphere and the streamlines are the ones
@@ -334,7 +343,14 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                 max={1e5}
                 log
                 format={timeS}
-                onChange={(v) => set('t', v)}
+                onChange={(v) => {
+                  set('t', v);
+                  // Scrub: the picture jumps to that moment (and pauses), showing
+                  // exactly the state the readouts describe.
+                  flowClock.current = { theta: Math.exp(-v / derived.tau), t: v };
+                  setRunning(false);
+                }}
+                hint="Scrub it and the picture jumps to that moment and pauses; press play to carry on from there."
               />
               <Slider
                 label="Volume, V"
@@ -406,6 +422,7 @@ export function CoolingModule({ dark }: { dark: boolean }) {
                     onClick={() => {
                       setParams(pr.params);
                       setPresetId(pr.id);
+                      reheat(); // a new object starts a fresh experiment
                     }}
                     className={
                       'w-full rounded-lg border px-3 py-2.5 text-left transition-colors ' +

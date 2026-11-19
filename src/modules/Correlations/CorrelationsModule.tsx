@@ -94,7 +94,8 @@ export function CorrelationsModule({ dark }: { dark: boolean }) {
               boundary layer, δ ≈ L/Sh. In air they ride together (Pr ≈ Sc ≈ 1);
               switch the fluid to water and watch them split by (Sc/Pr)^⅓ ≈ 5 — the
               mass film is the thinnest thing in the flow, and h ≈ k/δ is why that
-              matters.
+              matters. The flow arrows march at a compressed speed: each factor of ten
+              in v is a factor of two on screen.
             </p>
           </Panel>
         </div>

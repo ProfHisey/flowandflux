@@ -18,6 +18,8 @@
  * SI units, matching the Newton (viscosity) module.
  */
 
+import { compressPinned, compressRatio } from './visual';
+
 export type FlowGeometry = 'tube' | 'plates' | 'film';
 
 export interface PoiseuilleParams {
@@ -166,16 +168,16 @@ export function hydraulicResistance(p: PoiseuilleParams): number {
 export const SCREEN_SPEED_SLOW = 1e-5; // m/s
 export const SCREEN_SPEED_FAST = 10; // m/s
 
-/** Multiplier on a canvas's on-screen speed, relative to a 1 m/s peak. */
+/** Multiplier on a canvas's on-screen speed, relative to a 1 m/s peak —
+ *  the site-wide rule in lib/visual, with Poiseuille's window (5 decades
+ *  below 1 m/s, 1 above). */
 export function screenSpeedFactor(vPeak: number): number {
-  const v = Number.isFinite(vPeak) && vPeak > 0 ? vPeak : SCREEN_SPEED_SLOW;
-  return 2 ** Math.log10(Math.min(SCREEN_SPEED_FAST, Math.max(SCREEN_SPEED_SLOW, v)));
+  return compressRatio(vPeak, 1, 5, 1);
 }
 
 /** Which end of the compressed range a real peak speed falls off, if either. */
 export function screenSpeedPinned(vPeak: number): 'slow' | 'fast' | null {
-  if (!(vPeak >= SCREEN_SPEED_SLOW)) return 'slow'; // also catches NaN and v <= 0
-  return vPeak > SCREEN_SPEED_FAST ? 'fast' : null;
+  return compressPinned(vPeak, 1, 5, 1);
 }
 
 export interface ProfilePoint {

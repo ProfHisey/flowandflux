@@ -91,7 +91,10 @@ export function StokesModule({ dark }: { dark: boolean }) {
               with speed until the books balance, and the speed where that happens is
               v∞ = 2Δρ·g·a²/9μ. The a² is the story — halve the size, quarter the speed
               — and g is the only linear knob left, which is the entire business model
-              of the centrifuge.
+              of the centrifuge. Real fall speeds span nine decades here, so the speed on
+              screen is compressed: each factor of ten in the real v∞ is a factor of two
+              in the animation, so spinning a cell at 10⁵ g makes it fall 32 times faster
+              on screen. The real v∞ is printed on the canvas.
             </p>
           </Panel>
 

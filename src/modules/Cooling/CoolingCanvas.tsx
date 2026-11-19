@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
+import { coolingScreenTau, type CoolClock } from '../../lib/cooling';
+import { timeS } from '../../lib/format';
 import { rampWarm } from '../FourierLaw/FourierCanvas';
 import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
 
@@ -12,9 +14,10 @@ import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
  * downstream as a visible wake. As the object cools, the wake fades: the
  * exponential decay is watchable as a plume that starves.
  *
- * Cosmetic values, stated: the on-screen time constant is ~14 s regardless
- * of the physical tau (a mug takes 35 real minutes — the readouts carry the
- * true numbers). The film thickness drawn around the object shrinks with
+ * Cosmetic values, stated: the on-screen time constant is COMPRESSED from
+ * the physical tau (coolingScreenTau: 14 s for a mug's 35 real minutes, and
+ * each factor of ten in tau is a factor of two on screen), and the canvas
+ * prints the real time it is showing. The film thickness drawn around the object shrinks with
  * the h slider as a cue, but its pixel size is illustrative, not to scale.
  */
 
@@ -27,8 +30,6 @@ interface Tracer {
 
 const COUNT = 240;
 const FLOW = 70; // px/s
-/** Visual time constant, s: fast enough to watch, and labeled as such. */
-export const TAU_VIS = 14;
 
 export function CoolingCanvas({
   h,
@@ -38,6 +39,8 @@ export function CoolingCanvas({
   running,
   dark,
   clock,
+  tau,
+  scrubT,
 }: {
   /** Physical h, W/m^2 K — only used to size the drawn film (labeled cue). */
   h: number;
@@ -48,15 +51,20 @@ export function CoolingCanvas({
   resetTick: number;
   running: boolean;
   dark: boolean;
-  /** The visual clock, owned by the module so 2D and 3D share one cooling. */
-  clock: MutableRefObject<number>;
+  /** The shared cooling state (theta, real t), owned by the module so 2D
+   *  and 3D show one experiment. */
+  clock: MutableRefObject<CoolClock>;
+  /** The real time constant rho V c_p / h A, s — sets the on-screen pace. */
+  tau: number;
+  /** The Time slider's value — only so a paused canvas repaints on a scrub. */
+  scrubT: number;
 }) {
   const tracersRef = useRef<Tracer[]>([]);
   const tRef = clock;
   const zoomRef = useRef(1);
   const [zoomTick, setZoomTick] = useState(0);
 
-  const redrawKey = `${dark}|${resetTick}|${h}|${heating}|${lc}|${zoomTick}`;
+  const redrawKey = `${dark}|${resetTick}|${h}|${heating}|${lc}|${tau}|${scrubT}|${zoomTick}`;
 
   useEffect(() => {
     tracersRef.current = [];
@@ -83,9 +91,14 @@ export function CoolingCanvas({
     const film = Math.max(5, Math.min(24, 26 - 5 * Math.log10(Math.max(1, h))));
 
     const dt = running ? frame.dt : 0;
-    tRef.current += dt;
-    // Fraction of the initial excess still left, on the visual clock.
-    const theta = Math.exp(-tRef.current / TAU_VIS);
+    // Fraction of the initial gap still left: stepped, not recomputed from a
+    // clock, so a slider changing tau changes the pace without a jump.
+    const tauVis = coolingScreenTau(tau);
+    if (dt > 0) {
+      tRef.current.theta *= Math.exp(-dt / tauVis);
+      tRef.current.t += (dt * tau) / tauVis;
+    }
+    const theta = tRef.current.theta;
 
     const list = tracersRef.current;
     if (list.length === 0) {
@@ -190,12 +203,16 @@ export function CoolingCanvas({
     ctx.fillText('flow →   fluid at T∞', x0 + 4, y0 - 8);
     ctx.textAlign = 'center';
     ctx.fillText(
-      `one temperature everywhere (lumped) — ${Math.round((heating ? 1 - theta : theta) * 100)}% of the gap left`,
+      `one temperature everywhere (lumped) — ${Math.round(theta * 100)}% of the gap left`,
       cx, y1 + 16,
     );
     ctx.fillStyle = dark ? '#64748b' : '#94a3b8';
     ctx.textAlign = 'right';
-    ctx.fillText(`visual clock: τ ≈ ${TAU_VIS} s on screen — real τ in the readouts`, x1 - 2, y0 - 8);
+    {
+      const long = `t ≈ ${timeS(tRef.current.t)} real · τ = ${timeS(tau)}, shown as ${tauVis.toFixed(1)} s`;
+      const short = `t ≈ ${timeS(tRef.current.t)} real`;
+      ctx.fillText(ctx.measureText(long).width <= x1 - 12 ? long : short, x1 - 2, y0 - 8);
+    }
 
     // Film label with a leader tick.
     ctx.strokeStyle = dark ? 'rgba(251,191,36,0.6)' : 'rgba(217,119,6,0.55)';

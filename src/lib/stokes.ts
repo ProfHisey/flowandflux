@@ -22,6 +22,8 @@
  * SI units, matching the momentum modules.
  */
 
+import { compressPinned, compressRatio } from './visual';
+
 export interface StokesParams {
   /** Particle radius, m */
   a: number;
@@ -87,4 +89,19 @@ export function dragCoefficient(p: StokesParams): number {
  *  way — tau is negligible for anything this module simulates). */
 export function settlingTime(p: StokesParams): number {
   return p.Lint / Math.abs(terminalVelocity(p));
+}
+
+/**
+ * The canvases' on-screen fall-speed multiplier — cosmetic, by the site-wide
+ * rule in lib/visual: 1 at a real 2 cm/s (just above the centrifuged-cell
+ * preset), halved for every decade slower, pinned six decades below; faster
+ * settling (the raindrop) pins at 1. The caption states it ("spinning a cell
+ * at 10^5 g makes it fall 32 times faster on screen") and verify.ts pins it.
+ */
+export const STOKES_SCREEN_TOP = 2e-2; // m/s
+export function stokesScreenFactor(vinf: number): number {
+  return compressRatio(Math.abs(vinf), STOKES_SCREEN_TOP, 6, 0);
+}
+export function stokesScreenPinned(vinf: number): 'slow' | 'fast' | null {
+  return compressPinned(Math.abs(vinf), STOKES_SCREEN_TOP, 6, 0);
 }

@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import type { NewtonParams } from '../../lib/newton';
+import {
+  dragForce, newtonForceFactor, newtonForcePinned, newtonSpeedFactor, type NewtonParams,
+} from '../../lib/newton';
+import { sci } from '../../lib/format';
 import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
 
 /**
@@ -18,15 +21,27 @@ import { applyZoom, useWheelZoom } from '../FicksLaw/FickCanvas';
  * tug-release-catch IS the viscous stress, made visible. The statistical
  * (momentum-diffusion) story returns in the momentum module proper.
  *
- * Cosmetic values, stated: the on-screen plate speed is fixed for
- * legibility (like D_VIS). The velocity PROFILE the layers ride is the
- * physical steady solution u(y) = U·y/H.
+ * Cosmetic values, stated: the on-screen plate speed is COMPRESSED, not
+ * to scale (each factor of ten in U is a factor of two here; see
+ * newtonSpeedFactor), and the force arrow on the top plate is compressed the
+ * same way. The velocity PROFILE the layers ride is the physical steady
+ * solution u(y) = U·y/H.
  */
 
 const LANES = 9;
 const PER_LANE = 12;
-/** Top-plate speed on screen, px/s. Visual, like D_VIS. */
+/** Top-plate speed on screen, px/s, at U = 10 m/s; scaled by
+ *  newtonSpeedFactor (the default 1 cm/s plate runs at 25 px/s). */
+const U_VIS_TOP = 200;
+/** The dye view's REFERENCE speed, px/s. Its clock runs at (real on-screen
+ *  speed / U_VIS), so stripe positions are distance travelled: a slider
+ *  dragged mid-flight changes the speed without making the dye jump. */
 const U_VIS = 80;
+/** Force-arrow length on the top plate at the default F, px. */
+const FORCE_REF_PX = 30;
+/** Peak profile-arrow length at the default plate speed, px (it scales with
+ *  the on-screen speed, floored so the profile's shape never vanishes). */
+const ARROW_REF_PX = 42;
 
 /** Momentum ramp: low-to-high speed, the third color family (emerald),
  *  next to indigo/cyan for mass and red/amber for heat. */
@@ -118,8 +133,16 @@ export function NewtonCanvas({
 
     const dt = running && showParticles ? frame.dt : 0;
 
-    // Velocity on screen: linear, U_VIS at the top plate, 0 at the bottom.
-    const uAt = (y: number) => (U_VIS * (y1 - y)) / gapH;
+    // Velocity on screen: linear, uVis at the top plate, 0 at the bottom.
+    const uVis = U_VIS_TOP * newtonSpeedFactor(p.U);
+    const kRel = uVis / U_VIS;
+    const uAt = (y: number) => (uVis * (y1 - y)) / gapH;
+    const uRefAt = (y: number) => (U_VIS * (y1 - y)) / gapH;
+    // The default plate (1 cm/s) runs at U_VIS_TOP/8 = 25 px/s; the arrows
+    // keep their old 42 px there and scale with the speed from it.
+    const arrowPeak = p.U > 0
+      ? Math.min(110, Math.max(10, ARROW_REF_PX * (uVis / (U_VIS_TOP / 8))))
+      : 0;
     const normAt = (y: number) => (y1 - y) / gapH;
 
     // Shaded momentum field.
@@ -129,12 +152,12 @@ export function NewtonCanvas({
     }
 
     // Plates: the top one slides — its hatching marches — the bottom sits.
-    plateRef.current = (plateRef.current + U_VIS * dt) % 14;
+    plateRef.current = (plateRef.current + uVis * dt) % 14;
     drawPlate(ctx, x0, y0 - plateH, gapW, plateH, dark, plateRef.current);
     drawPlate(ctx, x0, y1, gapW, plateH, dark, 0);
 
     if (showParticles && view === 'dye') {
-      timeRef.current += dt;
+      timeRef.current += dt * kRel;
       const t = timeRef.current;
 
       // A stripe's top has crossed most of the gap by maxAge; three stripes
@@ -161,7 +184,7 @@ export function NewtonCanvas({
         ctx.beginPath();
         for (let s = 0; s <= SAMPLES; s++) {
           const y = y0 + (gapH * s) / SAMPLES;
-          const x = xInj + uAt(y) * age;
+          const x = xInj + uRefAt(y) * age;
           if (s === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
@@ -184,11 +207,11 @@ export function NewtonCanvas({
       const yTop = y0 + gapH * 0.35;
       const yBot = yTop + w0;
       const xSq = x0 + gapW * 0.72;
-      const relRate = uAt(yTop) - uAt(yBot); // px/s of relative sliding
+      const relRate = uRefAt(yTop) - uRefAt(yBot); // px/s of relative sliding
       const period = relRate > 0 ? (0.4 * gapW) / relRate : Infinity;
       const age2 = period === Infinity ? 0 : t % period;
-      const shiftTop = uAt(yTop) * age2 - uAt((yTop + yBot) / 2) * age2;
-      const shiftBot = uAt(yBot) * age2 - uAt((yTop + yBot) / 2) * age2;
+      const shiftTop = uRefAt(yTop) * age2 - uRefAt((yTop + yBot) / 2) * age2;
+      const shiftBot = uRefAt(yBot) * age2 - uRefAt((yTop + yBot) / 2) * age2;
       ctx.strokeStyle = `rgba(${dye},0.6)`;
       ctx.setLineDash([5, 4]);
       ctx.lineWidth = 2;
@@ -282,7 +305,7 @@ export function NewtonCanvas({
     ctx.lineWidth = 1.5;
     for (let i = 0; i <= 4; i++) {
       const y = y0 + (gapH * i) / 4;
-      const len = (uAt(y) / U_VIS) * 42;
+      const len = ((y1 - y) / gapH) * arrowPeak;
       if (len < 1) continue;
       ctx.beginPath();
       ctx.moveTo(x0 + 4, y);
@@ -307,6 +330,45 @@ export function NewtonCanvas({
     ctx.font = '500 11px ui-sans-serif, system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`top plate → U = ${fmtU(p.U)} m/s`, x0, y0 - plateH - 6);
+
+    // The force it takes to keep the plate moving, F = μUA/H — the one place
+    // μ shows (the motion itself is rightly μ-free). Compressed like the
+    // speed; drawn ON the plate, with a halo, from its left end.
+    const F = dragForce(p);
+    const fLen = Math.min(gapW - 16, FORCE_REF_PX * newtonForceFactor(F));
+    if (fLen > 3) {
+      const fy = y0 - plateH / 2;
+      const fx0 = x0 + 6;
+      const fCol = dark ? '#fb923c' : '#ea580c';
+      ctx.strokeStyle = dark ? 'rgba(2,6,23,0.75)' : 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(fx0, fy);
+      ctx.lineTo(fx0 + fLen, fy);
+      ctx.stroke();
+      ctx.strokeStyle = fCol;
+      ctx.fillStyle = fCol;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(fx0, fy);
+      ctx.lineTo(fx0 + fLen - 6, fy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(fx0 + fLen, fy);
+      ctx.lineTo(fx0 + fLen - 8, fy - 5);
+      ctx.lineTo(fx0 + fLen - 8, fy + 5);
+      ctx.closePath();
+      ctx.fill();
+      const pinF = newtonForcePinned(F);
+      const tail = pinF === 'fast' ? ' · larger than shown' : pinF === 'slow' ? ' · smaller than shown' : '';
+      const long = `F = μUA/H = ${sci(F)} N to keep it moving${tail}`;
+      const short = `F = ${sci(F)} N${tail}`;
+      ctx.fillStyle = fCol;
+      ctx.textAlign = 'right';
+      const room = x1 - (x0 + ctx.measureText(`top plate → U = ${fmtU(p.U)} m/s`).width + 16);
+      ctx.fillText(ctx.measureText(long).width <= room ? long : short, x1, y0 - plateH - 6);
+      ctx.textAlign = 'left';
+    }
     ctx.fillText('bottom plate fixed — no slip, u = 0', x0, y1 + plateH + 16);
   }, { running: running && showParticles, redrawKey });
 

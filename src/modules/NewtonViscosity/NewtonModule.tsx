@@ -159,6 +159,17 @@ export function NewtonModule({ dark }: { dark: boolean }) {
                 deformation of a single fluid element.
               </p>
             ))}
+            {dim === '2d' && (
+              <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                Speeds on screen are compressed so every setting stays watchable: each
+                factor of ten in U is a factor of two in the animation, and U = 0 stops the
+                plate dead. Viscosity rightly leaves the motion alone — the profile is
+                U·y/H whatever the fluid — so μ shows up where it really acts: the{' '}
+                <span className="font-semibold text-orange-600 dark:text-orange-400">orange arrow</span>{' '}
+                on the top plate is the force F = μUA/H it takes to keep the plate moving,
+                compressed the same way (ten times the force, twice the arrow).
+              </p>
+            )}
           </Panel>
 
         </div>

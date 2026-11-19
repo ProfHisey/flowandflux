@@ -21,6 +21,8 @@
  * Internal unit system is SI, matching the heat modules.
  */
 
+import { compressRatio } from './visual';
+
 export interface CoolingParams {
   /** Convection coefficient, W/(m^2 K) */
   h: number;
@@ -105,4 +107,30 @@ export function profile(p: CoolingParams, n = 120, tMax?: number): ProfilePoint[
 /** The mass-transfer twin: j = h_m (C_s - C_inf), mol/(m^2 s). */
 export function massFlux(hm: number, Cs: number, Cinf: number): number {
   return hm * (Cs - Cinf);
+}
+
+/**
+ * The Flow view's on-screen time constant — cosmetic, by the site-wide rule
+ * in lib/visual: 14 s for the forgotten-coffee preset's real tau (2093 s),
+ * and every factor of ten in the real tau is a factor of two on screen
+ * (thermometer, tau = 14 s: about 3 s; roast, tau ~ 1.7 h: about 19 s),
+ * pinned three decades faster and two slower. So h, V, A, rho and c_p — every
+ * input to tau — now visibly change how fast the object cools.
+ */
+export const COOL_TAU_VIS = 14; // s on screen at the reference
+export const COOL_TAU_REF = 2093; // s: rho V c_p / h A for the coffee preset
+export function coolingScreenTau(tauReal: number): number {
+  return COOL_TAU_VIS * compressRatio(tauReal, COOL_TAU_REF, 3, 2);
+}
+
+/**
+ * The cooling's shared STATE, owned by the module so 2D and 3D show one
+ * experiment: theta is the fraction of the initial gap still left, t the real
+ * time it represents. Each frame multiplies theta by exp(-dt / tau_vis), so a
+ * slider change alters the RATE but never makes the picture jump; dragging the
+ * Time slider sets theta = exp(-t / tau) exactly, the state the readouts show.
+ */
+export interface CoolClock {
+  theta: number;
+  t: number;
 }

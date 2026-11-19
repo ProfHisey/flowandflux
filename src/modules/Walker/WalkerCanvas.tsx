@@ -40,16 +40,36 @@ interface Paths {
   cloud: Float64Array[];
 }
 
-function simulate(v: number, D: number, T: number, key: string): Paths {
-  const dt = T / NSTEPS;
-  const walk = () => {
-    const x = new Float64Array(NSTEPS + 1);
-    for (let i = 0; i < NSTEPS; i++) x[i + 1] = stepWalker(x[i], v, D, dt, gauss());
-    return x;
+/** The random kicks of every life: one standard-normal draw per step, per
+ *  walker. Drawn once per Replay and KEPT, so changing v, D or T re-plays the
+ *  SAME lives under new physics — the path bends as the slider moves instead
+ *  of being thrown away for a different life. */
+interface Kicks {
+  replay: number;
+  tracer: Float64Array;
+  cloud: Float64Array[];
+}
+
+function drawKicks(replay: number): Kicks {
+  const draw = () => {
+    const z = new Float64Array(NSTEPS);
+    for (let i = 0; i < NSTEPS; i++) z[i] = gauss();
+    return z;
   };
   const cloud: Float64Array[] = [];
-  for (let k = 0; k < NCLOUD; k++) cloud.push(walk());
-  return { key, dt, tracer: walk(), cloud };
+  for (let k = 0; k < NCLOUD; k++) cloud.push(draw());
+  return { replay, tracer: draw(), cloud };
+}
+
+/** The same Euler–Maruyama step as everywhere else, fed the kept kicks. */
+function simulate(v: number, D: number, T: number, key: string, kicks: Kicks): Paths {
+  const dt = T / NSTEPS;
+  const walk = (z: Float64Array) => {
+    const x = new Float64Array(NSTEPS + 1);
+    for (let i = 0; i < NSTEPS; i++) x[i + 1] = stepWalker(x[i], v, D, dt, z[i]);
+    return x;
+  };
+  return { key, dt, tracer: walk(kicks.tracer), cloud: kicks.cloud.map(walk) };
 }
 
 export function WalkerCanvas({
@@ -73,36 +93,46 @@ export function WalkerCanvas({
   replay: number;
 }) {
   const pathsRef = useRef<Paths | null>(null);
-  const tauRef = useRef(0);
+  const kicksRef = useRef<Kicks | null>(null);
+  /** Playback position as a FRACTION of the horizon, so a new T keeps it. */
+  const fracRef = useRef(0);
+  /** The vertical half-range on screen, held while the sliders move. */
+  const rRef = useRef(0);
+  const faceRef = useRef(face);
   const propsRef = useRef({ v, D, T, face, view, dark });
   propsRef.current = { v, D, T, face, view, dark };
 
-  // New physics or an explicit replay: throw the walkers away and restart
-  // the clock. Changing the VIEW or the theme must not (the same lives stay
-  // on screen, just drawn differently).
+  // Only an explicit Replay draws new lives and restarts the clock. New
+  // physics (v, D, T) re-plays the SAME lives from the same point in the
+  // horizon; changing the view or the theme changes nothing at all.
   const seedKey = `${v}|${D}|${T}|${replay}`;
   useEffect(() => {
-    pathsRef.current = null;
-    tauRef.current = 0;
-  }, [seedKey]);
+    kicksRef.current = null;
+    fracRef.current = 0;
+    rRef.current = 0;
+  }, [replay]);
 
   const canvasRef = useCanvas((ctx, frame) => {
     const { width: W, height: H } = frame;
     const { v, D, T, face, view, dark } = propsRef.current;
     if (T <= 0) return;
 
+    let kicks = kicksRef.current;
+    if (!kicks || kicks.replay !== replay) {
+      kicks = drawKicks(replay);
+      kicksRef.current = kicks;
+    }
     let paths = pathsRef.current;
     if (!paths || paths.key !== seedKey) {
-      paths = simulate(v, D, T, seedKey);
+      paths = simulate(v, D, T, seedKey, kicks);
       pathsRef.current = paths;
-      tauRef.current = 0;
     }
 
     // The playback clock: run to T, then hold.
     if (running && frame.dt > 0) {
-      tauRef.current = Math.min(T, tauRef.current + (frame.dt * T) / PLAY_SECONDS);
+      fracRef.current = Math.min(1, fracRef.current + frame.dt / PLAY_SECONDS);
     }
-    const tau = tauRef.current;
+    const tau = fracRef.current * T;
     const stepsShown = Math.min(NSTEPS, Math.floor(tau / paths.dt));
 
     // Layout.
@@ -116,9 +146,22 @@ export function WalkerCanvas({
     if (plotW <= 0 || plotH <= 0) return;
 
     // Vertical range: symmetric about the start so the mean's slope is
-    // legible, wide enough for ±3 spreads and for the drift itself.
+    // legible, wide enough for ±3 spreads and for the drift itself. It is
+    // HELD while the sliders move — re-fitting every change would draw a walk
+    // with twice the spread at exactly the same size, and a slider that
+    // changes nothing on screen teaches nothing. It grows (with headroom)
+    // only when the content would clip, and re-fits on Replay or a new face.
     const sT = spread(D, T);
-    const R = Math.max(3 * sT, 1.2 * Math.abs(v) * T, 1e-9) * 1.05;
+    const fitR = Math.max(3 * sT, 1.2 * Math.abs(v) * T, 1e-9) * 1.05;
+    if (faceRef.current !== face) {
+      faceRef.current = face;
+      rRef.current = 0;
+    }
+    // Fit with headroom, and re-expand to the same headroom only on a clip:
+    // up to ~1.5x the spread (D up to ~2.25x) the walk visibly GROWS in a held
+    // frame; a fitted frame would draw it at exactly the same size.
+    if (!(rRef.current > 0) || fitR > rRef.current) rRef.current = fitR * 1.5;
+    const R = rRef.current;
     const x = (t: number) => x0 + (t / T) * plotW;
     const y = (pos: number) => y0 + plotH / 2 - (pos / R) * (plotH / 2);
 

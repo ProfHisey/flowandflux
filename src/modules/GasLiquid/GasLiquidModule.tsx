@@ -327,7 +327,10 @@ export function GasLiquidModule({ dark }: { dark: boolean }) {
                 onChange={setNGas}
                 hint="More molecules = shorter free flights. Rarefy it and the flights straighten out toward ballistic."
               />
-              {continuum ? (
+              {/* The viscosity only acts in the 2D continuum view. In 3D the liquid is
+                  always molecular, so packing must stay on screen even if the 2D view
+                  was last left on Continuum (it used to vanish, leaving a dead slider). */}
+              {continuum && dim === '2d' ? (
                 <Slider
                   label="Solvent viscosity μ"
                   value={muRel}

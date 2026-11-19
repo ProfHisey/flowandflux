@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useCanvas } from '../../hooks/useCanvas';
-import { nusselt, sherwood, type CorrParams } from '../../lib/correlations';
+import { corrFlowFactor, nusselt, sherwood, type CorrParams } from '../../lib/correlations';
 import {
   makePainter,
   useOrbitCam,
@@ -86,7 +86,7 @@ export function Corr3DCanvas({
     };
 
     // Flow arrows streaming past (along z).
-    offsetRef.current = (offsetRef.current + 40 * frame.dt) % 60;
+    offsetRef.current = (offsetRef.current + 100 * corrFlowFactor(p.v) * frame.dt) % 60;
     const arr = dark ? 'rgba(148,163,184,0.45)' : 'rgba(100,116,139,0.4)';
     for (let row = -1; row <= 1; row++) {
       for (let d = -fit; d < fit; d += 60) {
